@@ -28,7 +28,7 @@ const PlayerRegistration: React.FC = () => {
     const [playerID, setPlayerID] = useState('');
 
     const [formData, setFormData] = useState<any>({
-        fullName: '', playerType: '', gender: '', mobile: '', dob: '', captcha: ''
+        fullName: '', playerType: '', gender: '', mobile: '', dob: ''
     });
     const [profilePic, setProfilePic] = useState<string>('');
     const [paymentScreenshot, setPaymentScreenshot] = useState<string>('');
@@ -180,7 +180,6 @@ const PlayerRegistration: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.captcha.toLowerCase() !== 'dej7ym') return alert("Incorrect Captcha.");
         if (config?.includePayment) {
             if (config.paymentMethod === 'RAZORPAY') {
                 setSubmitting(true);
@@ -764,8 +763,6 @@ const PlayerRegistration: React.FC = () => {
                                                 </div>
                                             </label>
                                         </div>
-
-                                        <WarriorInput label="Validation Protocol" value={formData.captcha} onChange={(e: any) => setFormData({...formData, captcha: e.target.value})} placeholder="TYPE CODE: dej7ym" required />
                                     </div>
                                 </div>
                             )}
@@ -1223,15 +1220,6 @@ const PlayerRegistration: React.FC = () => {
                             </motion.div>
                         )}
                     </div>
-
-                    <motion.div 
-                        initial={isAdvaya ? { scale: 0.95, opacity: 0 } : {}}
-                        animate={isAdvaya ? { scale: 1, opacity: 1 } : {}}
-                        className={`p-8 rounded-[2.5rem] border ${isAdvaya ? 'bg-black/60 border-amber-900/30' : 'bg-gray-100 border-gray-200'}`}
-                    >
-                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-4 text-center ${isAdvaya ? 'text-amber-500/50' : 'text-gray-400'}`}>{isAdvaya ? 'Validation Protocol' : 'Enter Verification Code'} (dej7ym)</label>
-                        <input required className={`w-full border-2 border-transparent rounded-2xl px-6 py-4 font-black text-center uppercase text-xl outline-none transition-all shadow-inner ${isAdvaya ? 'bg-black text-amber-500 focus:border-amber-500' : 'bg-white text-gray-700 focus:border-blue-500'}`} value={formData.captcha} onChange={e => setFormData({...formData, captcha: e.target.value})} placeholder="TYPE CODE" />
-                    </motion.div>
 
                     <button disabled={submitting} type="submit" className={`w-full font-black py-5 rounded-[1.5rem] shadow-2xl transition-all flex items-center justify-center gap-4 group active:scale-95 uppercase text-sm tracking-widest ${isAdvaya ? 'bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'}`}>
                         {submitting ? <Loader2 className="animate-spin" /> : (config?.includePayment && config.paymentMethod === 'RAZORPAY' ? <><CreditCard className="w-6 h-6"/> {isAdvaya ? 'Authorize' : 'Pay'} ₹{config.fee}</> : (isAdvaya ? <><Sword className="w-5 h-5" /> JOIN THE BATTLE</> : 'Register Now'))}
