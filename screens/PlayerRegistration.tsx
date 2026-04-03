@@ -514,9 +514,20 @@ const PlayerRegistration: React.FC = () => {
                                             transition={{ delay: 0.8, duration: 1 }}
                                             className="mb-2"
                                         >
-                                            <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] tracking-[0.3em]">
-                                                SEASON {auction.season}
-                                            </span>
+                                            {isAdvaya ? (
+                                                <div className="flex items-center justify-center gap-4 mb-4 relative">
+                                                    <span className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]">
+                                                        SEASON
+                                                    </span>
+                                                    <span className="text-8xl md:text-[14rem] font-black skew-x-[-15deg] text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 -ml-6 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none">
+                                                        {auction.season}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] tracking-[0.3em]">
+                                                    SEASON {auction.season}
+                                                </span>
+                                            )}
                                         </motion.div>
                                     )}
                                     
