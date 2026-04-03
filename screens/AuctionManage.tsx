@@ -95,6 +95,11 @@ const AuctionManage: React.FC = () => {
     const [newField, setNewField] = useState<Partial<FormField>>({ label: '', type: 'text', required: true, options: [] });
     const [optionInput, setOptionInput] = useState('');
 
+    // Registration Details Modal
+    const [showRegModal, setShowRegModal] = useState(false);
+    const [selectedReg, setSelectedReg] = useState<RegisteredPlayer | null>(null);
+    const [isEditingReg, setIsEditingReg] = useState(false);
+
     useEffect(() => {
         if (!id) return;
         const unsubAuction = db.collection('auctions').doc(id).onSnapshot(doc => {
@@ -152,6 +157,54 @@ const AuctionManage: React.FC = () => {
             await db.collection('auctions').doc(id).update({ registrationConfig: regConfig });
             alert("Registration Protocol Deployed!");
         } catch (e: any) { alert("Failed: " + e.message); }
+    };
+
+    const handleRevertToPending = async (regId: string) => {
+        if (!id) return;
+        try {
+            await db.collection('auctions').doc(id).collection('registrations').doc(regId).update({ status: 'PENDING' });
+        } catch (e: any) { alert("Revert failed: " + e.message); }
+    };
+
+    const handleApproveAndAdd = async (reg: RegisteredPlayer) => {
+        if (!id) return;
+        try {
+            // 1. Update registration status
+            await db.collection('auctions').doc(id).collection('registrations').doc(reg.id).update({ status: 'APPROVED' });
+            
+            // Check if already in pool (by name)
+            const existing = players.find(p => p.name === reg.fullName);
+            if (existing) {
+                alert(`${reg.fullName} is already in the player pool.`);
+                return;
+            }
+
+            // 2. Add to players collection
+            const newPlayer: Partial<Player> = {
+                name: reg.fullName,
+                photoUrl: reg.profilePic,
+                category: 'Standard', // Default category
+                role: reg.playerType,
+                basePrice: auction?.basePrice || 0,
+                nationality: 'India',
+                speciality: reg.playerType,
+                stats: { matches: 0, runs: 0, wickets: 0 }
+            };
+            
+            await db.collection('auctions').doc(id).collection('players').add(newPlayer);
+            alert(`${reg.fullName} approved and added to player pool!`);
+        } catch (e: any) { alert("Approval failed: " + e.message); }
+    };
+
+    const handleUpdateRegistration = async (updatedReg: RegisteredPlayer) => {
+        if (!id) return;
+        try {
+            const { id: regId, ...data } = updatedReg;
+            await db.collection('auctions').doc(id).collection('registrations').doc(regId).update(data);
+            setSelectedReg(updatedReg);
+            setIsEditingReg(false);
+            alert("Registration details updated!");
+        } catch (e: any) { alert("Update failed: " + e.message); }
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'MODAL' | 'LOGO' | 'QR' | 'REG_LOGO' | 'REG_BANNER') => {
@@ -1049,11 +1102,34 @@ const AuctionManage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 ${reg.status === 'PENDING' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : 'bg-green-50 text-green-600 border-green-200'}`}>{reg.status}</div>
+                                            <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 ${reg.status === 'PENDING' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : reg.status === 'APPROVED' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>{reg.status}</div>
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedReg(reg);
+                                                    setShowRegModal(true);
+                                                }}
+                                                className="p-2.5 bg-gray-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-xl transition-all"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-4 h-4"/>
+                                            </button>
                                             <button onClick={() => handleDelete('REGISTRATION', reg.id)} className="p-2.5 bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all"><Trash2 className="w-4 h-4"/></button>
-                                            <button onClick={async () => {
-                                                await db.collection('auctions').doc(id!).collection('registrations').doc(reg.id).update({ status: 'APPROVED' });
-                                            }} className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest shadow-lg">Verify</button>
+                                            
+                                            {reg.status === 'PENDING' ? (
+                                                <button 
+                                                    onClick={() => handleApproveAndAdd(reg)} 
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest shadow-lg"
+                                                >
+                                                    Approve & Add
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleRevertToPending(reg.id)} 
+                                                    className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest border border-gray-200"
+                                                >
+                                                    Revert
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -1213,6 +1289,227 @@ const AuctionManage: React.FC = () => {
 
                             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Save Registry Protocol</button>
                         </form>
+                    </div>
+                </div>
+            )}
+            {showRegModal && selectedReg && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl border border-white/20 animate-fade-in my-8">
+                        {/* Header */}
+                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-600/20">
+                                    <User className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Registration Details</h3>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Review and manage player enrollment</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setShowRegModal(false);
+                                    setIsEditingReg(false);
+                                }} 
+                                className="p-4 hover:bg-gray-100 rounded-2xl transition-all text-gray-400 hover:text-gray-600"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            {/* Left Column: Profile & Basic Info */}
+                            <div className="space-y-6">
+                                <div className="relative group">
+                                    <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-gray-50 shadow-xl">
+                                        <img src={selectedReg.profilePic} className="w-full h-full object-cover" alt="Profile" />
+                                    </div>
+                                    <button 
+                                        onClick={() => window.open(selectedReg.profilePic, '_blank')}
+                                        className="absolute bottom-4 right-4 p-3 bg-white/90 backdrop-blur shadow-lg rounded-xl text-gray-600 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                        <ExternalLink className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Basic Information</p>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Full Name</label>
+                                                {isEditingReg ? (
+                                                    <input 
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                        value={selectedReg.fullName}
+                                                        onChange={e => setSelectedReg({...selectedReg, fullName: e.target.value})}
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.fullName}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mobile Number</label>
+                                                {isEditingReg ? (
+                                                    <input 
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                        value={selectedReg.mobile}
+                                                        onChange={e => setSelectedReg({...selectedReg, mobile: e.target.value})}
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm font-black text-gray-800">{selectedReg.mobile}</p>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Player Type</label>
+                                                    {isEditingReg ? (
+                                                        <select 
+                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                            value={selectedReg.playerType}
+                                                            onChange={e => setSelectedReg({...selectedReg, playerType: e.target.value})}
+                                                        >
+                                                            {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                                                        </select>
+                                                    ) : (
+                                                        <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.playerType}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Gender</label>
+                                                    {isEditingReg ? (
+                                                        <select 
+                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                            value={selectedReg.gender}
+                                                            onChange={e => setSelectedReg({...selectedReg, gender: e.target.value})}
+                                                        >
+                                                            <option value="Male">Male</option>
+                                                            <option value="Female">Female</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    ) : (
+                                                        <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.gender}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Payment & Custom Fields */}
+                            <div className="space-y-6">
+                                {selectedReg.paymentScreenshot && (
+                                    <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Payment Verification</p>
+                                        <div className="relative group aspect-video rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm">
+                                            <img src={selectedReg.paymentScreenshot} className="w-full h-full object-cover" alt="Payment" />
+                                            <button 
+                                                onClick={() => window.open(selectedReg.paymentScreenshot, '_blank')}
+                                                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                            >
+                                                <Eye className="w-8 h-8 text-white" />
+                                            </button>
+                                        </div>
+                                        {selectedReg.razorpayPaymentId && (
+                                            <p className="mt-2 text-[10px] font-black text-blue-600 uppercase tracking-widest">ID: {selectedReg.razorpayPaymentId}</p>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Attributes & Custom Fields</p>
+                                    <div className="space-y-4">
+                                        {regConfig.customFields.map(field => (
+                                            <div key={field.id}>
+                                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">{field.label}</label>
+                                                {isEditingReg ? (
+                                                    <input 
+                                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                        value={selectedReg[field.id] || ''}
+                                                        onChange={e => setSelectedReg({...selectedReg, [field.id]: e.target.value})}
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm font-black text-gray-800 uppercase">{selectedReg[field.id] || 'N/A'}</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {regConfig.customFields.length === 0 && (
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase italic">No custom fields defined</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-8 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-4 justify-between items-center">
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => {
+                                        const data = JSON.stringify(selectedReg, null, 2);
+                                        const blob = new Blob([data], { type: 'application/json' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `registration_${selectedReg.fullName.replace(/\s+/g, '_')}.json`;
+                                        a.click();
+                                    }}
+                                    className="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all"
+                                >
+                                    <Download className="w-4 h-4" /> Download Info
+                                </button>
+                            </div>
+                            
+                            <div className="flex gap-3">
+                                {isEditingReg ? (
+                                    <>
+                                        <button 
+                                            onClick={() => setIsEditingReg(false)}
+                                            className="px-8 py-3 bg-gray-200 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            onClick={() => handleUpdateRegistration(selectedReg)}
+                                            className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20"
+                                        >
+                                            Save Changes
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button 
+                                            onClick={() => setIsEditingReg(true)}
+                                            className="px-8 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all"
+                                        >
+                                            <Edit className="w-4 h-4" /> Edit Fields
+                                        </button>
+                                        {selectedReg.status === 'PENDING' ? (
+                                            <button 
+                                                onClick={() => {
+                                                    handleApproveAndAdd(selectedReg);
+                                                    setShowRegModal(false);
+                                                }}
+                                                className="px-8 py-3 bg-green-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-600/20"
+                                            >
+                                                Approve & Add to Pool
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => {
+                                                    handleRevertToPending(selectedReg.id);
+                                                    setShowRegModal(false);
+                                                }}
+                                                className="px-8 py-3 bg-yellow-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-yellow-600/20"
+                                            >
+                                                Revert to Pending
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
