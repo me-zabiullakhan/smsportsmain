@@ -260,7 +260,14 @@ const PlayerRegistration: React.FC = () => {
 
                     {config?.enableWaitlist ? (
                         <form onSubmit={handleWaitlistSubmit} className="space-y-4 text-left">
-                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-4 text-center">Join Waitlist Protocol</p>
+                            <div className="text-center mb-4">
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">Join Waitlist Protocol</p>
+                                {config?.waitlistMessage && (
+                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
+                                        {config.waitlistMessage}
+                                    </p>
+                                )}
+                            </div>
                             <div>
                                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Full Name</label>
                                 <input 
@@ -339,16 +346,16 @@ const PlayerRegistration: React.FC = () => {
                     
                     <div className={`p-8 rounded-[2rem] mb-8 border-2 ${isAdvaya ? 'bg-black/40 border-amber-500/10' : 'bg-gray-50 border-gray-100'}`}>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
-                            {isAdvaya ? 'Your Warrior ID' : 'Your Player ID'}
+                            {isAdvaya ? 'Registry Status' : 'Registration Status'}
                         </p>
-                        <p className={`text-4xl font-black uppercase tracking-tighter ${isAdvaya ? 'text-amber-500' : 'text-blue-600'}`}>{playerID || 'WAR-7782'}</p>
+                        <p className={`text-2xl font-black uppercase tracking-tight leading-tight ${isAdvaya ? 'text-amber-500' : 'text-blue-600'}`}>
+                            {config?.customSuccessMessage || (isAdvaya ? 'BATTLE ENROLLED' : 'SUCCESSFUL')}
+                        </p>
                     </div>
 
                     <div className="space-y-4">
-                        <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-wide">
-                            {config?.customSuccessMessage || (isAdvaya 
-                                ? "Your registration has been logged to the tournament registry. The commander will review your intel soon."
-                                : "Your registration has been successfully submitted. The organizer will review your details shortly.")}
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            {isAdvaya ? 'Your Warrior ID' : 'Your Player ID'}: <span className={isAdvaya ? 'text-amber-200' : 'text-gray-900'}>{playerID || 'WAR-7782'}</span>
                         </p>
                         
                         {config?.organizerContact && (

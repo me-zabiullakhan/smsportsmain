@@ -854,6 +854,18 @@ const AuctionManage: React.FC = () => {
                                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                                             </label>
                                         </div>
+                                        {regConfig.enableWaitlist && (
+                                            <div className="pt-4 border-t border-gray-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <label className="block text-[10px] font-black text-gray-500 uppercase mb-2">Waitlist Section Message</label>
+                                                <textarea 
+                                                    className="w-full border-2 border-gray-100 rounded-xl p-4 text-xs font-bold text-gray-600 h-20 focus:border-orange-400 outline-none transition-all bg-gray-50/50"
+                                                    placeholder="Custom message to show in the waitlist section..."
+                                                    value={regConfig.waitlistMessage || ''}
+                                                    onChange={e => setRegConfig({...regConfig, waitlistMessage: e.target.value})}
+                                                />
+                                                <p className="text-[9px] font-bold text-gray-400 uppercase mt-2 ml-2 tracking-widest">This message appears above the waitlist form when registration is closed.</p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm space-y-6">
