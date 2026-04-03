@@ -428,7 +428,7 @@ const PlayerRegistration: React.FC = () => {
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-40 blur-[4px]"
+                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[8px]"
                 />
                 <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
             </div>
@@ -751,7 +751,7 @@ const PlayerRegistration: React.FC = () => {
                                                             <motion.div
                                                                 animate={{ rotate: 360 }}
                                                                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-20 blur-[4px]"
+                                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[6px]"
                                                             />
                                                             <div className={`absolute inset-[2px] rounded-[inherit] z-0 ${formData.playerType === r.name ? 'bg-amber-600' : 'bg-black/80'}`} />
                                                         </div>
@@ -842,7 +842,7 @@ const PlayerRegistration: React.FC = () => {
                                                         <motion.div
                                                             animate={{ rotate: 360 }}
                                                             transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                                                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-30 blur-[4px]"
+                                                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[10px]"
                                                         />
                                                         <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                                     </div>
@@ -917,7 +917,7 @@ const PlayerRegistration: React.FC = () => {
                                                     <motion.div
                                                         animate={{ rotate: 360 }}
                                                         transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                                                        className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-10 blur-[4px]"
+                                                        className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[10px]"
                                                     />
                                                     <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                                 </div>
@@ -1179,7 +1179,7 @@ const PlayerRegistration: React.FC = () => {
                         <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_320deg,#f59e0b_360deg)] opacity-20 blur-[6px]"
+                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[15px]"
                         />
                     </div>
                 )}
@@ -1359,14 +1359,26 @@ const PlayerRegistration: React.FC = () => {
                             >
                                 <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>{isAdvaya ? 'WARRIOR PORTRAIT' : 'Upload Photo'}</label>
                                 <div onClick={() => profileInputRef.current?.click()} className={`w-full h-48 rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group border-2 border-dashed ${isAdvaya ? 'bg-black/40 border-amber-900/30 hover:border-amber-500' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-blue-400'}`}>
-                                    {profilePic ? (
-                                        <img src={profilePic} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="text-center">
-                                            <Upload className={`w-8 h-8 mx-auto mb-2 ${isAdvaya ? 'text-amber-900' : 'text-gray-300'}`} />
-                                            <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900' : 'text-gray-400'}`}>{isAdvaya ? 'Select Image' : 'Select Photo'}</p>
+                                    {isAdvaya && (
+                                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[8px]"
+                                            />
+                                            <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                         </div>
                                     )}
+                                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+                                        {profilePic ? (
+                                            <img src={profilePic} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="text-center">
+                                                <Upload className={`w-8 h-8 mx-auto mb-2 ${isAdvaya ? 'text-amber-900' : 'text-gray-300'}`} />
+                                                <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900' : 'text-gray-400'}`}>{isAdvaya ? 'Select Image' : 'Select Photo'}</p>
+                                            </div>
+                                        )}
+                                    </div>
                                     <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setProfilePic(await compressImage(e.target.files[0])); }} />
                                 </div>
                             </motion.div>
@@ -1399,17 +1411,29 @@ const PlayerRegistration: React.FC = () => {
                                         </div>
 
                                         <div onClick={() => paymentInputRef.current?.click()} className={`w-full max-w-sm h-24 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative border-2 border-dashed group ${isAdvaya ? 'bg-black/40 border-amber-900/30 hover:border-amber-500' : 'bg-white border-blue-200 hover:bg-blue-50 hover:border-blue-400'}`}>
-                                            {paymentScreenshot ? (
-                                                <div className="flex items-center gap-3 text-green-500">
-                                                    <CheckCircle className="w-6 h-6" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{isAdvaya ? 'Screenshot Attached' : 'Photo Uploaded'}</span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center">
-                                                    <Upload className={`w-6 h-6 mx-auto mb-2 ${isAdvaya ? 'text-amber-900 group-hover:text-amber-500' : 'text-gray-300 group-hover:text-blue-500'} transition-colors`} />
-                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900 group-hover:text-amber-500' : 'text-gray-400 group-hover:text-blue-500'} transition-colors`}>{isAdvaya ? 'Upload Payment Proof' : 'Upload Payment Screenshot'}</p>
+                                            {isAdvaya && (
+                                                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
+                                                    <motion.div
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                                                        className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[8px]"
+                                                    />
+                                                    <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                                 </div>
                                             )}
+                                            <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+                                                {paymentScreenshot ? (
+                                                    <div className="flex items-center gap-3 text-green-500">
+                                                        <CheckCircle className="w-6 h-6" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">{isAdvaya ? 'Screenshot Attached' : 'Photo Uploaded'}</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center">
+                                                        <Upload className={`w-6 h-6 mx-auto mb-2 ${isAdvaya ? 'text-amber-900 group-hover:text-amber-500' : 'text-gray-300 group-hover:text-blue-500'} transition-colors`} />
+                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900 group-hover:text-amber-500' : 'text-gray-400 group-hover:text-blue-500'} transition-colors`}>{isAdvaya ? 'Upload Payment Proof' : 'Upload Payment Screenshot'}</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <input ref={paymentInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setPaymentScreenshot(await compressImage(e.target.files[0])); }} />
                                         </div>
                                     </div>
