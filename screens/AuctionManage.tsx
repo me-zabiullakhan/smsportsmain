@@ -222,7 +222,8 @@ const AuctionManage: React.FC = () => {
     const handleCrudSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!id) return;
-        const col = modalType.toLowerCase() + 's';
+        let col = modalType.toLowerCase() + 's';
+        if (modalType === 'CATEGORY') col = 'categories';
         const itemData = { ...editItem, logoUrl: previewImage || editItem.logoUrl || '', photoUrl: previewImage || editItem.photoUrl || '', imageUrl: previewImage || editItem.imageUrl || '' };
         
         try {
@@ -1195,11 +1196,30 @@ const AuctionManage: React.FC = () => {
                                 <div key={item.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between group">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
-                                            {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-contain" /> : <Layers className="text-gray-300 w-5 h-5"/>}
+                                            {item.imageUrl || item.photoUrl || item.logoUrl ? (
+                                                <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" />
+                                            ) : (
+                                                <Layers className="text-gray-300 w-5 h-5"/>
+                                            )}
                                         </div>
-                                        <p className="font-black text-gray-800 uppercase text-xs">{item.name}</p>
+                                        <div>
+                                            <p className="font-black text-gray-800 uppercase text-xs">{item.name}</p>
+                                            {activeTab === 'CATEGORIES' && (
+                                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                    ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <button onClick={() => handleDelete(activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => {
+                                            setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
+                                            setEditItem(item);
+                                            setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
+                                            setShowModal(true);
+                                        }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
+                                        <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -1316,15 +1336,88 @@ const AuctionManage: React.FC = () => {
                                 </div>
                             )}
 
-                            {modalType === 'PLAYER' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Base Price (₹)</label>
-                                        <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.basePrice} onChange={e => setEditItem({...editItem, basePrice: Number(e.target.value)})} />
+                            {modalType === 'CATEGORY' && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Base Price (₹)</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.basePrice || 0} onChange={e => setEditItem({...editItem, basePrice: Number(e.target.value)})} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Bid Increment (₹)</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.bidIncrement || 0} onChange={e => setEditItem({...editItem, bidIncrement: Number(e.target.value)})} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Min Per Team</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.minPerTeam || 0} onChange={e => setEditItem({...editItem, minPerTeam: Number(e.target.value)})} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Max Per Team</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.maxPerTeam || 0} onChange={e => setEditItem({...editItem, maxPerTeam: Number(e.target.value)})} />
+                                        </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Nationality</label>
-                                        <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.nationality} onChange={e => setEditItem({...editItem, nationality: e.target.value})} />
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Bid Increment Slabs</label>
+                                        <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar p-2 bg-gray-50 rounded-xl border border-gray-100">
+                                            {(editItem?.slabs || []).map((slab: any, idx: number) => (
+                                                <div key={idx} className="flex gap-2 items-center">
+                                                    <input type="number" placeholder="From" className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[10px] font-bold" value={slab.from} onChange={e => {
+                                                        const newSlabs = [...(editItem.slabs || [])];
+                                                        newSlabs[idx].from = Number(e.target.value);
+                                                        setEditItem({...editItem, slabs: newSlabs});
+                                                    }} />
+                                                    <input type="number" placeholder="Incr" className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[10px] font-bold" value={slab.increment} onChange={e => {
+                                                        const newSlabs = [...(editItem.slabs || [])];
+                                                        newSlabs[idx].increment = Number(e.target.value);
+                                                        setEditItem({...editItem, slabs: newSlabs});
+                                                    }} />
+                                                    <button type="button" onClick={() => {
+                                                        const newSlabs = (editItem.slabs || []).filter((_: any, i: number) => i !== idx);
+                                                        setEditItem({...editItem, slabs: newSlabs});
+                                                    }} className="text-red-400 hover:text-red-600"><Trash2 className="w-3 h-3"/></button>
+                                                </div>
+                                            ))}
+                                            <button type="button" onClick={() => {
+                                                const newSlabs = [...(editItem.slabs || []), { from: 0, increment: 0 }];
+                                                setEditItem({...editItem, slabs: newSlabs});
+                                            }} className="w-full py-1 border border-dashed border-gray-300 rounded-lg text-[9px] font-black text-gray-400 uppercase hover:border-blue-400 hover:text-blue-500 transition-all">+ Add Slab</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalType === 'PLAYER' && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Base Price (₹)</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.basePrice} onChange={e => setEditItem({...editItem, basePrice: Number(e.target.value)})} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Nationality</label>
+                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.nationality} onChange={e => setEditItem({...editItem, nationality: e.target.value})} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Category</label>
+                                            <select className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.category || 'Standard'} onChange={e => setEditItem({...editItem, category: e.target.value})}>
+                                                <option value="Standard">Standard</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Role</label>
+                                            <select className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.role || 'All Rounder'} onChange={e => setEditItem({...editItem, role: e.target.value})}>
+                                                {roles.map(role => (
+                                                    <option key={role.id} value={role.name}>{role.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1431,6 +1524,21 @@ const AuctionManage: React.FC = () => {
                                                         </select>
                                                     ) : (
                                                         <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.gender}</p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Category</label>
+                                                    {isEditingReg ? (
+                                                        <select 
+                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                            value={selectedReg.category || 'Standard'}
+                                                            onChange={e => setSelectedReg({...selectedReg, category: e.target.value})}
+                                                        >
+                                                            <option value="Standard">Standard</option>
+                                                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                                        </select>
+                                                    ) : (
+                                                        <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.category || 'Standard'}</p>
                                                     )}
                                                 </div>
                                             </div>

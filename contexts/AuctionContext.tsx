@@ -249,6 +249,17 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 throw new Error("Squad Limit Reached!");
             }
 
+            // Category Max Limit Check
+            if (currentPlayer.category) {
+                const cat = state.categories.find(c => c.name === currentPlayer.category);
+                if (cat && cat.maxPerTeam > 0) {
+                    const countInCat = team.players.filter(p => p.category === cat.name).length;
+                    if (countInCat >= cat.maxPerTeam) {
+                        throw new Error(`Category Limit Reached! This team already has ${cat.maxPerTeam} players from category ${cat.name}.`);
+                    }
+                }
+            }
+
             const absoluteMinBasePrice = Math.min(
                 state.basePrice || 100,
                 ...(state.categories.length > 0 ? state.categories.map(c => c.basePrice) : [100]),
