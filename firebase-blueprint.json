@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "Auction": {
+      "title": "Auction",
+      "description": "Main auction configuration",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "date": { "type": "string" },
+        "venue": { "type": "string" },
+        "totalTeams": { "type": "number" },
+        "logoUrl": { "type": "string" },
+        "dateTBD": { "type": "boolean" },
+        "slabs": { "type": "array" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "AuctionCategory": {
+      "title": "Auction Category",
+      "description": "Player categories with bidding rules",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "bidIncrement": { "type": "number" },
+        "minPerTeam": { "type": "number" },
+        "maxPerTeam": { "type": "number" },
+        "slabs": { "type": "array" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Player details for the auction",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "role": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "RegisteredPlayer": {
+      "title": "Registered Player",
+      "description": "Players who registered via the form",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "playerType": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "paymentScreenshot": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/auctions/{auctionId}": {
+      "schema": "Auction",
+      "description": "Main auction document"
+    },
+    "/auctions/{auctionId}/categories/{categoryId}": {
+      "schema": "AuctionCategory",
+      "description": "Categories for this auction"
+    },
+    "/auctions/{auctionId}/players/{playerId}": {
+      "schema": "Player",
+      "description": "Players for this auction"
+    },
+    "/auctions/{auctionId}/registrations/{regId}": {
+      "schema": "RegisteredPlayer",
+      "description": "Registrations for this auction"
+    }
+  }
+}

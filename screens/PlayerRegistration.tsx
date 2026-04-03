@@ -423,13 +423,25 @@ const PlayerRegistration: React.FC = () => {
             whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(251,191,36,0.2)" }}
             className="bg-black/60 border-2 border-amber-900/20 rounded-[2rem] p-6 text-center relative overflow-hidden group"
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                <Icon className="w-6 h-6 text-amber-500" />
+            {/* Neon Border Effect */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-40 blur-[4px]"
+                />
+                <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
             </div>
-            <h4 className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest mb-1">{title}</h4>
-            <p className="text-lg font-black text-amber-100 uppercase tracking-tight mb-2">{value}</p>
-            {description && <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{description}</p>}
+
+            <div className="relative z-10">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+                    <Icon className="w-6 h-6 text-amber-500" />
+                </div>
+                <h4 className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest mb-1">{title}</h4>
+                <p className="text-lg font-black text-amber-100 uppercase tracking-tight mb-2">{value}</p>
+                {description && <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{description}</p>}
+            </div>
         </motion.div>
     );
 
@@ -515,13 +527,30 @@ const PlayerRegistration: React.FC = () => {
                                             className="mb-2"
                                         >
                                             {isAdvaya ? (
-                                                <div className="flex items-center justify-center gap-4 mb-4 relative">
-                                                    <span className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]">
+                                                <div className="flex items-center justify-center gap-12 mb-8 relative">
+                                                    <motion.span 
+                                                        animate={{ y: [-2, 2, -2] }}
+                                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                                        className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]"
+                                                    >
                                                         SEASON
-                                                    </span>
-                                                    <span className="text-8xl md:text-[14rem] font-black skew-x-[-15deg] text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 -ml-6 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none">
+                                                    </motion.span>
+                                                    <motion.span 
+                                                        animate={{ 
+                                                            x: [-5, 5, -5],
+                                                            y: [-3, 3, -3],
+                                                            rotate: [-2, 2, -2],
+                                                            skewX: [-15, -12, -15]
+                                                        }}
+                                                        transition={{ 
+                                                            duration: 4,
+                                                            repeat: Infinity,
+                                                            ease: "easeInOut"
+                                                        }}
+                                                        className="text-8xl md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none px-4"
+                                                    >
                                                         {auction.season}
-                                                    </span>
+                                                    </motion.span>
                                                 </div>
                                             ) : (
                                                 <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] tracking-[0.3em]">
@@ -717,12 +746,24 @@ const PlayerRegistration: React.FC = () => {
                                                     onClick={() => setFormData({...formData, playerType: r.name})}
                                                     className={`relative p-8 rounded-[2.5rem] border-2 transition-all overflow-hidden group ${formData.playerType === r.name ? 'bg-amber-600 border-amber-500 text-black shadow-[0_20px_40px_-10px_rgba(251,191,36,0.4)]' : 'bg-black/60 border-amber-900/20 text-amber-100 hover:border-amber-500/50'}`}
                                                 >
-                                                    <div className={`absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center ${formData.playerType === r.name ? 'bg-black/20' : 'bg-amber-500/10'}`}>
-                                                        {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
-                                                    </div>
-                                                    <div className="text-left mt-12">
-                                                        <h4 className={`text-xl font-black uppercase tracking-tight mb-2 ${formData.playerType === r.name ? 'text-black' : 'text-amber-500'}`}>{r.name}</h4>
-                                                        <p className={`text-[9px] font-black uppercase tracking-widest ${formData.playerType === r.name ? 'text-black/60' : 'text-slate-500'}`}>Primary Skillset</p>
+                                                    {isAdvaya && (
+                                                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+                                                            <motion.div
+                                                                animate={{ rotate: 360 }}
+                                                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-20 blur-[4px]"
+                                                            />
+                                                            <div className={`absolute inset-[2px] rounded-[inherit] z-0 ${formData.playerType === r.name ? 'bg-amber-600' : 'bg-black/80'}`} />
+                                                        </div>
+                                                    )}
+                                                    <div className="relative z-10">
+                                                        <div className={`absolute top-0 right-0 w-12 h-12 rounded-full flex items-center justify-center ${formData.playerType === r.name ? 'bg-black/20' : 'bg-amber-500/10'}`}>
+                                                            {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                                                        </div>
+                                                        <div className="text-left mt-12">
+                                                            <h4 className={`text-xl font-black uppercase tracking-tight mb-2 ${formData.playerType === r.name ? 'text-black' : 'text-amber-500'}`}>{r.name}</h4>
+                                                            <p className={`text-[9px] font-black uppercase tracking-widest ${formData.playerType === r.name ? 'text-black/60' : 'text-slate-500'}`}>Primary Skillset</p>
+                                                        </div>
                                                     </div>
                                                 </motion.button>
                                             ))
@@ -796,44 +837,56 @@ const PlayerRegistration: React.FC = () => {
                                     {config?.includePayment ? (
                                         <div className="space-y-8">
                                             <div className="bg-black/60 border-2 border-amber-500/20 rounded-[3rem] p-10 text-center relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-6">
-                                                    <div className="px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest">
-                                                        FEE: ₹{config.fee}
+                                                {isAdvaya && (
+                                                    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+                                                        <motion.div
+                                                            animate={{ rotate: 360 }}
+                                                            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                                                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-30 blur-[4px]"
+                                                        />
+                                                        <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                                     </div>
-                                                </div>
-                                                
-                                                <div className="space-y-6 mb-10">
-                                                    <div className="w-20 h-20 bg-amber-500/10 rounded-[2rem] flex items-center justify-center mx-auto border border-amber-500/20">
-                                                        <QrCode className="w-10 h-10 text-amber-500" />
+                                                )}
+                                                <div className="relative z-10">
+                                                    <div className="absolute top-0 right-0 p-6">
+                                                        <div className="px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest">
+                                                            FEE: ₹{config.fee}
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <h4 className="text-xl font-black text-amber-100 uppercase tracking-tight">Scan to Pay via UPI</h4>
-                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Receiver: <span className="text-amber-500">{config.upiName}</span> • UPI ID: <span className="text-amber-500">{config.upiId}</span></p>
+                                                    
+                                                    <div className="space-y-6 mb-10">
+                                                        <div className="w-20 h-20 bg-amber-500/10 rounded-[2rem] flex items-center justify-center mx-auto border border-amber-500/20">
+                                                            <QrCode className="w-10 h-10 text-amber-500" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-xl font-black text-amber-100 uppercase tracking-tight">Scan to Pay via UPI</h4>
+                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Receiver: <span className="text-amber-500">{config.upiName}</span> • UPI ID: <span className="text-amber-500">{config.upiId}</span></p>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_0_50px_rgba(251,191,36,0.3)] border-8 border-amber-500 inline-block mb-10">
-                                                    <img src={config.qrCodeUrl} className="w-64 h-64 object-contain" />
-                                                </div>
+                                                    <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_0_50px_rgba(251,191,36,0.3)] border-8 border-amber-500 inline-block mb-10">
+                                                        <img src={config.qrCodeUrl} className="w-64 h-64 object-contain" />
+                                                    </div>
 
-                                                <div className="space-y-4">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50">Upload Payment Proof</label>
-                                                    <div 
-                                                        onClick={() => paymentInputRef.current?.click()}
-                                                        className={`w-full max-w-sm mx-auto h-32 rounded-[2rem] bg-black/40 border-2 border-dashed border-amber-900/30 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden group`}
-                                                    >
-                                                        {paymentScreenshot ? (
-                                                            <div className="flex items-center gap-3 text-amber-500">
-                                                                <CheckCircle className="w-8 h-8" />
-                                                                <span className="text-xs font-black uppercase tracking-widest">Screenshot Verified</span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-center">
-                                                                <Upload className="w-8 h-8 mx-auto mb-2 text-amber-900 group-hover:text-amber-500 transition-colors" />
-                                                                <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 group-hover:text-amber-500 transition-colors">Upload Screenshot</p>
-                                                            </div>
-                                                        )}
-                                                        <input ref={paymentInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setPaymentScreenshot(await compressImage(e.target.files[0])); }} />
+                                                    <div className="space-y-4">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50">Upload Payment Proof</label>
+                                                        <div 
+                                                            onClick={() => paymentInputRef.current?.click()}
+                                                            className={`w-full max-w-sm mx-auto h-32 rounded-[2rem] bg-black/40 border-2 border-dashed border-amber-900/30 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden group`}
+                                                        >
+                                                            {paymentScreenshot ? (
+                                                                <div className="flex items-center gap-3 text-amber-500">
+                                                                    <CheckCircle className="w-8 h-8" />
+                                                                    <span className="text-xs font-black uppercase tracking-widest">Screenshot Verified</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-center">
+                                                                    <Upload className="w-8 h-8 mx-auto mb-2 text-amber-900 group-hover:text-amber-500 transition-colors" />
+                                                                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 group-hover:text-amber-500 transition-colors">Upload Screenshot</p>
+                                                                </div>
+                                                            )}
+                                                            <input ref={paymentInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setPaymentScreenshot(await compressImage(e.target.files[0])); }} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -858,12 +911,24 @@ const PlayerRegistration: React.FC = () => {
                                     </div>
                                     
                                     <div className="space-y-6">
-                                        <div className="bg-black/60 border-2 border-amber-900/20 rounded-[2.5rem] p-8 max-h-[300px] overflow-y-auto custom-scrollbar">
-                                            <h4 className="text-amber-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
-                                                <ShieldCheck className="w-4 h-4" /> Rules & Regulations
-                                            </h4>
-                                            <div className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-wide whitespace-pre-wrap">
-                                                {config?.rules || "1. Respect the spirit of the game.\n2. Arrive at the venue 30 minutes before the match.\n3. Follow all umpire decisions.\n4. Maintain sportsmanship at all times."}
+                                        <div className="bg-black/60 border-2 border-amber-900/20 rounded-[2.5rem] p-8 max-h-[300px] overflow-y-auto custom-scrollbar relative overflow-hidden">
+                                            {isAdvaya && (
+                                                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+                                                    <motion.div
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                                                        className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_300deg,#f59e0b_360deg)] opacity-10 blur-[4px]"
+                                                    />
+                                                    <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
+                                                </div>
+                                            )}
+                                            <div className="relative z-10">
+                                                <h4 className="text-amber-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
+                                                    <ShieldCheck className="w-4 h-4" /> Rules & Regulations
+                                                </h4>
+                                                <div className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-wide whitespace-pre-wrap">
+                                                    {config?.rules || "1. Respect the spirit of the game.\n2. Arrive at the venue 30 minutes before the match.\n3. Follow all umpire decisions.\n4. Maintain sportsmanship at all times."}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1107,8 +1172,19 @@ const PlayerRegistration: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            <div className={`max-w-2xl mx-auto shadow-2xl rounded-[2.5rem] overflow-hidden border animate-fade-in ${isAdvaya ? 'bg-[#151515] border-amber-900/30' : 'bg-white border-gray-200'}`}>
-                <div className={`${isAdvaya ? 'bg-gradient-to-b from-amber-900/40 to-transparent' : 'bg-blue-600'} p-10 text-center relative overflow-hidden`}>
+            <div className={`max-w-2xl mx-auto shadow-2xl rounded-[2.5rem] overflow-hidden border animate-fade-in relative ${isAdvaya ? 'bg-[#151515] border-amber-900/30' : 'bg-white border-gray-200'}`}>
+                {/* Main Card Neon Border */}
+                {isAdvaya && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_320deg,#f59e0b_360deg)] opacity-20 blur-[6px]"
+                        />
+                    </div>
+                )}
+                <div className="relative z-10">
+                    <div className={`${isAdvaya ? 'bg-gradient-to-b from-amber-900/40 to-transparent' : 'bg-blue-600'} p-10 text-center relative overflow-hidden`}>
                     {isAdvaya ? (
                         <>
                             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
@@ -1371,7 +1447,8 @@ const PlayerRegistration: React.FC = () => {
                 </form>
             </div>
         </div>
-    );
+    </div>
+);
 };
 
 export default PlayerRegistration;

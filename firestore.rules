@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: auctions
+    // Document ID: auctionId
+    // Fields:
+    //   - name: string (required)
+    //   - date: string (required)
+    //   - venue: string (optional)
+    //   - totalTeams: number (optional)
+    //   - logoUrl: string (optional)
+    //   - dateTBD: bool (optional)
+    //   - slabs: list (optional)
+    //   - createdAt: number (optional)
+    //
+    // Subcollection: auctions/{auctionId}/categories
+    // Fields:
+    //   - name: string (required)
+    //   - basePrice: number (required)
+    //   - bidIncrement: number (required)
+    //   - minPerTeam: number (required)
+    //   - maxPerTeam: number (required)
+    //   - slabs: list (optional)
+    //   - imageUrl: string (optional)
+    //   - createdAt: number (optional)
+    //
+    // Subcollection: auctions/{auctionId}/players
+    // Fields:
+    //   - name: string (required)
+    //   - category: string (required)
+    //   - role: string (required)
+    //   - photoUrl: string (optional)
+    //   - createdAt: number (optional)
+    //
+    // Subcollection: auctions/{auctionId}/registrations
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - phone: string (required)
+    //   - playerType: string (required)
+    //   - photoUrl: string (optional)
+    //   - paymentScreenshot: string (optional)
+    //   - status: string (required) - pending, approved, rejected
+    //   - createdAt: number (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "info.digitalmount@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidString(field, maxLen) {
+      return request.resource.data[field] is string && request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidNumber(field) {
+      return request.resource.data[field] is number;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /auctions/{auctionId} {
+      allow read: if true; // Publicly readable for registration
+      allow write: if isAdmin();
+
+      match /categories/{categoryId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /players/{playerId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /teams/{teamId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /roles/{roleId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /sponsors/{sponsorId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /registrations/{regId} {
+        allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.email);
+        allow create: if true; // Allow anyone to register
+        allow update, delete: if isAdmin();
+      }
+
+      match /waitlist/{waitId} {
+        allow read, write: if true;
+      }
+    }
+
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}

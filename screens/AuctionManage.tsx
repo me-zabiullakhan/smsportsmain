@@ -1191,35 +1191,85 @@ const AuctionManage: React.FC = () => {
                                 setShowModal(true);
                             }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg"><Plus className="w-4 h-4"/> Add New</button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(activeTab === 'CATEGORIES' ? categories : activeTab === 'ROLES' ? roles : sponsors).map((item: any) => (
-                                <div key={item.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between group">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
-                                            {item.imageUrl || item.photoUrl || item.logoUrl ? (
-                                                <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" />
-                                            ) : (
-                                                <Layers className="text-gray-300 w-5 h-5"/>
-                                            )}
+                                <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm flex flex-col group">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
+                                                {item.imageUrl || item.photoUrl || item.logoUrl ? (
+                                                    <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" />
+                                                ) : (
+                                                    <Layers className="text-gray-300 w-6 h-6"/>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-gray-800 uppercase text-sm">{item.name}</p>
+                                                {activeTab === 'CATEGORIES' && (
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                        ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-black text-gray-800 uppercase text-xs">{item.name}</p>
-                                            {activeTab === 'CATEGORIES' && (
-                                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                    ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team
-                                                </p>
-                                            )}
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => {
+                                                setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
+                                                setEditItem(item);
+                                                setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
+                                                setShowModal(true);
+                                            }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
+                                            <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                                         </div>
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => {
-                                            setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
-                                            setEditItem(item);
-                                            setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
-                                            setShowModal(true);
-                                        }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
-                                        <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
-                                    </div>
+
+                                    {activeTab === 'CATEGORIES' && (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between px-1">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Warriors</span>
+                                                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase">{players.filter(p => p.category === item.name).length}</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1">
+                                                {players.filter(p => p.category === item.name).map(p => (
+                                                    <div key={p.id} className="flex items-center gap-2 bg-gray-50 pl-1 pr-2 py-1 rounded-full border border-gray-100">
+                                                        <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden border border-white">
+                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-3 h-3 text-gray-400 m-auto" />}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-gray-600 truncate max-w-[80px]">{p.name}</span>
+                                                        <button onClick={async () => {
+                                                            if (window.confirm(`Remove ${p.name} from ${item.name}?`)) {
+                                                                await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: 'Standard' });
+                                                            }
+                                                        }} className="text-gray-300 hover:text-red-500 transition-colors">
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {players.filter(p => p.category === item.name).length === 0 && (
+                                                    <p className="text-[9px] font-bold text-gray-300 uppercase italic py-2">No warriors assigned</p>
+                                                )}
+                                            </div>
+                                            <div className="pt-4 border-t border-gray-50">
+                                                <select 
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-widest focus:bg-white focus:border-blue-400 outline-none transition-all"
+                                                    onChange={async (e) => {
+                                                        const pId = e.target.value;
+                                                        if (!pId) return;
+                                                        const p = players.find(x => x.id.toString() === pId);
+                                                        if (p) {
+                                                            await db.collection('auctions').doc(id!).collection('players').doc(pId).update({ category: item.name });
+                                                            e.target.value = "";
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">+ Assign Warrior</option>
+                                                    {players.filter(p => p.category !== item.name).map(p => (
+                                                        <option key={p.id} value={p.id}>{p.name} ({p.category})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
