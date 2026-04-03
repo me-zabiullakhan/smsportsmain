@@ -16,7 +16,7 @@ import firebase from 'firebase/compat/app';
 import * as XLSX from 'xlsx';
 import { useAuction } from '../hooks/useAuction';
 
-const compressImage = (file: File): Promise<string> => {
+const compressImage = (file: File, isBanner: boolean = false): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -25,8 +25,8 @@ const compressImage = (file: File): Promise<string> => {
             img.src = event.target?.result as string;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 500;
-                const MAX_HEIGHT = 500;
+                const MAX_WIDTH = isBanner ? 1920 : 800;
+                const MAX_HEIGHT = isBanner ? 1080 : 800;
                 let width = img.width;
                 let height = img.height;
                 if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
@@ -34,7 +34,7 @@ const compressImage = (file: File): Promise<string> => {
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                resolve(canvas.toDataURL('image/jpeg', isBanner ? 0.95 : 0.85));
             };
             img.onerror = (err) => reject(err);
         };
@@ -60,7 +60,7 @@ const AuctionManage: React.FC = () => {
     const { userProfile } = useAuction();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'SETTINGS' | 'TEAMS' | 'PLAYERS' | 'REQUESTS' | 'CATEGORIES' | 'ROLES' | 'SPONSORS' | 'REGISTRATION'>('SETTINGS');
+    const [activeTab, setActiveTab] = useState<'SETTINGS' | 'TEAMS' | 'PLAYERS' | 'REQUESTS' | 'CATEGORIES' | 'ROLES' | 'SPONSORS' | 'REGISTRATION' | 'WAITLIST'>('SETTINGS');
     const [loading, setLoading] = useState(true);
     const [auction, setAuction] = useState<AuctionSetup | null>(null);
 
@@ -70,6 +70,7 @@ const AuctionManage: React.FC = () => {
     const [roles, setRoles] = useState<PlayerRole[]>([]);
     const [sponsors, setSponsors] = useState<Sponsor[]>([]);
     const [registrations, setRegistrations] = useState<RegisteredPlayer[]>([]);
+    const [waitlist, setWaitlist] = useState<any[]>([]);
     
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
@@ -125,9 +126,10 @@ const AuctionManage: React.FC = () => {
         const unsubRoles = db.collection('auctions').doc(id).collection('roles').onSnapshot(s => setRoles(s.docs.map(d => ({id: d.id, ...d.data()}) as PlayerRole)));
         const unsubSponsors = db.collection('auctions').doc(id).collection('sponsors').onSnapshot(s => setSponsors(s.docs.map(d => ({id: d.id, ...d.data()}) as Sponsor)));
         const unsubRegs = db.collection('auctions').doc(id).collection('registrations').onSnapshot(s => setRegistrations(s.docs.map(d => ({id: d.id, ...d.data()}) as RegisteredPlayer)));
+        const unsubWaitlist = db.collection('auctions').doc(id).collection('waitlist').onSnapshot(s => setWaitlist(s.docs.map(d => ({id: d.id, ...d.data()}))));
 
         return () => {
-            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs();
+            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs(); unsubWaitlist();
         };
     }, [id]);
 
@@ -154,7 +156,7 @@ const AuctionManage: React.FC = () => {
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'MODAL' | 'LOGO' | 'QR' | 'REG_LOGO' | 'REG_BANNER') => {
         if (e.target.files && e.target.files[0]) {
-            const base64 = await compressImage(e.target.files[0]);
+            const base64 = await compressImage(e.target.files[0], type === 'REG_BANNER');
             if (type === 'MODAL') setPreviewImage(base64);
             if (type === 'LOGO') setSettingsForm({ ...settingsForm, logoUrl: base64 });
             if (type === 'QR') setRegConfig({ ...regConfig, qrCodeUrl: base64 });
@@ -315,10 +317,10 @@ const AuctionManage: React.FC = () => {
                         <h1 className="text-sm font-black uppercase tracking-widest text-gray-700 truncate max-w-[200px]">{auction?.title}</h1>
                     </div>
                     <div className="flex gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
-                        {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION'].map(tab => (
+                        {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
-                                {tab}
+                                {tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab}
                             </button>
                         ))}
                     </div>
@@ -837,6 +839,21 @@ const AuctionManage: React.FC = () => {
                                                 onChange={e => setRegConfig({...regConfig, closedMessage: e.target.value})}
                                             />
                                         </div>
+                                        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-gray-500 uppercase">Enable Waitlist Protocol</label>
+                                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect names/numbers after slots are full.</p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only peer"
+                                                    checked={regConfig.enableWaitlist || false}
+                                                    onChange={e => setRegConfig({...regConfig, enableWaitlist: e.target.checked})}
+                                                />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm space-y-6">
@@ -993,7 +1010,7 @@ const AuctionManage: React.FC = () => {
                     </div>
                 )}
                 
-                {activeTab === 'REQUESTS' && (
+                {activeTab === 'REGISTRATION' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-4 px-2">
                              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Registration Queue ({registrations.length})</h2>
@@ -1055,6 +1072,76 @@ const AuctionManage: React.FC = () => {
                                     <button onClick={() => handleDelete(activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+                {activeTab === 'WAITLIST' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+                            <div>
+                                <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Waitlist Registry</h2>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Players interested after slots filled</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">
+                                    <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Total Waitlist</p>
+                                    <p className="text-xl font-black text-amber-700">{waitlist.length}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-100">
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Player Name</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mobile Number</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Joined At</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {waitlist.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-12 text-center">
+                                                    <Users className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No warriors on waitlist yet</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            waitlist.map((player) => (
+                                                <tr key={player.id} className="hover:bg-gray-50/50 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <p className="font-black text-gray-800 uppercase text-xs">{player.fullName}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="w-3 h-3 text-gray-400" />
+                                                            <p className="font-bold text-gray-600 text-xs">{player.mobile}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs font-bold text-gray-400">
+                                                        {new Date(player.createdAt).toLocaleString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (window.confirm("Remove from waitlist?")) {
+                                                                    await db.collection('auctions').doc(id).collection('waitlist').doc(player.id).delete();
+                                                                }
+                                                            }}
+                                                            className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}

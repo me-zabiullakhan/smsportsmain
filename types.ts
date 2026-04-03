@@ -265,6 +265,7 @@ export interface RegistrationConfig {
     rules?: string;
     closedMessage?: string;
     organizerContact?: string;
+    enableWaitlist?: boolean;
     customFields: FormField[];
 }
 

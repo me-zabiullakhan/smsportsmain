@@ -5,6 +5,62 @@ import { AuctionSetup, RegistrationConfig, FormField, PlayerRole } from '../type
 import { Upload, Calendar, CheckCircle, AlertTriangle, ArrowUpCircle, FileText, Home, ArrowLeft, Loader2, CreditCard, QrCode, ShieldCheck, AlignLeft, Sword, Shield, Trophy as TrophyIcon, Zap, Megaphone, Users, XCircle, Phone, MapPin, Clock, Trophy, Share2, ChevronRight, ChevronLeft, User, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
+                else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.9)); 
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
+const WarriorInput = ({ label, value, onChange, type = "text", required = false, placeholder = "" }: any) => (
+    <div className="relative group">
+        <input 
+            type={type}
+            required={required}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
+        />
+        <label className="absolute left-6 top-2 text-[10px] font-black uppercase tracking-widest text-amber-500/50 transition-all peer-focus:text-amber-500">
+            {label} {required && <span className="text-red-500">*</span>}
+        </label>
+    </div>
+);
+
+const WarriorCard = ({ children, title, icon: Icon, className = "" }: any) => (
+    <div className={`bg-black/60 border-2 border-amber-900/20 rounded-[2.5rem] p-8 relative overflow-hidden group ${className}`}>
+        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Icon className="w-24 h-24" />
+        </div>
+        <h3 className="text-[11px] font-black text-amber-500 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+            <Icon className="w-4 h-4" /> {title}
+        </h3>
+        <div className="relative z-10 space-y-6">
+            {children}
+        </div>
+    </div>
+);
+
 const PlayerRegistration: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -26,6 +82,7 @@ const PlayerRegistration: React.FC = () => {
     const [isClosed, setIsClosed] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const [playerID, setPlayerID] = useState('');
+    const [waitlistSuccess, setWaitlistSuccess] = useState(false);
 
     const [formData, setFormData] = useState<any>({
         fullName: '', playerType: '', gender: '', mobile: '', dob: ''
@@ -62,32 +119,6 @@ const PlayerRegistration: React.FC = () => {
         }
         return () => clearTimeout(timer);
     }, [showWelcomePopup, welcomeTimer]);
-
-    const compressImage = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target?.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
-                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.7)); 
-                };
-                img.onerror = (err) => reject(err);
-            };
-            reader.onerror = (err) => reject(err);
-        });
-    };
 
     useEffect(() => {
         const fetchAuction = async () => {
@@ -192,27 +223,98 @@ const PlayerRegistration: React.FC = () => {
         submitToFirebase();
     };
 
+    const isAdvaya = config?.theme === 'ADVAYA';
+
+    const handleWaitlistSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await db.collection('auctions').doc(id!).collection('waitlist').add({
+                fullName: formData.fullName,
+                mobile: formData.mobile,
+                createdAt: new Date().toISOString()
+            });
+            setWaitlistSuccess(true);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to join waitlist. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white"><Loader2 className="animate-spin w-10 h-10 text-amber-500"/></div>;
     if (error) return <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900"><div className="bg-white p-8 rounded-[2rem] shadow-2xl text-center max-w-md border-4 border-red-500/20"><h2 className="text-2xl font-black mb-2 text-red-600 uppercase tracking-tighter">Access Denied</h2><p className="font-bold text-gray-500 uppercase text-xs tracking-widest">{error}</p></div></div>;
 
     if (isClosed) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-                <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl text-center max-w-md border-4 border-orange-500/20 animate-fade-in">
-                    <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <XCircle className="w-10 h-10 text-orange-500" />
+            <div className={`min-h-screen flex items-center justify-center p-4 ${isAdvaya ? 'bg-[#0a0a0a]' : 'bg-slate-900'}`}>
+                <div className={`${isAdvaya ? 'bg-[#151515] border-amber-500/30 text-amber-50' : 'bg-white text-gray-800'} p-10 rounded-[2.5rem] shadow-2xl text-center max-w-md border-4 animate-fade-in`}>
+                    <div className={`w-20 h-20 ${isAdvaya ? 'bg-amber-500/10' : 'bg-orange-50'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                        <XCircle className={`w-10 h-10 ${isAdvaya ? 'text-amber-500' : 'text-orange-500'}`} />
                     </div>
-                    <h2 className="text-2xl font-black mb-4 text-gray-800 uppercase tracking-tighter">Registration Closed</h2>
-                    <p className="font-bold text-gray-500 uppercase text-xs tracking-widest leading-relaxed">
+                    <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter">Registration Closed</h2>
+                    <p className="font-bold text-gray-500 uppercase text-xs tracking-widest leading-relaxed mb-8">
                         {config?.closedMessage || "The registration limit has been reached or the form has been closed by the organizer."}
                     </p>
-                    <button onClick={() => navigate('/')} className="mt-8 w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest shadow-xl active:scale-95 transition-all">Back to Portal</button>
+
+                    {config?.enableWaitlist ? (
+                        <form onSubmit={handleWaitlistSubmit} className="space-y-4 text-left">
+                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-4 text-center">Join Waitlist Protocol</p>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Full Name</label>
+                                <input 
+                                    required
+                                    className={`w-full px-5 py-4 rounded-2xl text-xs font-bold outline-none border-2 transition-all ${isAdvaya ? 'bg-black border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-gray-100 focus:border-blue-500'}`}
+                                    value={formData.fullName}
+                                    onChange={e => setFormData({...formData, fullName: e.target.value})}
+                                    placeholder="Enter your name"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Mobile Number</label>
+                                <input 
+                                    required
+                                    type="tel"
+                                    className={`w-full px-5 py-4 rounded-2xl text-xs font-bold outline-none border-2 transition-all ${isAdvaya ? 'bg-black border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-gray-100 focus:border-blue-500'}`}
+                                    value={formData.mobile}
+                                    onChange={e => setFormData({...formData, mobile: e.target.value})}
+                                    placeholder="Enter mobile number"
+                                />
+                            </div>
+                            <button 
+                                disabled={submitting}
+                                type="submit"
+                                className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3 ${isAdvaya ? 'bg-amber-600 hover:bg-amber-500 text-black' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                            >
+                                {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <><Users className="w-5 h-5" /> Join Waitlist</>}
+                            </button>
+                            <button type="button" onClick={() => navigate('/')} className="w-full py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-400 transition-colors">Back to Portal</button>
+                        </form>
+                    ) : (
+                        <button onClick={() => navigate('/')} className={`w-full font-black py-4 rounded-2xl uppercase tracking-widest shadow-xl active:scale-95 transition-all ${isAdvaya ? 'bg-amber-600 text-black' : 'bg-slate-900 text-white'}`}>Back to Portal</button>
+                    )}
                 </div>
             </div>
         );
     }
 
-    const isAdvaya = config?.theme === 'ADVAYA';
+    if (waitlistSuccess) {
+        return (
+            <div className={`min-h-screen flex items-center justify-center p-4 ${isAdvaya ? 'bg-[#0a0a0a]' : 'bg-slate-900'}`}>
+                <div className={`${isAdvaya ? 'bg-[#151515] border-amber-500/30 text-amber-50' : 'bg-white text-gray-800'} p-10 rounded-[2.5rem] shadow-2xl text-center max-w-md border-4 animate-fade-in`}>
+                    <div className={`w-20 h-20 ${isAdvaya ? 'bg-amber-500/10' : 'bg-green-50'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                        <CheckCircle className={`w-10 h-10 ${isAdvaya ? 'text-amber-500' : 'text-green-500'}`} />
+                    </div>
+                    <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter">Waitlist Joined!</h2>
+                    <p className="font-bold text-gray-500 uppercase text-xs tracking-widest leading-relaxed mb-8">
+                        You've been added to the waitlist. We'll contact you if a slot becomes available.
+                    </p>
+                    <button onClick={() => navigate('/')} className={`w-full font-black py-5 rounded-2xl uppercase tracking-widest shadow-xl active:scale-95 transition-all ${isAdvaya ? 'bg-amber-600 text-black' : 'bg-blue-600 text-white'}`}>OK</button>
+                </div>
+            </div>
+        );
+    }
 
     if (success) {
         return (
@@ -301,23 +403,7 @@ const PlayerRegistration: React.FC = () => {
         if (currentStep > 0) setCurrentStep(prev => prev - 1);
     };
 
-    const WarriorInput = ({ label, value, onChange, type = "text", required = false, placeholder = "" }: any) => (
-        <div className="relative group">
-            <input 
-                type={type}
-                required={required}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
-            />
-            <label className="absolute left-6 top-2 text-[10px] font-black uppercase tracking-widest text-amber-500/50 transition-all peer-focus:text-amber-500">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-        </div>
-    );
-
-    const WarriorCard = ({ icon: Icon, title, value, description }: any) => (
+    const WarriorDetailCard = ({ icon: Icon, title, value, description }: any) => (
         <motion.div 
             whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(251,191,36,0.2)" }}
             className="bg-black/60 border-2 border-amber-900/20 rounded-[2rem] p-6 text-center relative overflow-hidden group"
@@ -504,11 +590,11 @@ const PlayerRegistration: React.FC = () => {
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Review the tournament protocols before joining the arena</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                                        <WarriorCard icon={Calendar} title="Auction Date" value={auction?.date || 'TBD'} description="Player bidding day" />
-                                        <WarriorCard icon={Clock} title="Matches Date" value={auction?.matchesDate || 'TBD'} description="Tournament schedule" />
-                                        <WarriorCard icon={Users} title="Total Teams" value={auction?.totalTeams || '0'} description="Competing squads" />
-                                        <WarriorCard icon={MapPin} title="Tournament Venue" value={auction?.venue || 'TBD'} description="Battle ground location" />
-                                        <WarriorCard icon={Phone} title="Organizer" value={config?.organizerContact || 'TBD'} description="Contact for queries" />
+                                        <WarriorDetailCard icon={Calendar} title="Auction Date" value={auction?.date || 'TBD'} description="Player bidding day" />
+                                        <WarriorDetailCard icon={Clock} title="Matches Date" value={auction?.matchesDate || 'TBD'} description="Tournament schedule" />
+                                        <WarriorDetailCard icon={Users} title="Total Teams" value={auction?.totalTeams || '0'} description="Competing squads" />
+                                        <WarriorDetailCard icon={MapPin} title="Tournament Venue" value={auction?.venue || 'TBD'} description="Battle ground location" />
+                                        <WarriorDetailCard icon={Phone} title="Organizer" value={config?.organizerContact || 'TBD'} description="Contact for queries" />
                                     </div>
                                     <div className="bg-black/40 border-2 border-amber-500/10 rounded-[2.5rem] p-8 mt-12">
                                         <h4 className="text-amber-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
