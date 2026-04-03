@@ -65,7 +65,8 @@ const AppContent: React.FC = () => {
   // Visibility Logic: Hide Support Widget on Landing Page or OBS Views
   const isLandingPage = location.pathname === '/';
   const isObsView = location.pathname.includes('obs-') || location.pathname.includes('match-overlay');
-  const showSupport = isLoggedIn && !isSupportStaff && !isLandingPage && !isObsView;
+  const isRegistrationPage = location.pathname.includes('/register');
+  const showSupport = isLoggedIn && !isSupportStaff && !isLandingPage && !isObsView && !isRegistrationPage;
 
   return (
     <>

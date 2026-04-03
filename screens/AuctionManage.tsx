@@ -320,7 +320,7 @@ const AuctionManage: React.FC = () => {
                         {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
-                                {tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab}
+                                {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab}
                             </button>
                         ))}
                     </div>
@@ -1010,7 +1010,7 @@ const AuctionManage: React.FC = () => {
                     </div>
                 )}
                 
-                {activeTab === 'REGISTRATION' && (
+                {activeTab === 'REQUESTS' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-4 px-2">
                              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Registration Queue ({registrations.length})</h2>
