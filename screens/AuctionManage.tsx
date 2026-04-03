@@ -53,7 +53,7 @@ const DEFAULT_REG_CONFIG: RegistrationConfig = {
     qrCodeUrl: '',
     terms: '1. Registration fee is non-refundable.\n2. Players must reporting 30 mins before match.',
     customFields: [],
-    organizerContact: ''
+    organizerContacts: []
 };
 
 const AuctionManage: React.FC = () => {
@@ -75,7 +75,7 @@ const AuctionManage: React.FC = () => {
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
     const [settingsForm, setSettingsForm] = useState({
-        title: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false
+        title: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false
     });
     const [slabs, setSlabs] = useState<BidIncrementSlab[]>([]);
     const [newSlab, setNewSlab] = useState({ from: '', increment: '' });
@@ -109,6 +109,7 @@ const AuctionManage: React.FC = () => {
                 if (data.registrationConfig) setRegConfig({ ...DEFAULT_REG_CONFIG, ...data.registrationConfig });
                 setSettingsForm({
                     title: data.title || '', 
+                    season: data.season || '',
                     date: data.date === 'TBD' ? '' : (data.date || ''), 
                     matchesDate: data.matchesDate || '',
                     sport: data.sport || '', 
@@ -423,6 +424,10 @@ const AuctionManage: React.FC = () => {
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Event Name</label>
                                             <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.title} onChange={e => setSettingsForm({...settingsForm, title: e.target.value})} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Season Number</label>
+                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.season || ''} onChange={e => setSettingsForm({...settingsForm, season: e.target.value})} placeholder="e.g. 4" />
                                         </div>
                                         <div>
                                             <div className="flex justify-between items-center mb-2 ml-1">
@@ -923,18 +928,55 @@ const AuctionManage: React.FC = () => {
 
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm space-y-6">
                                         <h3 className="text-[11px] font-black text-blue-500 uppercase tracking-[0.25em] mb-2 flex items-center gap-2">
-                                            <UserCheck className="w-4 h-4"/> Contact Information
+                                            <Phone className="w-4 h-4"/> Organizer Contacts
                                         </h3>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-gray-500 uppercase mb-2">Organizer Contact Number</label>
-                                            <input 
-                                                type="text"
-                                                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 text-xs font-bold text-gray-700 focus:border-blue-400 outline-none transition-all"
-                                                placeholder="e.g. +91 98765 43210"
-                                                value={regConfig.organizerContact || ''}
-                                                onChange={e => setRegConfig({...regConfig, organizerContact: e.target.value})}
-                                            />
-                                            <p className="text-[9px] font-bold text-gray-400 uppercase mt-2 ml-2 tracking-widest">This number will be displayed on the registration form for player inquiries.</p>
+                                        <div className="space-y-4">
+                                            {(regConfig.organizerContacts || []).map((contact, idx) => (
+                                                <div key={idx} className="flex gap-4 items-end bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                                    <div className="flex-1">
+                                                        <label className="block text-[9px] font-black text-gray-400 uppercase mb-1">Name</label>
+                                                        <input 
+                                                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold"
+                                                            value={contact.name}
+                                                            onChange={e => {
+                                                                const newContacts = [...(regConfig.organizerContacts || [])];
+                                                                newContacts[idx].name = e.target.value;
+                                                                setRegConfig({...regConfig, organizerContacts: newContacts});
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <label className="block text-[9px] font-black text-gray-400 uppercase mb-1">Phone</label>
+                                                        <input 
+                                                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold"
+                                                            value={contact.phone}
+                                                            onChange={e => {
+                                                                const newContacts = [...(regConfig.organizerContacts || [])];
+                                                                newContacts[idx].phone = e.target.value;
+                                                                setRegConfig({...regConfig, organizerContacts: newContacts});
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const newContacts = (regConfig.organizerContacts || []).filter((_, i) => i !== idx);
+                                                            setRegConfig({...regConfig, organizerContacts: newContacts});
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <button 
+                                                onClick={() => {
+                                                    const newContacts = [...(regConfig.organizerContacts || []), { name: '', phone: '' }];
+                                                    setRegConfig({...regConfig, organizerContacts: newContacts});
+                                                }}
+                                                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-black text-gray-400 uppercase hover:border-blue-400 hover:text-blue-500 transition-all"
+                                            >
+                                                <Plus className="w-3 h-3 inline mr-1" /> Add Contact
+                                            </button>
                                         </div>
                                     </div>
 

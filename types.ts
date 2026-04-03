@@ -245,6 +245,11 @@ export interface WelcomePopupConfig {
     autoCloseTimer: number; // in seconds
 }
 
+export interface OrganizerContact {
+    name: string;
+    phone: string;
+}
+
 export interface RegistrationConfig {
     isEnabled: boolean;
     includePayment: boolean; 
@@ -264,7 +269,7 @@ export interface RegistrationConfig {
     maxRegistrations?: number;
     rules?: string;
     closedMessage?: string;
-    organizerContact?: string;
+    organizerContacts?: OrganizerContact[];
     enableWaitlist?: boolean;
     waitlistMessage?: string;
     customFields: FormField[];
@@ -273,6 +278,7 @@ export interface RegistrationConfig {
 export interface AuctionSetup {
     id?: string;
     title: string;
+    season?: string;
     sport: string;
     date: string;
     venue?: string;

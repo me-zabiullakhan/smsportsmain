@@ -16,6 +16,7 @@ const CreateAuction: React.FC = () => {
   const [formData, setFormData] = useState({
       sport: '',
       title: '',
+      season: '',
       date: '',
       dateTBD: false,
       plan: '',
@@ -160,6 +161,12 @@ const CreateAuction: React.FC = () => {
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2">2. Auction Name <span className="text-red-500">*</span></label>
                     <input type="text" name="title" required placeholder="e.g. Premier League 2025" value={formData.title} onChange={handleChange}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm font-bold text-gray-700 focus:bg-white outline-none focus:ring-2 ring-blue-500 transition-all"/>
+                </div>
+
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Season Number</label>
+                    <input type="text" name="season" placeholder="e.g. 4" value={formData.season || ''} onChange={handleChange}
                         className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm font-bold text-gray-700 focus:bg-white outline-none focus:ring-2 ring-blue-500 transition-all"/>
                 </div>
 

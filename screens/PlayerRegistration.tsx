@@ -358,10 +358,18 @@ const PlayerRegistration: React.FC = () => {
                             {isAdvaya ? 'Your Warrior ID' : 'Your Player ID'}: <span className={isAdvaya ? 'text-amber-200' : 'text-gray-900'}>{playerID || 'WAR-7782'}</span>
                         </p>
                         
-                        {config?.organizerContact && (
-                            <div className={`p-4 rounded-2xl border flex items-center justify-center gap-3 ${isAdvaya ? 'bg-amber-500/5 border-amber-500/10 text-amber-500/70' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
-                                <Phone className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Organizer: {config.organizerContact}</span>
+                        {(config?.organizerContacts || []).length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Organizer Contacts</p>
+                                {(config?.organizerContacts || []).map((contact, idx) => (
+                                    <div key={idx} className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${isAdvaya ? 'bg-amber-500/5 border-amber-500/10 text-amber-500/70' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <Phone className="w-4 h-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{contact.name}</span>
+                                        </div>
+                                        <span className="text-[10px] font-black tracking-widest">{contact.phone}</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
@@ -499,13 +507,26 @@ const PlayerRegistration: React.FC = () => {
                                         />
                                     )}
                                     
+                                    {auction?.season && (
+                                        <motion.div
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.8, duration: 1 }}
+                                            className="mb-2"
+                                        >
+                                            <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] tracking-[0.3em]">
+                                                SEASON {auction.season}
+                                            </span>
+                                        </motion.div>
+                                    )}
+                                    
                                     <motion.div
                                         initial={{ letterSpacing: "0.8em", opacity: 0 }}
                                         animate={{ letterSpacing: "0.2em", opacity: 1 }}
                                         transition={{ delay: 1, duration: 1.5 }}
                                         className="mb-6"
                                     >
-                                        <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+                                        <h1 className="text-4xl sm:text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
                                             {auction?.title || 'ADVAYA'}
                                         </h1>
                                     </motion.div>
@@ -563,7 +584,7 @@ const PlayerRegistration: React.FC = () => {
                             <h2 className="text-2xl font-black text-amber-500 uppercase tracking-tighter">{auction?.title}</h2>
                             <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-amber-500/20 to-transparent" />
                             <div className="px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <Users className="w-3 h-3" /> {approvedCount} ENROLLED
+                                <Users className="w-3 h-3" /> {approvedCount} {config?.maxRegistrations ? `of ${config.maxRegistrations}` : ''} ENROLLED
                             </div>
                         </motion.div>
 
@@ -601,7 +622,12 @@ const PlayerRegistration: React.FC = () => {
                                         <WarriorDetailCard icon={Clock} title="Matches Date" value={auction?.matchesDate || 'TBD'} description="Tournament schedule" />
                                         <WarriorDetailCard icon={Users} title="Total Teams" value={auction?.totalTeams || '0'} description="Competing squads" />
                                         <WarriorDetailCard icon={MapPin} title="Tournament Venue" value={auction?.venue || 'TBD'} description="Battle ground location" />
-                                        <WarriorDetailCard icon={Phone} title="Organizer" value={config?.organizerContact || 'TBD'} description="Contact for queries" />
+                                        <WarriorDetailCard 
+                                            icon={Phone} 
+                                            title="Organizer" 
+                                            value={(config?.organizerContacts || []).length > 0 ? (config?.organizerContacts || [])[0].name : 'TBD'} 
+                                            description={(config?.organizerContacts || []).length > 0 ? (config?.organizerContacts || [])[0].phone : 'Contact for queries'} 
+                                        />
                                     </div>
                                     <div className="bg-black/40 border-2 border-amber-500/10 rounded-[2.5rem] p-8 mt-12">
                                         <h4 className="text-amber-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
@@ -834,7 +860,17 @@ const PlayerRegistration: React.FC = () => {
                                             <h4 className="text-amber-500 font-black uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
                                                 <Phone className="w-4 h-4" /> Organizer Contact
                                             </h4>
-                                            <p className="text-sm font-black text-amber-100 uppercase tracking-tight">{config?.organizerContact || 'N/A'}</p>
+                                            <div className="space-y-2">
+                                                {(config?.organizerContacts || []).map((contact, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between">
+                                                        <p className="text-sm font-black text-amber-100 uppercase tracking-tight">{contact.name}</p>
+                                                        <p className="text-sm font-black text-amber-500/70 tracking-widest">{contact.phone}</p>
+                                                    </div>
+                                                ))}
+                                                {(config?.organizerContacts || []).length === 0 && (
+                                                    <p className="text-sm font-black text-amber-100 uppercase tracking-tight">N/A</p>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="bg-black/60 border-2 border-amber-900/20 rounded-[2.5rem] p-8">
@@ -1082,7 +1118,7 @@ const PlayerRegistration: React.FC = () => {
                                     <p className="text-[10px] font-black tracking-[0.5em] text-amber-200/60 uppercase">Warrior Registration Protocol</p>
                                     {config?.maxRegistrations > 0 && (
                                         <div className="mt-4 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest">
-                                            <Users className="inline w-3 h-3 mr-2" /> {approvedCount} / {config.maxRegistrations} WARRIORS ENROLLED
+                                            <Users className="inline w-3 h-3 mr-2" /> {approvedCount} {config.maxRegistrations ? `/ ${config.maxRegistrations} WARRIORS ENROLLED` : 'WARRIORS ENROLLED'}
                                         </div>
                                     )}
                                 </div>
@@ -1095,7 +1131,7 @@ const PlayerRegistration: React.FC = () => {
                             <p className="text-[10px] font-bold tracking-[0.4em] mt-2 opacity-60 relative z-10 uppercase">Registry Enrollment Terminal</p>
                             {config?.maxRegistrations > 0 && (
                                 <div className="mt-6 inline-flex items-center px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest relative z-10">
-                                    <Users className="inline w-3 h-3 mr-2" /> {approvedCount} / {config.maxRegistrations} REGISTERED
+                                    <Users className="inline w-3 h-3 mr-2" /> {approvedCount} {config.maxRegistrations ? `/ ${config.maxRegistrations} REGISTERED` : 'REGISTERED'}
                                 </div>
                             )}
                         </>
