@@ -33,14 +33,25 @@ const compressImage = (file: File): Promise<string> => {
 
 const WarriorInput = ({ label, value, onChange, type = "text", required = false, placeholder = "" }: any) => (
     <div className="relative group">
-        <input 
-            type={type}
-            required={required}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
-        />
+        {type === 'textarea' ? (
+            <textarea 
+                required={required}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                rows={4}
+                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer min-h-[120px] resize-none"
+            />
+        ) : (
+            <input 
+                type={type}
+                required={required}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
+            />
+        )}
         <label className="absolute left-6 top-2 text-[10px] font-black uppercase tracking-widest text-amber-500/50 transition-all peer-focus:text-amber-500">
             {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -83,6 +94,20 @@ const PlayerRegistration: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [playerID, setPlayerID] = useState('');
     const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+
+    useEffect(() => {
+        if (!id) return;
+        const unsubscribe = db.collection('registrations')
+            .where('auctionId', '==', id)
+            .where('status', '==', 'APPROVED')
+            .onSnapshot(snapshot => {
+                setApprovedCount(snapshot.size);
+            });
+        return () => unsubscribe();
+    }, [id]);
+
+    const totalSlots = config?.maxRegistrations || 36;
+    const isFull = approvedCount >= totalSlots;
 
     // Captain Registration State
     const [isCaptain, setIsCaptain] = useState<boolean | null>(null);
@@ -268,14 +293,32 @@ const PlayerRegistration: React.FC = () => {
         }
 
         // Check for required basic fields that are not handled by native 'required' attribute
-        if (config?.basicFields?.photo?.required !== false && !profilePic && config?.basicFields?.photo?.show !== false) {
+        const basicFields = config?.basicFields || {
+            name: { show: true, required: true },
+            dob: { show: true, required: true },
+            photo: { show: true, required: true },
+            mobile: { show: true, required: true },
+            gender: { show: true, required: true },
+            role: { show: true, required: true }
+        };
+
+        if (basicFields.photo?.required !== false && !profilePic && basicFields.photo?.show !== false) {
             return alert("Please upload your player photo.");
         }
-        if (config?.basicFields?.gender?.required !== false && !formData.gender && config?.basicFields?.gender?.show !== false) {
+        if (basicFields.gender?.required !== false && !formData.gender && basicFields.gender?.show !== false) {
             return alert("Please select your gender.");
         }
-        if (config?.basicFields?.role?.required !== false && !formData.playerType && config?.basicFields?.role?.show !== false) {
+        if (basicFields.role?.required !== false && !formData.playerType && basicFields.role?.show !== false) {
             return alert("Please select your role.");
+        }
+        if (basicFields.name?.required !== false && !formData.fullName && basicFields.name?.show !== false) {
+            return alert("Please enter your full name.");
+        }
+        if (basicFields.mobile?.required !== false && !formData.mobile && basicFields.mobile?.show !== false) {
+            return alert("Please enter your mobile number.");
+        }
+        if (basicFields.dob?.required !== false && !formData.dob && basicFields.dob?.show !== false) {
+            return alert("Please enter your date of birth.");
         }
 
         if (config?.includePayment) {
@@ -577,13 +620,21 @@ const PlayerRegistration: React.FC = () => {
                                     transition={{ duration: 1, ease: "easeOut" }}
                                 >
                                     {config?.logoUrl && (
-                                        <motion.img 
-                                            initial={{ y: -20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
+                                        <motion.div 
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
                                             transition={{ delay: 0.5, duration: 0.8 }}
-                                            src={config.logoUrl} 
-                                            className="w-48 h-48 mx-auto mb-12 object-contain drop-shadow-[0_0_35px_rgba(251,191,36,0.6)]" 
-                                        />
+                                            className="relative mb-12"
+                                        >
+                                            <div className="absolute inset-0 bg-white rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                                            <div className="relative bg-white p-6 rounded-[3rem] border-4 border-amber-500/30 shadow-[0_0_50px_rgba(251,191,36,0.3)]">
+                                                <img 
+                                                    src={config.logoUrl} 
+                                                    className="w-32 h-32 md:w-48 md:h-48 mx-auto object-contain drop-shadow-2xl" 
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            </div>
+                                        </motion.div>
                                     )}
                                     
                                     {auction?.season && (
@@ -594,11 +645,11 @@ const PlayerRegistration: React.FC = () => {
                                             className="mb-2"
                                         >
                                             {isAdvaya ? (
-                                                <div className="flex items-center justify-center gap-12 mb-8 relative">
+                                                <div className="flex items-center justify-center gap-4 mb-8 relative">
                                                     <motion.span 
                                                         animate={{ y: [-2, 2, -2] }}
                                                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                                        className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]"
+                                                        className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]"
                                                     >
                                                         SEASON
                                                     </motion.span>
@@ -614,7 +665,7 @@ const PlayerRegistration: React.FC = () => {
                                                             repeat: Infinity,
                                                             ease: "easeInOut"
                                                         }}
-                                                        className="text-8xl md:text-[14rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none px-4"
+                                                        className="text-7xl md:text-[12rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none px-4"
                                                     >
                                                         {auction.season}
                                                     </motion.span>
@@ -633,8 +684,8 @@ const PlayerRegistration: React.FC = () => {
                                         transition={{ delay: 1, duration: 1.5 }}
                                         className="mb-6"
                                     >
-                                        <h1 className="text-4xl sm:text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
-                                            {auction?.title || 'ADVAYA'}
+                                        <h1 className="text-5xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+                                            WELCOME
                                         </h1>
                                     </motion.div>
 
@@ -645,7 +696,7 @@ const PlayerRegistration: React.FC = () => {
                                         className="flex items-center justify-center gap-6 mb-12"
                                     >
                                         <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-amber-500/50" />
-                                        <p className="text-sm md:text-lg font-black text-amber-500/70 uppercase tracking-[0.4em]">The Ultimate Battle Awaits</p>
+                                        <p className="text-sm md:text-lg font-black text-amber-500/70 uppercase tracking-[0.4em]">The stage of cricket dreams</p>
                                         <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-amber-500/50" />
                                     </motion.div>
                                     
@@ -653,10 +704,10 @@ const PlayerRegistration: React.FC = () => {
                                         whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(251,191,36,0.5)" }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setBattleStarted(true)}
-                                        className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-16 py-6 rounded-full text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(251,191,36,0.3)] flex items-center gap-6 mx-auto"
+                                        className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-8 py-4 md:px-16 md:py-6 rounded-full text-lg md:text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(251,191,36,0.3)] flex items-center gap-4 md:gap-6 mx-auto"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                        <Sword className="w-8 h-8" /> 
+                                        <Sword className="w-6 h-6 md:w-8 md:h-8" /> 
                                         ENTER TOURNAMENT
                                     </motion.button>
                                 </motion.div>
@@ -727,7 +778,10 @@ const PlayerRegistration: React.FC = () => {
                                     />
                                 </div>
                                 {approvedCount >= config.maxRegistrations && (
-                                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mt-2">All slots are filled. Join the waitlist protocol below.</p>
+                                    <div className="p-6 bg-red-500/10 border-2 border-red-500/20 rounded-[2rem] text-center">
+                                        <p className="text-sm font-black text-red-500 uppercase tracking-widest">Registrations Closed. All slots are filled.</p>
+                                        <p className="text-[10px] font-bold text-red-400/60 uppercase tracking-widest mt-1">Join the waitlist protocol below to be notified of openings.</p>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -753,7 +807,7 @@ const PlayerRegistration: React.FC = () => {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -20, opacity: 0 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
-                            className="min-h-[400px]"
+                            className={`min-h-[400px] ${isFull ? 'opacity-50 pointer-events-none' : ''}`}
                         >
                             {currentStep === 0 && (
                                 <div className="space-y-8">
@@ -893,7 +947,7 @@ const PlayerRegistration: React.FC = () => {
                                         {(!config?.basicFields || config.basicFields.gender?.show !== false) && (
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
-                                                    Gender Identity {(!config?.basicFields || config.basicFields.gender?.required !== false) && <span className="text-red-500">*</span>}
+                                                    Gender Identity {(config?.basicFields?.gender?.required !== false) && <span className="text-red-500">*</span>}
                                                 </label>
                                                 <div className="grid grid-cols-3 gap-4">
                                                     {['Male', 'Female', 'Other'].map(g => (
@@ -913,18 +967,20 @@ const PlayerRegistration: React.FC = () => {
                                         {(!config?.basicFields || config.basicFields.photo?.show !== false) && (
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
-                                                    Warrior Portrait {(!config?.basicFields || config.basicFields.photo?.required !== false) && <span className="text-red-500">*</span>}
+                                                    Warrior Portrait {(config?.basicFields?.photo?.required !== false) && <span className="text-red-500">*</span>}
                                                 </label>
                                                 <div 
                                                     onClick={() => profileInputRef.current?.click()}
                                                     className={`w-full h-48 rounded-[2.5rem] bg-black/40 border-2 border-dashed border-amber-900/30 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden relative group`}
                                                 >
                                                     {profilePic ? (
-                                                        <img src={profilePic} className="w-full h-full object-cover" />
+                                                        <div className="w-full h-full bg-white">
+                                                            <img src={profilePic} className="w-full h-full object-cover" />
+                                                        </div>
                                                     ) : (
                                                         <div className="text-center">
                                                             <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                                                                <Upload className="w-8 h-8 text-amber-500" />
+                                                                 <Upload className="w-8 h-8 text-amber-500" />
                                                             </div>
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/50">Upload Portrait</p>
                                                         </div>
@@ -1005,7 +1061,9 @@ const PlayerRegistration: React.FC = () => {
                                             >
                                                 {field.type === 'select' ? (
                                                     <div className="space-y-4">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">{field.label}</label>
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
+                                                            {field.label} {field.required && <span className="text-red-500">*</span>}
+                                                        </label>
                                                         <div className="flex flex-wrap gap-3">
                                                             {field.options?.map(opt => (
                                                                 <button 
@@ -1022,7 +1080,7 @@ const PlayerRegistration: React.FC = () => {
                                                 ) : (
                                                     <WarriorInput 
                                                         label={field.label} 
-                                                        type={field.type === 'textarea' ? 'text' : field.type}
+                                                        type={field.type}
                                                         value={formData[field.id]} 
                                                         onChange={(e: any) => setFormData({...formData, [field.id]: e.target.value})} 
                                                         required={field.required}
