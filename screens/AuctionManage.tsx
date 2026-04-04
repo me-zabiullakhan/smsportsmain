@@ -112,7 +112,7 @@ const AuctionManage: React.FC = () => {
     // Captain Code State
     const [showCodeModal, setShowCodeModal] = useState(false);
     const [editCode, setEditCode] = useState<Partial<CaptainCode>>({
-        code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCode: '', teamMaxPlayers: 11, teamUsedCount: 0
+        code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCodes: [], teamMaxPlayers: 11, teamUsedCount: 0
     });
 
     useEffect(() => {
@@ -384,7 +384,7 @@ const AuctionManage: React.FC = () => {
             const codeData = {
                 ...editCode,
                 code: editCode.code?.toUpperCase(),
-                teamCode: editCode.teamCode?.toUpperCase(),
+                teamCodes: editCode.teamCodes?.map(tc => ({ ...tc, code: tc.code.toUpperCase() })),
                 updatedAt: Date.now()
             };
             if (editCode.id) {
@@ -398,7 +398,7 @@ const AuctionManage: React.FC = () => {
                 });
             }
             setShowCodeModal(false);
-            setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCode: '', teamMaxPlayers: 11, teamUsedCount: 0 });
+            setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCodes: [], teamMaxPlayers: 11, teamUsedCount: 0 });
         } catch (err: any) { alert("Save failed: " + err.message); }
     };
 
@@ -410,7 +410,13 @@ const AuctionManage: React.FC = () => {
 
     const handleResetCodeUsage = async (codeId: string) => {
         if (window.confirm("Reset usage for this code?")) {
-            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ currentUsage: 0, teamUsedCount: 0 });
+            const code = captainCodes.find(c => c.id === codeId);
+            const resetTeamCodes = code?.teamCodes?.map(tc => ({ ...tc, isUsed: false, usedBy: undefined })) || [];
+            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ 
+                currentUsage: 0, 
+                teamUsedCount: 0,
+                teamCodes: resetTeamCodes
+            });
         }
     };
 
@@ -1407,7 +1413,7 @@ const AuctionManage: React.FC = () => {
                                     <thead className="bg-gray-50 border-b border-gray-100">
                                         <tr>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Code</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Code</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Codes</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Assigned To</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Name</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Usage</th>
@@ -1423,7 +1429,20 @@ const AuctionManage: React.FC = () => {
                                                     <span className="font-mono font-black text-blue-600 text-sm">{code.code}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="font-mono font-black text-amber-600 text-sm">{code.teamCode || '-'}</span>
+                                                    <div className="flex flex-wrap gap-1 max-w-[150px]">
+                                                        {code.teamCodes && code.teamCodes.length > 0 ? (
+                                                            code.teamCodes.slice(0, 3).map((tc, i) => (
+                                                                <span key={i} className={`px-2 py-0.5 rounded text-[8px] font-mono font-black border ${tc.isUsed ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                                                    {tc.code}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-gray-400 text-[10px]">-</span>
+                                                        )}
+                                                        {code.teamCodes && code.teamCodes.length > 3 && (
+                                                            <span className="text-[8px] font-black text-gray-400">+{code.teamCodes.length - 3} more</span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="font-black text-gray-800 text-sm uppercase">{code.assignedTo}</span>
@@ -1581,11 +1600,59 @@ const AuctionManage: React.FC = () => {
                                         <input required type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-blue-600 focus:bg-white focus:border-blue-400 outline-none transition-all uppercase font-mono" value={editCode.code} onChange={e => setEditCode({...editCode, code: e.target.value.toUpperCase()})} placeholder="e.g. CAPTAIN01" />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Code</label>
-                                        <div className="relative">
-                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-amber-600 focus:bg-white focus:border-amber-400 outline-none transition-all uppercase font-mono" value={editCode.teamCode} onChange={e => setEditCode({...editCode, teamCode: e.target.value.toUpperCase()})} placeholder="e.g. TEAM01" />
-                                            <button type="button" onClick={() => setEditCode({...editCode, teamCode: Math.random().toString(36).substring(2, 8).toUpperCase()})} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"><RefreshCw className="w-4 h-4" /></button>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Player Codes</label>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar p-2 bg-gray-50 rounded-xl border border-gray-100">
+                                            {editCode.teamCodes?.map((tc, idx) => (
+                                                <div key={idx} className="flex items-center gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        className={`flex-1 bg-white border rounded-lg px-3 py-1.5 text-xs font-mono font-black uppercase ${tc.isUsed ? 'text-gray-400 border-gray-100' : 'text-amber-600 border-gray-200'}`}
+                                                        value={tc.code}
+                                                        disabled={tc.isUsed}
+                                                        onChange={e => {
+                                                            const newCodes = [...(editCode.teamCodes || [])];
+                                                            newCodes[idx].code = e.target.value.toUpperCase();
+                                                            setEditCode({...editCode, teamCodes: newCodes});
+                                                        }}
+                                                        placeholder="CODE"
+                                                    />
+                                                    {!tc.isUsed && (
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newCodes = editCode.teamCodes?.filter((_, i) => i !== idx);
+                                                                setEditCode({...editCode, teamCodes: newCodes});
+                                                            }}
+                                                            className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <button 
+                                                type="button"
+                                                onClick={() => setEditCode({...editCode, teamCodes: [...(editCode.teamCodes || []), { code: '', isUsed: false }]})}
+                                                className="w-full py-2 border-2 border-dashed border-gray-200 rounded-xl text-[10px] font-black text-gray-400 uppercase hover:border-amber-400 hover:text-amber-500 transition-all"
+                                            >
+                                                + Add Code
+                                            </button>
                                         </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                const prefix = editCode.teamName?.substring(0, 3).toUpperCase() || 'T1';
+                                                const count = editCode.teamMaxPlayers || 11;
+                                                const generated = Array.from({ length: count }, (_, i) => ({
+                                                    code: `${prefix}P${(i + 1).toString().padStart(2, '0')}`,
+                                                    isUsed: false
+                                                }));
+                                                setEditCode({...editCode, teamCodes: generated});
+                                            }}
+                                            className="mt-2 text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline flex items-center gap-1"
+                                        >
+                                            <RefreshCw className="w-3 h-3" /> Auto-Generate {editCode.teamMaxPlayers || 11} Codes
+                                        </button>
                                     </div>
                                 </div>
                                 <div>

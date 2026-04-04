@@ -248,30 +248,40 @@ const PlayerRegistration: React.FC = () => {
         if (!code || !id) return;
         setTeamCodeStatus({ type: 'loading', message: 'Verifying Team Protocol...' });
         try {
-            const snap = await db.collection('auctions').doc(id).collection('captainCodes')
-                .where('teamCode', '==', code.toUpperCase())
-                .get();
+            // Since we have unique codes per player, we need to find the captain code that contains this specific player code
+            const snap = await db.collection('auctions').doc(id).collection('captainCodes').get();
             
-            if (snap.empty) {
+            let foundCodeData: any = null;
+            let specificPlayerCode: any = null;
+
+            snap.docs.forEach(doc => {
+                const data = doc.data() as any;
+                const playerCode = data.teamCodes?.find((tc: any) => tc.code === code.toUpperCase());
+                if (playerCode) {
+                    foundCodeData = { id: doc.id, ...data };
+                    specificPlayerCode = playerCode;
+                }
+            });
+            
+            if (!foundCodeData) {
                 setTeamCodeStatus({ type: 'error', message: 'Invalid Team Code' });
                 setValidatedTeamCode(null);
                 return;
             }
 
-            const codeData = { id: snap.docs[0].id, ...snap.docs[0].data() } as any;
-            
-            if (!codeData.isActive) {
+            if (!foundCodeData.isActive) {
                 setTeamCodeStatus({ type: 'error', message: 'This team code is no longer active' });
                 setValidatedTeamCode(null);
-            } else if ((codeData.teamUsedCount || 0) >= (codeData.teamMaxPlayers || 11)) {
-                setTeamCodeStatus({ type: 'error', message: 'Team limit reached' });
+            } else if (specificPlayerCode.isUsed) {
+                setTeamCodeStatus({ type: 'error', message: 'This specific player code has already been used' });
                 setValidatedTeamCode(null);
             } else {
                 setTeamCodeStatus({ type: 'success', message: 'Team code applied successfully!' });
-                setValidatedTeamCode(codeData);
+                // We store the specific code as well so we know which one to mark as used
+                setValidatedTeamCode({ ...foundCodeData, usedSpecificCode: code.toUpperCase() });
                 // Auto-fill team name if applicable
-                if (codeData.teamName) {
-                    setFormData(prev => ({ ...prev, teamName: codeData.teamName }));
+                if (foundCodeData.teamName) {
+                    setFormData(prev => ({ ...prev, teamName: foundCodeData.teamName }));
                 }
             }
         } catch (err) {
@@ -307,8 +317,15 @@ const PlayerRegistration: React.FC = () => {
 
             // Update Team Code Usage if applicable
             if (hasTeamCode && validatedTeamCode) {
+                const updatedTeamCodes = validatedTeamCode.teamCodes?.map((tc: any) => {
+                    if (tc.code === validatedTeamCode.usedSpecificCode) {
+                        return { ...tc, isUsed: true, usedBy: formData.fullName };
+                    }
+                    return tc;
+                });
                 await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
-                    teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1
+                    teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1,
+                    teamCodes: updatedTeamCodes
                 });
             }
 

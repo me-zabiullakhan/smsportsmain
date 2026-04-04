@@ -239,6 +239,12 @@ export interface FormField {
     placeholder?: string;
 }
 
+export interface TeamPlayerCode {
+    code: string;
+    isUsed: boolean;
+    usedBy?: string;
+}
+
 export interface CaptainCode {
     id?: string;
     code: string;
@@ -248,7 +254,7 @@ export interface CaptainCode {
     currentUsage: number;
     isActive: boolean;
     createdAt: number;
-    teamCode?: string;
+    teamCodes?: TeamPlayerCode[];
     teamMaxPlayers?: number;
     teamUsedCount?: number;
 }
