@@ -699,45 +699,78 @@ const PlayerRegistration: React.FC = () => {
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Establish your presence in the registry</p>
                                     </div>
                                     <div className="space-y-6">
-                                        <WarriorInput label="Warrior Name" value={formData.fullName} onChange={(e: any) => setFormData({...formData, fullName: e.target.value})} placeholder="ENTER FULL NAME" required />
-                                        <WarriorInput label="Mobile Primary" type="tel" value={formData.mobile} onChange={(e: any) => setFormData({...formData, mobile: e.target.value})} placeholder="10 DIGIT NUMBER" required />
-                                        <WarriorInput label="Date of Birth" type="date" value={formData.dob} onChange={(e: any) => setFormData({...formData, dob: e.target.value})} required />
+                                        {(!config?.basicFields || config.basicFields.name?.show !== false) && (
+                                            <WarriorInput 
+                                                label="Warrior Name" 
+                                                value={formData.fullName} 
+                                                onChange={(e: any) => setFormData({...formData, fullName: e.target.value})} 
+                                                placeholder="ENTER FULL NAME" 
+                                                required={!config?.basicFields || config.basicFields.name?.required !== false} 
+                                            />
+                                        )}
+                                        {(!config?.basicFields || config.basicFields.mobile?.show !== false) && (
+                                            <WarriorInput 
+                                                label="Mobile Primary" 
+                                                type="tel" 
+                                                value={formData.mobile} 
+                                                onChange={(e: any) => setFormData({...formData, mobile: e.target.value})} 
+                                                placeholder="10 DIGIT NUMBER" 
+                                                required={!config?.basicFields || config.basicFields.mobile?.required !== false} 
+                                            />
+                                        )}
+                                        {(!config?.basicFields || config.basicFields.dob?.show !== false) && (
+                                            <WarriorInput 
+                                                label="Date of Birth" 
+                                                type="date" 
+                                                value={formData.dob} 
+                                                onChange={(e: any) => setFormData({...formData, dob: e.target.value})} 
+                                                required={!config?.basicFields || config.basicFields.dob?.required !== false} 
+                                            />
+                                        )}
                                         
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">Gender Identity</label>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                {['Male', 'Female', 'Other'].map(g => (
-                                                    <button 
-                                                        key={g} 
-                                                        type="button" 
-                                                        onClick={() => setFormData({...formData, gender: g})} 
-                                                        className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${formData.gender === g ? 'bg-amber-600 border-amber-600 text-black shadow-[0_0_20px_rgba(251,191,36,0.3)]' : 'bg-black/40 border-amber-900/20 text-amber-500/50 hover:border-amber-500/50'}`}
-                                                    >
-                                                        {g}
-                                                    </button>
-                                                ))}
+                                        {(!config?.basicFields || config.basicFields.gender?.show !== false) && (
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
+                                                    Gender Identity {(!config?.basicFields || config.basicFields.gender?.required !== false) && <span className="text-red-500">*</span>}
+                                                </label>
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    {['Male', 'Female', 'Other'].map(g => (
+                                                        <button 
+                                                            key={g} 
+                                                            type="button" 
+                                                            onClick={() => setFormData({...formData, gender: g})} 
+                                                            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${formData.gender === g ? 'bg-amber-600 border-amber-600 text-black shadow-[0_0_20px_rgba(251,191,36,0.3)]' : 'bg-black/40 border-amber-900/20 text-amber-500/50 hover:border-amber-500/50'}`}
+                                                        >
+                                                            {g}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">Warrior Portrait</label>
-                                            <div 
-                                                onClick={() => profileInputRef.current?.click()}
-                                                className={`w-full h-48 rounded-[2.5rem] bg-black/40 border-2 border-dashed border-amber-900/30 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden relative group`}
-                                            >
-                                                {profilePic ? (
-                                                    <img src={profilePic} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="text-center">
-                                                        <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                                                            <Upload className="w-8 h-8 text-amber-500" />
+                                        {(!config?.basicFields || config.basicFields.photo?.show !== false) && (
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
+                                                    Warrior Portrait {(!config?.basicFields || config.basicFields.photo?.required !== false) && <span className="text-red-500">*</span>}
+                                                </label>
+                                                <div 
+                                                    onClick={() => profileInputRef.current?.click()}
+                                                    className={`w-full h-48 rounded-[2.5rem] bg-black/40 border-2 border-dashed border-amber-900/30 flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 transition-all overflow-hidden relative group`}
+                                                >
+                                                    {profilePic ? (
+                                                        <img src={profilePic} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="text-center">
+                                                            <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+                                                                <Upload className="w-8 h-8 text-amber-500" />
+                                                            </div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/50">Upload Portrait</p>
                                                         </div>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/50">Upload Portrait</p>
-                                                    </div>
-                                                )}
-                                                <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setProfilePic(await compressImage(e.target.files[0])); }} />
+                                                    )}
+                                                    <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setProfilePic(await compressImage(e.target.files[0])); }} />
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -748,43 +781,49 @@ const PlayerRegistration: React.FC = () => {
                                         <h3 className="text-3xl font-black text-amber-100 uppercase tracking-tight">Combat Role</h3>
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Select your primary skill on the field</p>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        {roles.length > 0 ? (
-                                            roles.map(r => (
-                                                <motion.button
-                                                    key={r.id}
-                                                    whileHover={{ y: -10 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => setFormData({...formData, playerType: r.name})}
-                                                    className={`relative p-8 rounded-[2.5rem] border-2 transition-all overflow-hidden group ${formData.playerType === r.name ? 'bg-amber-600 border-amber-500 text-black shadow-[0_20px_40px_-10px_rgba(251,191,36,0.4)]' : 'bg-black/60 border-amber-900/20 text-amber-100 hover:border-amber-500/50'}`}
-                                                >
-                                                    {isAdvaya && (
-                                                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
-                                                            <motion.div
-                                                                animate={{ rotate: 360 }}
-                                                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[6px]"
-                                                            />
-                                                            <div className={`absolute inset-[2px] rounded-[inherit] z-0 ${formData.playerType === r.name ? 'bg-amber-600' : 'bg-black/80'}`} />
+                                    {(!config?.basicFields || config.basicFields.role?.show !== false) ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            {roles.length > 0 ? (
+                                                roles.map(r => (
+                                                    <motion.button
+                                                        key={r.id}
+                                                        whileHover={{ y: -10 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        onClick={() => setFormData({...formData, playerType: r.name})}
+                                                        className={`relative p-8 rounded-[2.5rem] border-2 transition-all overflow-hidden group ${formData.playerType === r.name ? 'bg-amber-600 border-amber-500 text-black shadow-[0_20px_40px_-10px_rgba(251,191,36,0.4)]' : 'bg-black/60 border-amber-900/20 text-amber-100 hover:border-amber-500/50'}`}
+                                                    >
+                                                        {isAdvaya && (
+                                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
+                                                                <motion.div
+                                                                    animate={{ rotate: 360 }}
+                                                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                                                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[6px]"
+                                                                />
+                                                                <div className={`absolute inset-[2px] rounded-[inherit] z-0 ${formData.playerType === r.name ? 'bg-amber-600' : 'bg-black/80'}`} />
+                                                            </div>
+                                                        )}
+                                                        <div className="relative z-10">
+                                                            <div className={`absolute top-0 right-0 w-12 h-12 rounded-full flex items-center justify-center ${formData.playerType === r.name ? 'bg-black/20' : 'bg-amber-500/10'}`}>
+                                                                {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                                                            </div>
+                                                            <div className="text-left mt-12">
+                                                                <h4 className={`text-xl font-black uppercase tracking-tight mb-2 ${formData.playerType === r.name ? 'text-black' : 'text-amber-500'}`}>{r.name}</h4>
+                                                                <p className={`text-[9px] font-black uppercase tracking-widest ${formData.playerType === r.name ? 'text-black/60' : 'text-slate-500'}`}>Primary Skillset</p>
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <div className="relative z-10">
-                                                        <div className={`absolute top-0 right-0 w-12 h-12 rounded-full flex items-center justify-center ${formData.playerType === r.name ? 'bg-black/20' : 'bg-amber-500/10'}`}>
-                                                            {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
-                                                        </div>
-                                                        <div className="text-left mt-12">
-                                                            <h4 className={`text-xl font-black uppercase tracking-tight mb-2 ${formData.playerType === r.name ? 'text-black' : 'text-amber-500'}`}>{r.name}</h4>
-                                                            <p className={`text-[9px] font-black uppercase tracking-widest ${formData.playerType === r.name ? 'text-black/60' : 'text-slate-500'}`}>Primary Skillset</p>
-                                                        </div>
-                                                    </div>
-                                                </motion.button>
-                                            ))
-                                        ) : (
-                                            <div className="col-span-full p-12 text-center border-2 border-dashed border-amber-900/20 rounded-[3rem]">
-                                                <p className="text-amber-500/50 font-black uppercase tracking-widest">No roles defined in registry</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                                    </motion.button>
+                                                ))
+                                            ) : (
+                                                <div className="col-span-full p-12 text-center border-2 border-dashed border-amber-900/20 rounded-[3rem]">
+                                                    <p className="text-amber-500/50 font-black uppercase tracking-widest">No roles defined in registry</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="p-12 text-center border-2 border-dashed border-amber-900/20 rounded-[3rem]">
+                                            <p className="text-amber-500/50 font-black uppercase tracking-widest">Combat role selection is hidden</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
