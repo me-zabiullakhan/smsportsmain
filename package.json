@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@remix-run/router": "1.21.0",
+    "@tailwindcss/vite": "^4.2.2",
     "firebase": "^12.5.0",
     "lucide-react": "^0.553.0",
     "motion": "^12.38.0",
@@ -18,6 +19,7 @@
     "react-dom": "^19.2.0",
     "react-router": "6.28.0",
     "react-router-dom": "6.28.0",
+    "tailwindcss": "^4.2.2",
     "xlsx": "0.18.5"
   },
   "devDependencies": {

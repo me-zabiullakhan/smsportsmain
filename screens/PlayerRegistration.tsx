@@ -658,25 +658,29 @@ const PlayerRegistration: React.FC = () => {
     if (isAdvaya) {
         if (!battleStarted) {
             return (
-                <div className="min-h-screen bg-[#0a0a0a] text-amber-50 font-sans overflow-hidden relative">
+                <div className="min-h-screen bg-[#0a0a0a] text-amber-50 font-sans overflow-hidden relative particle-bg">
+                    {/* Glowing Borders */}
+                    <div className="fixed inset-0 border-[12px] border-amber-500/10 pointer-events-none z-50" />
+                    <div className="fixed inset-0 border-[1px] border-amber-500/20 pointer-events-none z-50 m-2" />
+                    
                     {/* Particle Background Simulation */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        {[...Array(20)].map((_, i) => (
+                        {[...Array(30)].map((_, i) => (
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, scale: 0 }}
                                 animate={{ 
-                                    opacity: [0, 0.3, 0],
-                                    scale: [0, 1, 0],
+                                    opacity: [0, 0.4, 0],
+                                    scale: [0, 1.5, 0],
                                     x: [Math.random() * 100 + "%", Math.random() * 100 + "%"],
                                     y: [Math.random() * 100 + "%", Math.random() * 100 + "%"]
                                 }}
                                 transition={{ 
-                                    duration: Math.random() * 5 + 5, 
+                                    duration: Math.random() * 8 + 5, 
                                     repeat: Infinity,
                                     ease: "linear"
                                 }}
-                                className="absolute w-1 h-1 bg-amber-500 rounded-full blur-[1px]"
+                                className="absolute w-1 h-1 bg-amber-400 rounded-full blur-[1px]"
                             />
                         ))}
                     </div>
@@ -710,107 +714,102 @@ const PlayerRegistration: React.FC = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="relative z-10 min-h-screen flex flex-col items-center justify-center text-center p-6"
+                                className="relative z-10 min-h-screen flex flex-col items-center justify-start text-center p-6 pt-12"
                             >
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.1)_0%,transparent_70%)]" />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.08)_0%,transparent_70%)]" />
                                 
-                                <motion.div
-                                    initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                                    transition={{ duration: 1, ease: "easeOut" }}
-                                >
-                                    {config?.logoUrl && (
-                                        <motion.div 
-                                            initial={{ scale: 0.8, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ delay: 0.5, duration: 0.8 }}
-                                            className="relative mb-12"
-                                        >
-                                            <div className="absolute inset-0 bg-white rounded-full blur-3xl opacity-20 animate-pulse"></div>
-                                            <div className="relative bg-white p-6 rounded-[3rem] border-4 border-amber-500/30 shadow-[0_0_50px_rgba(251,191,36,0.3)]">
-                                                <img 
-                                                    src={config.logoUrl} 
-                                                    className="w-32 h-32 md:w-48 md:h-48 mx-auto object-contain drop-shadow-2xl" 
-                                                    referrerPolicy="no-referrer"
-                                                />
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                    
-                                    {auction?.season && (
-                                        <motion.div
-                                            initial={{ y: 20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.8, duration: 1 }}
-                                            className="mb-2"
-                                        >
-                                            {isAdvaya ? (
-                                                <div className="flex items-center justify-center gap-4 mb-8 relative">
-                                                    <motion.span 
-                                                        animate={{ y: [-2, 2, -2] }}
-                                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                                        className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 uppercase tracking-tighter drop-shadow-[0_2px_15px_rgba(251,191,36,0.6)]"
-                                                    >
-                                                        SEASON
-                                                    </motion.span>
-                                                    <motion.span 
-                                                        animate={{ 
-                                                            x: [-5, 5, -5],
-                                                            y: [-3, 3, -3],
-                                                            rotate: [-2, 2, -2],
-                                                            skewX: [-15, -12, -15]
-                                                        }}
-                                                        transition={{ 
-                                                            duration: 4,
-                                                            repeat: Infinity,
-                                                            ease: "easeInOut"
-                                                        }}
-                                                        className="text-7xl md:text-[12rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700 drop-shadow-[0_15px_40px_rgba(251,191,36,0.9)] leading-[0.7] select-none px-4"
-                                                    >
-                                                        {auction.season}
-                                                    </motion.span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] tracking-[0.3em]">
-                                                    SEASON {auction.season}
-                                                </span>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                    
-                                    <motion.div
-                                        initial={{ letterSpacing: "0.8em", opacity: 0 }}
-                                        animate={{ letterSpacing: "0.2em", opacity: 1 }}
-                                        transition={{ delay: 1, duration: 1.5 }}
-                                        className="mb-6"
+                                {/* 1. Logo Placement */}
+                                {config?.logoUrl && (
+                                    <motion.div 
+                                        initial={{ y: -50, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ duration: 1 }}
+                                        className="relative mb-4 z-20"
                                     >
-                                        <h1 className="text-5xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
-                                            WELCOME
-                                        </h1>
+                                        <div className="absolute inset-0 bg-amber-500 rounded-full blur-[60px] opacity-20 animate-pulse"></div>
+                                        <img 
+                                            src={config.logoUrl} 
+                                            className="w-32 h-32 md:w-48 md:h-48 mx-auto object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]" 
+                                            referrerPolicy="no-referrer"
+                                        />
                                     </motion.div>
+                                )}
 
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 1.8, duration: 1 }}
-                                        className="flex items-center justify-center gap-6 mb-12"
-                                    >
-                                        <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-amber-500/50" />
-                                        <p className="text-sm md:text-lg font-black text-amber-500/70 uppercase tracking-[0.4em]">The stage of cricket dreams</p>
-                                        <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-amber-500/50" />
-                                    </motion.div>
-                                    
-                                    <motion.button
-                                        whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(251,191,36,0.5)" }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setBattleStarted(true)}
-                                        className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-8 py-4 md:px-16 md:py-6 rounded-full text-lg md:text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(251,191,36,0.3)] flex items-center gap-4 md:gap-6 mx-auto"
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                        <Sword className="w-6 h-6 md:w-8 md:h-8" /> 
-                                        ENTER TOURNAMENT
-                                    </motion.button>
+                                {/* 2. Tagline Below Logo */}
+                                <motion.p 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="text-amber-500/80 font-inter font-black text-xs md:text-sm uppercase tracking-[0.5em] mb-12"
+                                >
+                                    THE STAGE OF CRICKET DREAMS
+                                </motion.p>
+                                
+                                {/* 3. Main Banner Section */}
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ delay: 0.8, duration: 1 }}
+                                    className="cinematic-frame max-w-4xl w-full p-1 md:p-2 mb-12 group"
+                                >
+                                    <div className="bg-black/90 rounded-[2.8rem] p-8 md:p-12 relative overflow-hidden">
+                                        {/* Stadium Lights Effect */}
+                                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1)_0%,transparent_50%)]" />
+                                        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.1)_0%,transparent_50%)]" />
+                                        
+                                        <div className="relative z-10 space-y-4">
+                                            <h2 className="text-xl md:text-4xl font-bebas font-black golden-text tracking-widest">
+                                                {auction?.title || "BANGALORE BIGBASH LEAGUE 2026"}
+                                            </h2>
+                                            
+                                            <div className="flex flex-col items-center">
+                                                <p className="text-[10px] md:text-xs font-inter font-black text-amber-500/50 uppercase tracking-[0.4em] mb-2">
+                                                    GET READY FOR
+                                                </p>
+                                                <div className="flex items-center justify-center gap-4">
+                                                    <span className="text-4xl md:text-7xl font-cinzel font-black golden-text tracking-tighter">
+                                                        SEASON
+                                                    </span>
+                                                    <span className="text-7xl md:text-[10rem] font-cinzel font-black golden-text leading-none drop-shadow-[0_10px_30px_rgba(251,191,36,0.8)] shine-effect">
+                                                        {auction?.season || "4"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </motion.div>
+
+                                {/* 4. Welcome Section */}
+                                <motion.div
+                                    initial={{ y: 30, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 1.2 }}
+                                    className="space-y-6 mb-12"
+                                >
+                                    <h1 className="text-6xl md:text-9xl font-cinzel font-black golden-text uppercase tracking-tight">
+                                        Welcome
+                                    </h1>
+                                    
+                                    <div className="flex items-center justify-center gap-4 md:gap-8">
+                                        <div className="h-[2px] flex-1 max-w-[100px] bg-gradient-to-r from-transparent via-amber-500/50 to-amber-500" />
+                                        <p className="text-[10px] md:text-sm font-inter font-black text-amber-100 uppercase tracking-[0.3em] whitespace-nowrap">
+                                            JOIN THE BATTLE, CREATE YOUR LEGACY
+                                        </p>
+                                        <div className="h-[2px] flex-1 max-w-[100px] bg-gradient-to-l from-transparent via-amber-500/50 to-amber-500" />
+                                    </div>
+                                </motion.div>
+                                
+                                {/* Enter Button */}
+                                <motion.button
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(251,191,36,0.5)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setBattleStarted(true)}
+                                    className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-12 py-5 md:px-20 md:py-7 rounded-full text-lg md:text-2xl uppercase tracking-[0.2em] transition-all shadow-[0_0_30px_rgba(251,191,36,0.3)] flex items-center gap-4 md:gap-6 mx-auto"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                    <Sword className="w-6 h-6 md:w-8 md:h-8" /> 
+                                    ENTER TOURNAMENT
+                                </motion.button>
                             </motion.div>
                         )}
                     </AnimatePresence>
