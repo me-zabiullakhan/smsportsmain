@@ -856,7 +856,11 @@ const PlayerRegistration: React.FC = () => {
                                     </div>
                                     <div className="text-right">
                                         {approvedCount >= config.maxRegistrations ? (
-                                            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">Registrations Closed</span>
+                                            (isCaptain || hasTeamCode) ? (
+                                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">Protocol Bypass Active</span>
+                                            ) : (
+                                                <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">Registrations Closed</span>
+                                            )
                                         ) : approvedCount > 30 ? (
                                             <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest animate-pulse">Only a few spots left!</span>
                                         ) : approvedCount > 25 ? (
@@ -877,7 +881,7 @@ const PlayerRegistration: React.FC = () => {
                                         }`}
                                     />
                                 </div>
-                                {approvedCount >= config.maxRegistrations && (
+                                {approvedCount >= config.maxRegistrations && !isCaptain && !hasTeamCode && (
                                     <div className="p-6 bg-red-500/10 border-2 border-red-500/20 rounded-[2rem] text-center">
                                         <p className="text-sm font-black text-red-500 uppercase tracking-widest">Registrations Closed. All slots are filled.</p>
                                         <p className="text-[10px] font-bold text-red-400/60 uppercase tracking-widest mt-1">Join the waitlist protocol below to be notified of openings.</p>
@@ -907,7 +911,7 @@ const PlayerRegistration: React.FC = () => {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -20, opacity: 0 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
-                            className={`min-h-[400px] ${isFull ? 'opacity-50 pointer-events-none' : ''}`}
+                            className={`min-h-[400px] ${(isFull && !isCaptain && !hasTeamCode) ? 'opacity-50 pointer-events-none' : ''}`}
                         >
                             {currentStep === 0 && (
                                 <div className="space-y-8">
