@@ -47,6 +47,7 @@ const DEFAULT_REG_CONFIG: RegistrationConfig = {
     includePayment: false,
     paymentMethod: 'MANUAL',
     isPublic: true,
+    hideLandingPage: false,
     fee: 0,
     upiId: '',
     upiName: '',
@@ -691,13 +692,40 @@ const AuctionManage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl px-6 py-3 shadow-sm">
-                                    <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Public Status</label>
+                                    <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Registration Open</label>
                                     <button onClick={() => setRegConfig({...regConfig, isEnabled: !regConfig.isEnabled})} className={`transition-all active:scale-90 ${regConfig.isEnabled ? 'text-blue-600' : 'text-gray-300'}`}>{regConfig.isEnabled ? <ToggleRight className="w-10 h-10"/> : <ToggleLeft className="w-10 h-10"/>}</button>
                                 </div>
                             </div>
 
                             <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-12">
                                 <div className="space-y-8">
+                                    {/* Visibility & Access */}
+                                    <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm space-y-6">
+                                        <h3 className="text-[11px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2 flex items-center gap-2">
+                                            <Eye className="w-4 h-4"/> Visibility & Access
+                                        </h3>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div>
+                                                    <span className="text-[11px] font-black text-gray-700 block uppercase tracking-wide">Show on SM Sports Website</span>
+                                                    <span className="text-[9px] text-gray-400 font-bold uppercase mt-1 block">Make this tournament visible in the public directory</span>
+                                                </div>
+                                                <button onClick={() => setRegConfig({...regConfig, isPublic: !regConfig.isPublic})} className={`transition-all active:scale-90 ${regConfig.isPublic ? 'text-indigo-600' : 'text-gray-300'}`}>
+                                                    {regConfig.isPublic ? <ToggleRight className="w-8 h-8"/> : <ToggleLeft className="w-8 h-8"/>}
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div>
+                                                    <span className="text-[11px] font-black text-gray-700 block uppercase tracking-wide">Hide Landing Page</span>
+                                                    <span className="text-[9px] text-gray-400 font-bold uppercase mt-1 block">Skip "Join the Battle" and show form directly</span>
+                                                </div>
+                                                <button onClick={() => setRegConfig({...regConfig, hideLandingPage: !regConfig.hideLandingPage})} className={`transition-all active:scale-90 ${regConfig.hideLandingPage ? 'text-indigo-600' : 'text-gray-300'}`}>
+                                                    {regConfig.hideLandingPage ? <ToggleRight className="w-8 h-8"/> : <ToggleLeft className="w-8 h-8"/>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Default Fields Display */}
                                     <div className="bg-gray-50 p-6 rounded-[1.5rem] border border-gray-100">
                                         <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">

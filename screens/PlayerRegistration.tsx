@@ -168,6 +168,9 @@ const PlayerRegistration: React.FC = () => {
                         setConfig(regConfig);
                         if (regConfig.theme === 'ADVAYA') {
                             setShowBattleEntrance(true);
+                            if (regConfig.hideLandingPage) {
+                                setBattleStarted(true);
+                            }
                             if (regConfig.bannerUrl) {
                                 setShowPoster(true);
                             }
@@ -656,7 +659,7 @@ const PlayerRegistration: React.FC = () => {
     );
 
     if (isAdvaya) {
-        if (!battleStarted) {
+        if (!battleStarted && !config?.hideLandingPage) {
             return (
                 <div className="min-h-screen bg-[#0a0a0a] text-amber-50 font-sans overflow-hidden relative particle-bg">
                     {/* Glowing Borders */}

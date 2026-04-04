@@ -281,6 +281,7 @@ export interface RegistrationConfig {
     paymentMethod?: 'MANUAL' | 'RAZORPAY';
     razorpayKey?: string;
     isPublic: boolean; 
+    hideLandingPage?: boolean;
     fee: number;
     upiId: string;
     upiName: string;

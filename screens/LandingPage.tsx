@@ -97,8 +97,16 @@ const LandingPage: React.FC = () => {
       const unsubscribe = db.collection('auctions').onSnapshot((snapshot) => {
           const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AuctionSetup));
           data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          const active = data.filter(a => { const s = (a.status || '').toUpperCase(); return s === 'DRAFT' || s === 'LIVE' || s === 'NOT_STARTED' || s === 'IN_PROGRESS'; });
-          const past = data.filter(a => { const s = (a.status || '').toUpperCase(); return s === 'FINISHED' || s === 'COMPLETED'; });
+          const active = data.filter(a => { 
+              const s = (a.status || '').toUpperCase(); 
+              const isPublic = a.registrationConfig?.isPublic !== false;
+              return (s === 'DRAFT' || s === 'LIVE' || s === 'NOT_STARTED' || s === 'IN_PROGRESS') && isPublic; 
+          });
+          const past = data.filter(a => { 
+              const s = (a.status || '').toUpperCase(); 
+              const isPublic = a.registrationConfig?.isPublic !== false;
+              return (s === 'FINISHED' || s === 'COMPLETED') && isPublic; 
+          });
           setUpcomingAuctions(active);
           setPastAuctions(past);
           setLoading(false);
