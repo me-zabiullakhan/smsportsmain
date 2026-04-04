@@ -53,7 +53,15 @@ const DEFAULT_REG_CONFIG: RegistrationConfig = {
     qrCodeUrl: '',
     terms: '1. Registration fee is non-refundable.\n2. Players must reporting 30 mins before match.',
     customFields: [],
-    organizerContacts: []
+    organizerContacts: [],
+    basicFields: {
+        name: { show: true, required: true },
+        dob: { show: true, required: true },
+        photo: { show: true, required: true },
+        mobile: { show: true, required: true },
+        gender: { show: true, required: true },
+        role: { show: true, required: true }
+    }
 };
 
 const AuctionManage: React.FC = () => {
@@ -742,6 +750,59 @@ const AuctionManage: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-8">
+                                    {/* Basic Fields Management */}
+                                    <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
+                                        <h3 className="text-[11px] font-black text-blue-500 uppercase tracking-[0.25em] mb-6 flex items-center gap-2">
+                                            <User className="w-4 h-4"/> Basic Form Fields
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {[
+                                                { id: 'name', label: 'Player Name' },
+                                                { id: 'dob', label: 'Date of Birth' },
+                                                { id: 'photo', label: 'Player Photo' },
+                                                { id: 'mobile', label: 'Mobile Number' },
+                                                { id: 'gender', label: 'Gender' },
+                                                { id: 'role', label: 'Player Role' }
+                                            ].map(field => (
+                                                <div key={field.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase text-gray-800">{field.label}</p>
+                                                        <div className="flex items-center gap-4 mt-2">
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="w-3 h-3 rounded text-blue-600"
+                                                                    checked={regConfig.basicFields?.[field.id as keyof typeof regConfig.basicFields]?.show ?? true}
+                                                                    onChange={e => {
+                                                                        const basicFields = { ...regConfig.basicFields };
+                                                                        // @ts-ignore
+                                                                        basicFields[field.id] = { ...basicFields[field.id], show: e.target.checked };
+                                                                        setRegConfig({ ...regConfig, basicFields: basicFields as any });
+                                                                    }}
+                                                                />
+                                                                <span className="text-[9px] font-bold uppercase text-gray-500">Show</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="w-3 h-3 rounded text-blue-600"
+                                                                    checked={regConfig.basicFields?.[field.id as keyof typeof regConfig.basicFields]?.required ?? true}
+                                                                    onChange={e => {
+                                                                        const basicFields = { ...regConfig.basicFields };
+                                                                        // @ts-ignore
+                                                                        basicFields[field.id] = { ...basicFields[field.id], required: e.target.checked };
+                                                                        setRegConfig({ ...regConfig, basicFields: basicFields as any });
+                                                                    }}
+                                                                />
+                                                                <span className="text-[9px] font-bold uppercase text-gray-500">Required</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     {/* Custom Fields Management */}
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm">
                                         <h3 className="text-[11px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-6 flex items-center gap-2">

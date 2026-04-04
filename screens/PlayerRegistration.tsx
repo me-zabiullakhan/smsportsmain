@@ -211,6 +211,18 @@ const PlayerRegistration: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Check for required basic fields that are not handled by native 'required' attribute
+        if (config?.basicFields?.photo?.required !== false && !profilePic && config?.basicFields?.photo?.show !== false) {
+            return alert("Please upload your player photo.");
+        }
+        if (config?.basicFields?.gender?.required !== false && !formData.gender && config?.basicFields?.gender?.show !== false) {
+            return alert("Please select your gender.");
+        }
+        if (config?.basicFields?.role?.required !== false && !formData.playerType && config?.basicFields?.role?.show !== false) {
+            return alert("Please select your role.");
+        }
+
         if (config?.includePayment) {
             if (config.paymentMethod === 'RAZORPAY') {
                 setSubmitting(true);
@@ -1228,40 +1240,55 @@ const PlayerRegistration: React.FC = () => {
                 <form onSubmit={handleSubmit} className="p-10 space-y-8">
                     <div className="space-y-6">
                         {/* DEFAULT FIELDS */}
-                        <motion.div
-                            initial={isAdvaya ? { x: -20, opacity: 0 } : {}}
-                            animate={isAdvaya ? { x: 0, opacity: 1 } : {}}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>{isAdvaya ? 'Warrior Name' : 'Your Full Name'}</label>
-                            <input required className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder={isAdvaya ? "ENTER WARRIOR NAME" : "Enter your full name"} />
-                        </motion.div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {(!config?.basicFields || config.basicFields.name?.show !== false) && (
                             <motion.div
                                 initial={isAdvaya ? { x: -20, opacity: 0 } : {}}
                                 animate={isAdvaya ? { x: 0, opacity: 1 } : {}}
-                                transition={{ delay: 0.2 }}
+                                transition={{ delay: 0.1 }}
                             >
-                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>{isAdvaya ? 'Mobile Primary' : 'Mobile Number'}</label>
-                                <input required type="tel" className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} placeholder="Enter 10 digit mobile number" />
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                    {isAdvaya ? 'Warrior Name' : 'Your Full Name'} {(!config?.basicFields || config.basicFields.name?.required !== false) && <span className="text-red-500">*</span>}
+                                </label>
+                                <input required={!config?.basicFields || config.basicFields.name?.required !== false} className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder={isAdvaya ? "ENTER WARRIOR NAME" : "Enter your full name"} />
                             </motion.div>
-                            <motion.div
-                                initial={isAdvaya ? { x: 20, opacity: 0 } : {}}
-                                animate={isAdvaya ? { x: 0, opacity: 1 } : {}}
-                                transition={{ delay: 0.2 }}
-                            >
-                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>Date of Birth</label>
-                                <input required type="date" className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
-                            </motion.div>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {(!config?.basicFields || config.basicFields.mobile?.show !== false) && (
+                                <motion.div
+                                    initial={isAdvaya ? { x: -20, opacity: 0 } : {}}
+                                    animate={isAdvaya ? { x: 0, opacity: 1 } : {}}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                        {isAdvaya ? 'Mobile Primary' : 'Mobile Number'} {(!config?.basicFields || config.basicFields.mobile?.required !== false) && <span className="text-red-500">*</span>}
+                                    </label>
+                                    <input required={!config?.basicFields || config.basicFields.mobile?.required !== false} type="tel" className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} placeholder="Enter 10 digit mobile number" />
+                                </motion.div>
+                            )}
+                            {(!config?.basicFields || config.basicFields.dob?.show !== false) && (
+                                <motion.div
+                                    initial={isAdvaya ? { x: 20, opacity: 0 } : {}}
+                                    animate={isAdvaya ? { x: 0, opacity: 1 } : {}}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                        Date of Birth {(!config?.basicFields || config.basicFields.dob?.required !== false) && <span className="text-red-500">*</span>}
+                                    </label>
+                                    <input required={!config?.basicFields || config.basicFields.dob?.required !== false} type="date" className={`w-full rounded-2xl px-6 py-4 font-bold outline-none transition-all ${isAdvaya ? 'bg-black/40 border-2 border-amber-900/30 text-amber-100 focus:border-amber-500' : 'bg-gray-50 border-2 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
+                                </motion.div>
+                            )}
                         </div>
 
+                        {(!config?.basicFields || config.basicFields.gender?.show !== false) && (
                             <motion.div
                                 initial={isAdvaya ? { y: 20, opacity: 0 } : {}}
                                 animate={isAdvaya ? { y: 0, opacity: 1 } : {}}
                                 transition={{ delay: 0.3 }}
                             >
-                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>Gender</label>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                    Gender {(!config?.basicFields || config.basicFields.gender?.required !== false) && <span className="text-red-500">*</span>}
+                                </label>
                                 <div className="flex flex-wrap gap-2.5">
                                     {['Male', 'Female', 'Other'].map(g => (
                                         <button 
@@ -1275,13 +1302,17 @@ const PlayerRegistration: React.FC = () => {
                                     ))}
                                 </div>
                             </motion.div>
+                        )}
 
+                        {(!config?.basicFields || config.basicFields.role?.show !== false) && (
                             <motion.div
                                 initial={isAdvaya ? { y: 20, opacity: 0 } : {}}
                                 animate={isAdvaya ? { y: 0, opacity: 1 } : {}}
                                 transition={{ delay: 0.35 }}
                             >
-                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>Select Your Role</label>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                    Select Your Role {(!config?.basicFields || config.basicFields.role?.required !== false) && <span className="text-red-500">*</span>}
+                                </label>
                                 <div className="flex flex-wrap gap-2.5">
                                     {roles.length > 0 ? (
                                         roles.map(r => (
@@ -1296,6 +1327,7 @@ const PlayerRegistration: React.FC = () => {
                                     )}
                                 </div>
                             </motion.div>
+                        )}
 
                         {/* CUSTOM FIELDS DYNAMIC RENDERING */}
                         {(config?.customFields || []).length > 0 && (
@@ -1352,36 +1384,40 @@ const PlayerRegistration: React.FC = () => {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                            <motion.div
-                                initial={isAdvaya ? { opacity: 0, scale: 0.9 } : {}}
-                                animate={isAdvaya ? { opacity: 1, scale: 1 } : {}}
-                                transition={{ delay: 0.5 }}
-                            >
-                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>{isAdvaya ? 'WARRIOR PORTRAIT' : 'Upload Photo'}</label>
-                                <div onClick={() => profileInputRef.current?.click()} className={`w-full h-48 rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group border-2 border-dashed ${isAdvaya ? 'bg-black/40 border-amber-900/30 hover:border-amber-500' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-blue-400'}`}>
-                                    {isAdvaya && (
-                                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
-                                            <motion.div
-                                                animate={{ rotate: 360 }}
-                                                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                                                className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[8px]"
-                                            />
-                                            <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
-                                        </div>
-                                    )}
-                                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-                                        {profilePic ? (
-                                            <img src={profilePic} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="text-center">
-                                                <Upload className={`w-8 h-8 mx-auto mb-2 ${isAdvaya ? 'text-amber-900' : 'text-gray-300'}`} />
-                                                <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900' : 'text-gray-400'}`}>{isAdvaya ? 'Select Image' : 'Select Photo'}</p>
+                            {(!config?.basicFields || config.basicFields.photo?.show !== false) && (
+                                <motion.div
+                                    initial={isAdvaya ? { opacity: 0, scale: 0.9 } : {}}
+                                    animate={isAdvaya ? { opacity: 1, scale: 1 } : {}}
+                                    transition={{ delay: 0.5 }}
+                                >
+                                    <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ml-1 ${isAdvaya ? 'text-amber-500/70' : 'text-gray-400'}`}>
+                                        {isAdvaya ? 'WARRIOR PORTRAIT' : 'Upload Photo'} {(!config?.basicFields || config.basicFields.photo?.required !== false) && <span className="text-red-500">*</span>}
+                                    </label>
+                                    <div onClick={() => profileInputRef.current?.click()} className={`w-full h-48 rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group border-2 border-dashed ${isAdvaya ? 'bg-black/40 border-amber-900/30 hover:border-amber-500' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-blue-400'}`}>
+                                        {isAdvaya && (
+                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit] z-0">
+                                                <motion.div
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                                                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[8px]"
+                                                />
+                                                <div className="absolute inset-[2px] bg-black/80 rounded-[inherit] z-0" />
                                             </div>
                                         )}
+                                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+                                            {profilePic ? (
+                                                <img src={profilePic} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-center">
+                                                    <Upload className={`w-8 h-8 mx-auto mb-2 ${isAdvaya ? 'text-amber-900' : 'text-gray-300'}`} />
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isAdvaya ? 'text-amber-900' : 'text-gray-400'}`}>{isAdvaya ? 'Select Image' : 'Select Photo'}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setProfilePic(await compressImage(e.target.files[0])); }} />
                                     </div>
-                                    <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={async e => { if (e.target.files?.[0]) setProfilePic(await compressImage(e.target.files[0])); }} />
-                                </div>
-                            </motion.div>
+                                </motion.div>
+                            )}
                             
                             {config?.includePayment && config.paymentMethod === 'MANUAL' && (
                                 <motion.div

@@ -250,6 +250,11 @@ export interface OrganizerContact {
     phone: string;
 }
 
+export interface BasicFieldConfig {
+    show: boolean;
+    required: boolean;
+}
+
 export interface RegistrationConfig {
     isEnabled: boolean;
     includePayment: boolean; 
@@ -273,6 +278,14 @@ export interface RegistrationConfig {
     enableWaitlist?: boolean;
     waitlistMessage?: string;
     customFields: FormField[];
+    basicFields?: {
+        name: BasicFieldConfig;
+        dob: BasicFieldConfig;
+        photo: BasicFieldConfig;
+        mobile: BasicFieldConfig;
+        gender: BasicFieldConfig;
+        role: BasicFieldConfig;
+    };
 }
 
 export interface AuctionSetup {
