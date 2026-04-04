@@ -56,6 +56,20 @@
         "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
         "createdAt": { "type": "number" }
       }
+    },
+    "CaptainCode": {
+      "title": "Captain Code",
+      "description": "Codes for captain registration",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "assignedTo": { "type": "string" },
+        "teamName": { "type": "string" },
+        "usageLimit": { "type": "number" },
+        "currentUsage": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      }
     }
   },
   "firestore": {
@@ -74,6 +88,10 @@
     "/auctions/{auctionId}/registrations/{regId}": {
       "schema": "RegisteredPlayer",
       "description": "Registrations for this auction"
+    },
+    "/auctions/{auctionId}/captainCodes/{codeId}": {
+      "schema": "CaptainCode",
+      "description": "Captain codes for this auction"
     }
   }
 }

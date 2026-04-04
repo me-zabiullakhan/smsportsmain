@@ -84,6 +84,12 @@ const PlayerRegistration: React.FC = () => {
     const [playerID, setPlayerID] = useState('');
     const [waitlistSuccess, setWaitlistSuccess] = useState(false);
 
+    // Captain Registration State
+    const [isCaptain, setIsCaptain] = useState<boolean | null>(null);
+    const [captainCode, setCaptainCode] = useState('');
+    const [codeStatus, setCodeStatus] = useState<{ type: 'success' | 'error' | 'loading' | null, message: string }>({ type: null, message: '' });
+    const [validatedCode, setValidatedCode] = useState<any>(null);
+
     const [formData, setFormData] = useState<any>({
         fullName: '', playerType: '', gender: '', mobile: '', dob: ''
     });
@@ -174,6 +180,41 @@ const PlayerRegistration: React.FC = () => {
         return () => unsubRoles();
     }, [id]);
 
+    const validateCaptainCode = async (code: string) => {
+        if (!code || !id) return;
+        setCodeStatus({ type: 'loading', message: 'Verifying Protocol...' });
+        try {
+            const snap = await db.collection('auctions').doc(id).collection('captainCodes')
+                .where('code', '==', code.toUpperCase())
+                .get();
+            
+            if (snap.empty) {
+                setCodeStatus({ type: 'error', message: 'Invalid Captain Code' });
+                setValidatedCode(null);
+                return;
+            }
+
+            const codeData = { id: snap.docs[0].id, ...snap.docs[0].data() } as any;
+            
+            if (!codeData.isActive) {
+                setCodeStatus({ type: 'error', message: 'This code is inactive' });
+                setValidatedCode(null);
+            } else if (codeData.currentUsage >= codeData.usageLimit) {
+                setCodeStatus({ type: 'error', message: 'This code has already been used' });
+                setValidatedCode(null);
+            } else {
+                setCodeStatus({ type: 'success', message: 'Captain verified successfully!' });
+                setValidatedCode(codeData);
+                // Auto-fill name if assigned
+                if (codeData.assignedTo) {
+                    setFormData(prev => ({ ...prev, fullName: codeData.assignedTo }));
+                }
+            }
+        } catch (err) {
+            setCodeStatus({ type: 'error', message: 'Verification failed' });
+        }
+    };
+
     const submitToFirebase = async (razorpayId?: string) => {
         if (!id) return;
         setSubmitting(true);
@@ -183,11 +224,21 @@ const PlayerRegistration: React.FC = () => {
             const submissionData = {
                 ...formData, profilePic,
                 playerID: generatedID,
+                isCaptain: !!isCaptain,
+                captainCode: isCaptain ? captainCode.toUpperCase() : '',
                 paymentScreenshot: config?.paymentMethod === 'MANUAL' ? paymentScreenshot : '',
                 razorpayPaymentId: razorpayId || '',
                 submittedAt: Date.now(), status: 'PENDING'
             };
             await db.collection('auctions').doc(id).collection('registrations').add(submissionData);
+            
+            // Update Captain Code Usage if applicable
+            if (isCaptain && validatedCode) {
+                await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
+                    currentUsage: (validatedCode.currentUsage || 0) + 1
+                });
+            }
+
             setSuccess(true);
         } catch (e: any) { alert("Error: " + e.message); }
         finally { setSubmitting(false); }
@@ -211,6 +262,10 @@ const PlayerRegistration: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (isCaptain && !validatedCode) {
+            return alert("Please verify a valid captain code first.");
+        }
 
         // Check for required basic fields that are not handled by native 'required' attribute
         if (config?.basicFields?.photo?.required !== false && !profilePic && config?.basicFields?.photo?.show !== false) {
@@ -640,6 +695,43 @@ const PlayerRegistration: React.FC = () => {
                             </div>
                         </motion.div>
 
+                        {/* Slot System UI */}
+                        {config?.maxRegistrations && (
+                            <div className="max-w-2xl mx-auto mb-10 space-y-4">
+                                <div className="flex justify-between items-end mb-2">
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black text-amber-500/50 uppercase tracking-[0.2em]">Registration Progress</p>
+                                        <h4 className="text-xl font-black text-amber-100 uppercase tracking-tight">Slots Filled: {approvedCount}/{config.maxRegistrations}</h4>
+                                    </div>
+                                    <div className="text-right">
+                                        {approvedCount >= config.maxRegistrations ? (
+                                            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">Registrations Closed</span>
+                                        ) : approvedCount > 30 ? (
+                                            <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest animate-pulse">Only a few spots left!</span>
+                                        ) : approvedCount > 25 ? (
+                                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest animate-pulse">Hurry! Slots are filling fast.</span>
+                                        ) : (
+                                            <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Secure your spot now</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 p-0.5">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(100, (approvedCount / config.maxRegistrations) * 100)}%` }}
+                                        className={`h-full rounded-full shadow-[0_0_15px_rgba(251,191,36,0.3)] ${
+                                            approvedCount >= config.maxRegistrations ? 'bg-red-500' :
+                                            approvedCount > 30 ? 'bg-orange-500' :
+                                            'bg-gradient-to-r from-amber-600 to-amber-400'
+                                        }`}
+                                    />
+                                </div>
+                                {approvedCount >= config.maxRegistrations && (
+                                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mt-2">All slots are filled. Join the waitlist protocol below.</p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Progress Tracker */}
                         <div className="flex items-center justify-between gap-2 max-w-2xl mx-auto">
                             {steps.map((step, idx) => (
@@ -699,6 +791,76 @@ const PlayerRegistration: React.FC = () => {
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Establish your presence in the registry</p>
                                     </div>
                                     <div className="space-y-6">
+                                        {/* Captain Option */}
+                                        <div className="bg-amber-500/5 border-2 border-amber-500/10 rounded-3xl p-6 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Leadership Protocol</p>
+                                                    <h4 className="text-sm font-black text-amber-100 uppercase tracking-tight">Are you registering as Captain?</h4>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {[true, false].map(val => (
+                                                        <button 
+                                                            key={val ? 'yes' : 'no'}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setIsCaptain(val);
+                                                                if (!val) {
+                                                                    setCaptainCode('');
+                                                                    setCodeStatus({ type: null, message: '' });
+                                                                    setValidatedCode(null);
+                                                                }
+                                                            }}
+                                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isCaptain === val ? 'bg-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 text-amber-500/50 border border-amber-900/20'}`}
+                                                        >
+                                                            {val ? 'YES' : 'NO'}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {isCaptain && (
+                                                <motion.div 
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    className="pt-4 border-t border-amber-500/10 space-y-4"
+                                                >
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="text"
+                                                            value={captainCode}
+                                                            onChange={e => setCaptainCode(e.target.value.toUpperCase())}
+                                                            placeholder="ENTER CAPTAIN CODE (e.g. ARSLT1)"
+                                                            className="w-full bg-black/60 border-2 border-amber-900/30 rounded-2xl px-6 py-4 font-black text-amber-100 outline-none focus:border-amber-500 uppercase font-mono"
+                                                        />
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => validateCaptainCode(captainCode)}
+                                                            className="absolute right-2 top-2 bottom-2 bg-amber-600 hover:bg-amber-500 text-black px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                        >
+                                                            VERIFY
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Get the captain code from the tournament organizer</p>
+                                                    
+                                                    {codeStatus.type && (
+                                                        <motion.div 
+                                                            initial={{ opacity: 0, y: -10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className={`p-4 rounded-2xl border flex items-center gap-3 ${
+                                                                codeStatus.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
+                                                                codeStatus.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                                                'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                                            }`}
+                                                        >
+                                                            {codeStatus.type === 'success' ? <ShieldCheck className="w-4 h-4" /> : codeStatus.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{codeStatus.message}</span>
+                                                        </motion.div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </div>
+
                                         {(!config?.basicFields || config.basicFields.name?.show !== false) && (
                                             <WarriorInput 
                                                 label="Warrior Name" 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { AuctionSetup, Team, Player, AuctionCategory, Sponsor, PlayerRole, RegistrationConfig, FormField, RegisteredPlayer, BidIncrementSlab } from '../types';
+import { AuctionSetup, Team, Player, AuctionCategory, Sponsor, PlayerRole, RegistrationConfig, FormField, RegisteredPlayer, BidIncrementSlab, CaptainCode } from '../types';
 import { 
     ArrowLeft, Plus, Trash2, Edit, Save, X, Upload, Users, Layers, Trophy, 
     DollarSign, Image as ImageIcon, Briefcase, FileText, Settings, QrCode, 
@@ -68,7 +68,7 @@ const AuctionManage: React.FC = () => {
     const { userProfile } = useAuction();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'SETTINGS' | 'TEAMS' | 'PLAYERS' | 'REQUESTS' | 'CATEGORIES' | 'ROLES' | 'SPONSORS' | 'REGISTRATION' | 'WAITLIST'>('SETTINGS');
+    const [activeTab, setActiveTab] = useState<'SETTINGS' | 'TEAMS' | 'PLAYERS' | 'REQUESTS' | 'CATEGORIES' | 'ROLES' | 'SPONSORS' | 'REGISTRATION' | 'WAITLIST' | 'CAPTAIN_CODES'>('SETTINGS');
     const [loading, setLoading] = useState(true);
     const [auction, setAuction] = useState<AuctionSetup | null>(null);
 
@@ -79,6 +79,7 @@ const AuctionManage: React.FC = () => {
     const [sponsors, setSponsors] = useState<Sponsor[]>([]);
     const [registrations, setRegistrations] = useState<RegisteredPlayer[]>([]);
     const [waitlist, setWaitlist] = useState<any[]>([]);
+    const [captainCodes, setCaptainCodes] = useState<CaptainCode[]>([]);
     
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
@@ -107,6 +108,12 @@ const AuctionManage: React.FC = () => {
     const [showRegModal, setShowRegModal] = useState(false);
     const [selectedReg, setSelectedReg] = useState<RegisteredPlayer | null>(null);
     const [isEditingReg, setIsEditingReg] = useState(false);
+
+    // Captain Code State
+    const [showCodeModal, setShowCodeModal] = useState(false);
+    const [editCode, setEditCode] = useState<Partial<CaptainCode>>({
+        code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true
+    });
 
     useEffect(() => {
         if (!id) return;
@@ -141,9 +148,10 @@ const AuctionManage: React.FC = () => {
         const unsubSponsors = db.collection('auctions').doc(id).collection('sponsors').onSnapshot(s => setSponsors(s.docs.map(d => ({id: d.id, ...d.data()}) as Sponsor)));
         const unsubRegs = db.collection('auctions').doc(id).collection('registrations').onSnapshot(s => setRegistrations(s.docs.map(d => ({id: d.id, ...d.data()}) as RegisteredPlayer)));
         const unsubWaitlist = db.collection('auctions').doc(id).collection('waitlist').onSnapshot(s => setWaitlist(s.docs.map(d => ({id: d.id, ...d.data()}))));
+        const unsubCodes = db.collection('auctions').doc(id).collection('captainCodes').onSnapshot(s => setCaptainCodes(s.docs.map(d => ({id: d.id, ...d.data()}) as CaptainCode)));
 
         return () => {
-            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs(); unsubWaitlist();
+            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs(); unsubWaitlist(); unsubCodes();
         };
     }, [id]);
 
@@ -369,6 +377,36 @@ const AuctionManage: React.FC = () => {
         setOptionInput('');
     };
 
+    const handleSaveCode = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id) return;
+        try {
+            if (editCode.id) {
+                await db.collection('auctions').doc(id).collection('captainCodes').doc(editCode.id).update(editCode);
+            } else {
+                await db.collection('auctions').doc(id).collection('captainCodes').add({
+                    ...editCode,
+                    currentUsage: 0,
+                    createdAt: Date.now()
+                });
+            }
+            setShowCodeModal(false);
+            setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true });
+        } catch (err: any) { alert("Save failed: " + err.message); }
+    };
+
+    const handleDeleteCode = async (codeId: string) => {
+        if (window.confirm("Delete this captain code?")) {
+            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).delete();
+        }
+    };
+
+    const handleResetCodeUsage = async (codeId: string) => {
+        if (window.confirm("Reset usage for this code?")) {
+            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ currentUsage: 0 });
+        }
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]"><Loader2 className="animate-spin text-blue-600"/></div>;
 
     return (
@@ -380,10 +418,10 @@ const AuctionManage: React.FC = () => {
                         <h1 className="text-sm font-black uppercase tracking-widest text-gray-700 truncate max-w-[200px]">{auction?.title}</h1>
                     </div>
                     <div className="flex gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
-                        {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST'].map(tab => (
+                        {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST', 'CAPTAIN_CODES'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
-                                {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab}
+                                {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab === 'CAPTAIN_CODES' ? 'CAPTAIN CODES' : tab}
                             </button>
                         ))}
                     </div>
@@ -1201,7 +1239,12 @@ const AuctionManage: React.FC = () => {
                                                 <img src={reg.profilePic} className="w-full h-full object-cover"/>
                                             </div>
                                             <div>
-                                                <p className="text-lg font-black text-gray-800 uppercase leading-none mb-1">{reg.fullName}</p>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="text-lg font-black text-gray-800 uppercase leading-none">{reg.fullName}</p>
+                                                    {reg.isCaptain && (
+                                                        <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-200">Captain</span>
+                                                    )}
+                                                </div>
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{reg.playerType} • {reg.mobile}</p>
                                             </div>
                                         </div>
@@ -1336,6 +1379,85 @@ const AuctionManage: React.FC = () => {
                         </div>
                     </div>
                 )}
+                {activeTab === 'CAPTAIN_CODES' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Captain Code Management ({captainCodes.length})</h2>
+                            <button onClick={() => { setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true }); setShowCodeModal(true); }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
+                                <Plus className="w-4 h-4"/> Create Code
+                            </button>
+                        </div>
+                        <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Code</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Assigned To</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Name</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Usage</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Status</th>
+                                            <th className="px-6 py-4 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {captainCodes.map(code => (
+                                            <tr key={code.id} className="hover:bg-gray-50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <span className="font-mono font-black text-blue-600 text-sm">{code.code}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="font-black text-gray-800 text-sm uppercase">{code.assignedTo}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{code.teamName || '-'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[10px] font-black text-gray-700 uppercase">{code.currentUsage} / {code.usageLimit}</span>
+                                                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className={`h-full transition-all ${code.currentUsage >= code.usageLimit ? 'bg-red-500' : 'bg-green-500'}`} 
+                                                                style={{ width: `${Math.min(100, (code.currentUsage / code.usageLimit) * 100)}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                                                        !code.isActive ? 'bg-gray-100 text-gray-400 border-gray-200' :
+                                                        code.currentUsage >= code.usageLimit ? 'bg-red-50 text-red-500 border-red-100' :
+                                                        'bg-green-50 text-green-600 border-green-100'
+                                                    }`}>
+                                                        {!code.isActive ? 'INACTIVE' : code.currentUsage >= code.usageLimit ? 'USED' : 'ACTIVE'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleResetCodeUsage(code.id!)} className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg" title="Reset Usage"><RefreshCw className="w-4 h-4"/></button>
+                                                        <button onClick={() => { setEditCode(code); setShowCodeModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit className="w-4 h-4"/></button>
+                                                        <button onClick={() => handleDeleteCode(code.id!)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {captainCodes.length === 0 && (
+                                            <tr>
+                                                <td colSpan={6} className="px-6 py-12 text-center">
+                                                    <div className="max-w-xs mx-auto">
+                                                        <Key className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                                        <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No Captain Codes Established</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Create custom codes to authorize team captains</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {activeTab === 'WAITLIST' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
@@ -1409,6 +1531,50 @@ const AuctionManage: React.FC = () => {
             </main>
 
             {/* MODALS */}
+            {showCodeModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl border border-white/20 animate-scale-in">
+                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-600/20">
+                                    <Key className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{editCode.id ? 'Edit Protocol' : 'New Captain Code'}</h3>
+                            </div>
+                            <button onClick={() => setShowCodeModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all text-gray-400"><X className="w-6 h-6" /></button>
+                        </div>
+                        <form onSubmit={handleSaveCode} className="p-8 space-y-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Captain Code</label>
+                                    <input required type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-blue-600 focus:bg-white focus:border-blue-400 outline-none transition-all uppercase font-mono" value={editCode.code} onChange={e => setEditCode({...editCode, code: e.target.value.toUpperCase()})} placeholder="e.g. CAPTAIN01" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Assigned Captain Name</label>
+                                    <input required type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.assignedTo} onChange={e => setEditCode({...editCode, assignedTo: e.target.value})} placeholder="Enter captain's name" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Name (Optional)</label>
+                                    <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.teamName} onChange={e => setEditCode({...editCode, teamName: e.target.value})} placeholder="Enter team name" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Usage Limit</label>
+                                        <input required type="number" min="1" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.usageLimit} onChange={e => setEditCode({...editCode, usageLimit: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Status</label>
+                                        <button type="button" onClick={() => setEditCode({...editCode, isActive: !editCode.isActive})} className={`w-full py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border-2 ${editCode.isActive ? 'bg-green-50 border-green-100 text-green-600' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+                                            {editCode.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Establish Protocol</button>
+                        </form>
+                    </div>
+                </div>
+            )}
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full overflow-hidden border border-gray-200 animate-slide-up">
@@ -1584,15 +1750,24 @@ const AuctionManage: React.FC = () => {
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Full Name</label>
-                                                {isEditingReg ? (
-                                                    <input 
-                                                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
-                                                        value={selectedReg.fullName}
-                                                        onChange={e => setSelectedReg({...selectedReg, fullName: e.target.value})}
-                                                    />
-                                                ) : (
-                                                    <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.fullName}</p>
-                                                )}
+                                                <div className="flex items-center gap-3">
+                                                    {isEditingReg ? (
+                                                        <input 
+                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
+                                                            value={selectedReg.fullName}
+                                                            onChange={e => setSelectedReg({...selectedReg, fullName: e.target.value})}
+                                                        />
+                                                    ) : (
+                                                        <div className="flex items-center gap-3">
+                                                            <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.fullName}</p>
+                                                            {selectedReg.isCaptain && (
+                                                                <span className="bg-amber-100 text-amber-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-amber-200 flex items-center gap-1">
+                                                                    <ShieldCheck className="w-3 h-3" /> Captain
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Mobile Number</label>

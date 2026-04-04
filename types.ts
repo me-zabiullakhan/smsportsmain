@@ -239,6 +239,17 @@ export interface FormField {
     placeholder?: string;
 }
 
+export interface CaptainCode {
+    id?: string;
+    code: string;
+    assignedTo: string;
+    teamName?: string;
+    usageLimit: number;
+    currentUsage: number;
+    isActive: boolean;
+    createdAt: number;
+}
+
 export interface WelcomePopupConfig {
     isEnabled: boolean;
     message: string;
