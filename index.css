@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Bebas+Neue&family=Inter:wght@400;700;900&family=Playfair+Display:ital,wght@0,900;1,900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-cinzel: "Cinzel", serif;
   --font-bebas: "Bebas Neue", sans-serif;
   --font-inter: "Inter", sans-serif;
+  --font-playfair: "Playfair Display", serif;
 }
 
 @layer components {
@@ -13,40 +14,73 @@
     filter: drop-shadow(0 2px 10px rgba(251, 191, 36, 0.5));
   }
 
-  .golden-glow {
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.2);
+  .bahubali-text {
+    @apply font-cinzel font-black uppercase tracking-[0.2em];
+    background: linear-gradient(to bottom, #fff9e6 0%, #f59e0b 50%, #78350f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
   }
 
-  .golden-border {
-    @apply border-2 border-amber-500/30;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+  .neon-gold-glow {
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4), 
+                0 0 30px rgba(251, 191, 36, 0.2),
+                inset 0 0 15px rgba(251, 191, 36, 0.2);
+    border-color: rgba(251, 191, 36, 0.6);
+  }
+
+  .ornate-bg {
+    background: radial-gradient(circle at center, #3e2711 0%, #1a0f05 50%, #050301 100%);
+    position: relative;
+  }
+
+  .ornate-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .sparkle-overlay {
+    background-image: 
+      radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.3) 1px, transparent 0),
+      radial-gradient(circle at 5px 5px, rgba(251, 191, 36, 0.1) 1.5px, transparent 0);
+    background-size: 40px 40px, 100px 100px;
+    animation: drift 20s linear infinite;
+  }
+
+  @keyframes drift {
+    from { background-position: 0 0; }
+    to { background-position: 100px 100px; }
   }
 
   .cinematic-frame {
-    @apply relative overflow-hidden rounded-[3rem] border-4 border-amber-500/40;
-    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(251, 191, 36, 0.1);
+    @apply relative overflow-hidden rounded-[2.5rem] border-2 border-amber-500/40;
+    background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(45,26,10,0.9) 100%);
   }
 
-  .shine-effect {
-    @apply relative overflow-hidden;
+  .premium-button {
+    @apply relative overflow-hidden bg-gradient-to-b from-amber-400 to-amber-700 text-black font-black uppercase tracking-widest transition-all;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px rgba(251, 191, 36, 0.3);
   }
 
-  .shine-effect::after {
+  .premium-button::before {
     content: "";
-    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent;
-    animation: shine 3s infinite;
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full;
+    transition: transform 0.6s ease-in-out;
   }
 
-  @keyframes shine {
-    0% { transform: translateX(-100%); }
-    20% { transform: translateX(100%); }
-    100% { transform: translateX(100%); }
+  .premium-button:hover::before {
+    @apply translate-x-full;
   }
 
-  .particle-bg {
-    background-image: radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.15) 1px, transparent 0);
-    background-size: 40px 40px;
+  .ornate-corner {
+    @apply absolute w-16 h-16 pointer-events-none opacity-60;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="%23f59e0b" stroke-width="2"><path d="M0 20 V0 H20 M0 40 V0 M40 0 H0 M10 10 L30 30 M5 5 L15 15" stroke-linecap="round"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
   }
 }
 

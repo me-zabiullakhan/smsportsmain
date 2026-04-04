@@ -23,7 +23,7 @@ const compressImage = (file: File): Promise<string> => {
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.9)); 
+                resolve(canvas.toDataURL('image/webp', 0.9)); 
             };
             img.onerror = (err) => reject(err);
         };
@@ -740,7 +740,7 @@ const PlayerRegistration: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.5 }}
-                                    className="text-amber-500/80 font-inter font-black text-xs md:text-sm uppercase tracking-[0.5em] mb-12"
+                                    className="golden-text font-cinzel font-black text-xs md:text-lg uppercase tracking-[0.6em] mb-12"
                                 >
                                     THE STAGE OF CRICKET DREAMS
                                 </motion.p>
@@ -786,28 +786,28 @@ const PlayerRegistration: React.FC = () => {
                                     transition={{ delay: 1.2 }}
                                     className="space-y-6 mb-12"
                                 >
-                                    <h1 className="text-6xl md:text-9xl font-cinzel font-black golden-text uppercase tracking-tight">
+                                    <h1 className="text-6xl md:text-[10rem] font-cinzel font-black golden-text uppercase tracking-tight drop-shadow-[0_10px_30px_rgba(251,191,36,0.5)]">
                                         Welcome
                                     </h1>
                                     
                                     <div className="flex items-center justify-center gap-4 md:gap-8">
-                                        <div className="h-[2px] flex-1 max-w-[100px] bg-gradient-to-r from-transparent via-amber-500/50 to-amber-500" />
-                                        <p className="text-[10px] md:text-sm font-inter font-black text-amber-100 uppercase tracking-[0.3em] whitespace-nowrap">
+                                        <div className="h-[2px] flex-1 max-w-[150px] bg-gradient-to-r from-transparent via-amber-500/50 to-amber-500" />
+                                        <p className="text-[10px] md:text-lg font-inter font-black golden-text uppercase tracking-[0.4em] whitespace-nowrap">
                                             JOIN THE BATTLE, CREATE YOUR LEGACY
                                         </p>
-                                        <div className="h-[2px] flex-1 max-w-[100px] bg-gradient-to-l from-transparent via-amber-500/50 to-amber-500" />
+                                        <div className="h-[2px] flex-1 max-w-[150px] bg-gradient-to-l from-transparent via-amber-500/50 to-amber-500" />
                                     </div>
                                 </motion.div>
                                 
                                 {/* Enter Button */}
                                 <motion.button
-                                    whileHover={{ scale: 1.05, boxShadow: "0 0 50px rgba(251,191,36,0.5)" }}
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 60px rgba(251,191,36,0.6)" }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setBattleStarted(true)}
-                                    className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-12 py-5 md:px-20 md:py-7 rounded-full text-lg md:text-2xl uppercase tracking-[0.2em] transition-all shadow-[0_0_30px_rgba(251,191,36,0.3)] flex items-center gap-4 md:gap-6 mx-auto"
+                                    className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-10 py-5 md:px-24 md:py-8 rounded-full text-lg md:text-3xl uppercase tracking-[0.2em] transition-all shadow-[0_0_40px_rgba(251,191,36,0.4)] flex items-center gap-4 md:gap-8 mx-auto w-full max-w-[320px] md:max-w-none md:w-auto"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                    <Sword className="w-6 h-6 md:w-8 md:h-8" /> 
+                                    <Sword className="w-6 h-6 md:w-10 md:h-10" /> 
                                     ENTER TOURNAMENT
                                 </motion.button>
                             </motion.div>
