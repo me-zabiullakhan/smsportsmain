@@ -211,7 +211,7 @@ const PlayerRegistration: React.FC = () => {
 
     const validateCaptainCode = async (code: string) => {
         if (!code || !id) return;
-        setCodeStatus({ type: 'loading', message: 'Verifying Protocol...' });
+        setCodeStatus({ type: 'loading', message: 'Verifying Code...' });
         try {
             const snap = await db.collection('auctions').doc(id).collection('captainCodes')
                 .where('code', '==', code.toUpperCase())
@@ -246,7 +246,7 @@ const PlayerRegistration: React.FC = () => {
 
     const validateTeamCode = async (code: string) => {
         if (!code || !id) return;
-        setTeamCodeStatus({ type: 'loading', message: 'Verifying Team Protocol...' });
+        setTeamCodeStatus({ type: 'loading', message: 'Verifying Team Code...' });
         try {
             // Since we have unique codes per player, we need to find the captain code that contains this specific player code
             const snap = await db.collection('auctions').doc(id).collection('captainCodes').get();
@@ -458,7 +458,7 @@ const PlayerRegistration: React.FC = () => {
                     {config?.enableWaitlist ? (
                         <form onSubmit={handleWaitlistSubmit} className="space-y-4 text-left">
                             <div className="text-center mb-4">
-                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">Join Waitlist Protocol</p>
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">Join Waitlist</p>
                                 {config?.waitlistMessage && (
                                     <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">
                                         {config.waitlistMessage}
@@ -805,14 +805,14 @@ const PlayerRegistration: React.FC = () => {
                                         <div className="h-[2px] flex-1 max-w-[150px] bg-gradient-to-l from-transparent via-amber-500/50 to-amber-500" />
                                     </div>
                                 </motion.div>
-                                                      {/* Enter Button */}
+                                 {/* Enter Button */}
                                 <motion.button
-                                    whileHover={{ scale: 1.05, boxShadow: "0 0 80px rgba(251,191,36,0.8)" }}
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 100px rgba(251,191,36,1)" }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setBattleStarted(true)}
-                                    className="relative group overflow-hidden bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-cinzel font-black px-10 py-6 md:px-32 md:py-10 rounded-full text-xl md:text-4xl uppercase tracking-[0.2em] transition-all shadow-[0_0_50px_rgba(251,191,36,0.5)] flex items-center justify-center gap-4 md:gap-10 mx-auto w-full max-w-[340px] md:max-w-none md:w-auto border-4 border-amber-200/30"
+                                    className="relative group overflow-hidden bg-amber-400 hover:bg-amber-300 text-black font-cinzel font-black px-10 py-6 md:px-32 md:py-10 rounded-full text-xl md:text-4xl uppercase tracking-[0.2em] transition-all shadow-[0_0_60px_rgba(251,191,36,0.8)] flex items-center justify-center gap-4 md:gap-10 mx-auto w-full max-w-[340px] md:max-w-none md:w-auto border-4 border-amber-200/50"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                     <Sword className="w-8 h-8 md:w-14 md:h-14" /> 
                                     JOIN THE BATTLE
                                 </motion.button>
@@ -862,7 +862,7 @@ const PlayerRegistration: React.FC = () => {
                                     <div className="text-right">
                                         {approvedCount >= config.maxRegistrations ? (
                                             (isCaptain || hasTeamCode) ? (
-                                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">Protocol Bypass Active</span>
+                                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">Priority Access Active</span>
                                             ) : (
                                                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">Registrations Closed</span>
                                             )
@@ -889,7 +889,7 @@ const PlayerRegistration: React.FC = () => {
                                 {approvedCount >= config.maxRegistrations && !isCaptain && !hasTeamCode && (
                                     <div className="p-6 bg-red-500/10 border-2 border-red-500/20 rounded-[2rem] text-center">
                                         <p className="text-sm font-black text-red-500 uppercase tracking-widest">Registrations Closed. All slots are filled.</p>
-                                        <p className="text-[10px] font-bold text-red-400/60 uppercase tracking-widest mt-1">Join the waitlist protocol below to be notified of openings.</p>
+                                        <p className="text-[10px] font-bold text-red-400/60 uppercase tracking-widest mt-1">Join the waitlist below to be notified of openings.</p>
                                     </div>
                                 )}
                             </div>
@@ -922,7 +922,7 @@ const PlayerRegistration: React.FC = () => {
                                 <div className="space-y-8">
                                     <div className="text-center space-y-4 mb-12">
                                         <h3 className="text-3xl font-black text-amber-100 uppercase tracking-tight">Battle Intel</h3>
-                                        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Review the tournament protocols before joining the arena</p>
+                                        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Review the tournament details before joining the arena</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                                         <WarriorDetailCard icon={Calendar} title="Auction Date" value={auction?.date || 'TBD'} description="Player bidding day" />
@@ -958,7 +958,7 @@ const PlayerRegistration: React.FC = () => {
                                         <div className="bg-amber-500/5 border-2 border-amber-500/10 rounded-3xl p-6 space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Leadership Protocol</p>
+                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Captain Registration</p>
                                                     <h4 className="text-sm font-black text-amber-100 uppercase tracking-tight">Are you registering as Captain?</h4>
                                                 </div>
                                                 <div className="flex gap-2">
@@ -1029,7 +1029,7 @@ const PlayerRegistration: React.FC = () => {
                                             <div className="bg-amber-500/5 border-2 border-amber-500/10 rounded-3xl p-6 space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Team Protocol</p>
+                                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Team Registration</p>
                                                         <h4 className="text-sm font-black text-amber-100 uppercase tracking-tight">Do you have a Captain's Team Code?</h4>
                                                     </div>
                                                     <div className="flex gap-2">
@@ -1654,7 +1654,7 @@ const PlayerRegistration: React.FC = () => {
                                     <Shield className="w-8 h-8 text-amber-500" />
                                 </div>
                                 <div className="flex flex-col items-center gap-2">
-                                    <p className="text-[10px] font-black tracking-[0.5em] text-amber-200/60 uppercase">Warrior Registration Protocol</p>
+                                    <p className="text-[10px] font-black tracking-[0.5em] text-amber-200/60 uppercase">Warrior Registration</p>
                                     {config?.maxRegistrations > 0 && (
                                         <div className="mt-4 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest">
                                             <Users className="inline w-3 h-3 mr-2" /> {approvedCount} {config.maxRegistrations ? `/ ${config.maxRegistrations} WARRIORS ENROLLED` : 'WARRIORS ENROLLED'}

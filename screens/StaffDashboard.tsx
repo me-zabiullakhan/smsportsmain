@@ -102,7 +102,7 @@ const StaffDashboard: React.FC = () => {
                 // Locally clear and switch views immediately for UX
                 if (activeTicketId === ticketId) setActiveTicketId(null);
                 setShowResolved(true);
-                alert("Protocol Updated: Ticket status is now RESOLVED.");
+                alert("Ticket status updated to RESOLVED.");
             } catch (err: any) { 
                 console.error("Resolve Error:", err);
                 alert("Failed to update status. Check connectivity."); 

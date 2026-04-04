@@ -165,7 +165,7 @@ const AuctionManage: React.FC = () => {
                 slabs
             };
             await db.collection('auctions').doc(id).update(updateData);
-            alert("Auction Identity Protocols Synced!");
+            alert("Settings Saved Successfully!");
         } catch (e: any) { alert("Save failed: " + e.message); }
     };
 
@@ -173,7 +173,7 @@ const AuctionManage: React.FC = () => {
         if (!id) return;
         try {
             await db.collection('auctions').doc(id).update({ registrationConfig: regConfig });
-            alert("Registration Protocol Deployed!");
+            alert("Registration Settings Saved!");
         } catch (e: any) { alert("Failed: " + e.message); }
     };
 
@@ -701,7 +701,7 @@ const AuctionManage: React.FC = () => {
                                     {/* Default Fields Display */}
                                     <div className="bg-gray-50 p-6 rounded-[1.5rem] border border-gray-100">
                                         <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
-                                            <ListChecks className="w-4 h-4"/> Standard Protocol Fields
+                                            <ListChecks className="w-4 h-4"/> Standard Form Fields
                                         </h3>
                                         <div className="space-y-2">
                                             {['Full Legal Name', 'Mobile Primary', 'Date of Birth', 'Skill Identity (Role)', 'Profile Asset (Photo)', 'Proof of Payment (Conditional)'].map(f => (
@@ -980,7 +980,7 @@ const AuctionManage: React.FC = () => {
 
                                     <div>
                                         <h3 className="text-[11px] font-black text-green-500 uppercase tracking-[0.25em] mb-6 flex items-center gap-2">
-                                            <CheckCircle className="w-4 h-4"/> Success Protocol Message
+                                            <CheckCircle className="w-4 h-4"/> Success Message
                                         </h3>
                                         <textarea 
                                             className="w-full border-2 border-gray-100 rounded-[1.5rem] p-6 text-xs font-bold text-gray-600 h-24 focus:border-green-400 outline-none transition-all shadow-inner bg-gray-50/50"
@@ -1017,7 +1017,7 @@ const AuctionManage: React.FC = () => {
                                         </div>
                                         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                                             <div>
-                                                <label className="block text-[10px] font-black text-gray-500 uppercase">Enable Waitlist Protocol</label>
+                                                <label className="block text-[10px] font-black text-gray-500 uppercase">Enable Waitlist</label>
                                                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Collect names/numbers after slots are full.</p>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
@@ -1101,7 +1101,7 @@ const AuctionManage: React.FC = () => {
                                     <div className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm space-y-6">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-[11px] font-black text-amber-500 uppercase tracking-[0.25em] flex items-center gap-2">
-                                                <Megaphone className="w-4 h-4"/> Welcome Popup Protocol
+                                                <Megaphone className="w-4 h-4"/> Welcome Popup
                                             </h3>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input 
@@ -1168,7 +1168,7 @@ const AuctionManage: React.FC = () => {
                                             <label className="block text-[10px] font-black text-gray-500 uppercase mb-2">Form Theme Style</label>
                                             <div className="flex gap-3">
                                                 {[
-                                                    { id: 'DEFAULT', label: 'Standard Protocol (Clean)' },
+                                                    { id: 'DEFAULT', label: 'Standard (Clean)' },
                                                     { id: 'ADVAYA', label: 'ADVAYA (Kingdom Battle)' }
                                                 ].map(t => (
                                                     <button 
@@ -1217,10 +1217,10 @@ const AuctionManage: React.FC = () => {
                                     <div className="bg-slate-900 p-6 rounded-[2rem] text-white">
                                         <div className="flex items-center gap-3 mb-4">
                                             <Info className="w-5 h-5 text-blue-400"/>
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Protocol Tip</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Quick Tip</span>
                                         </div>
                                         <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-wide">
-                                            Standard protocol fields are mandatory. Use custom fields for tournament-specific data like T-Shirt size or Father's Name.
+                                            Standard form fields are mandatory. Use custom fields for tournament-specific data like T-Shirt size or Father's Name.
                                         </p>
                                     </div>
                                 </div>
@@ -1228,7 +1228,7 @@ const AuctionManage: React.FC = () => {
 
                             <div className="p-10 bg-gray-50 border-t border-gray-100 flex justify-center">
                                 <button onClick={handleSaveRegistration} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-[1.5rem] shadow-2xl shadow-blue-600/30 text-sm uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 group">
-                                    <Save className="w-5 h-5 group-hover:rotate-12 transition-transform" /> Deploy Registry Protocol
+                                    <Save className="w-5 h-5 group-hover:rotate-12 transition-transform" /> Save Settings
                                 </button>
                             </div>
                         </div>
@@ -1593,7 +1593,7 @@ const AuctionManage: React.FC = () => {
                                 <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-600/20">
                                     <Key className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{editCode.id ? 'Edit Protocol' : 'New Captain Code'}</h3>
+                                <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{editCode.id ? 'Edit Code' : 'New Captain Code'}</h3>
                             </div>
                             <button onClick={() => setShowCodeModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all text-gray-400"><X className="w-6 h-6" /></button>
                         </div>
@@ -1685,7 +1685,7 @@ const AuctionManage: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Establish Protocol</button>
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Create Code</button>
                         </form>
                     </div>
                 </div>
@@ -1814,7 +1814,7 @@ const AuctionManage: React.FC = () => {
                                 </div>
                             )}
 
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Save Registry Protocol</button>
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase text-xs tracking-widest active:scale-95">Save Code</button>
                         </form>
                     </div>
                 </div>

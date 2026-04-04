@@ -193,7 +193,7 @@ const AdminDashboard: React.FC = () => {
                       currentClaims: (appliedPromo.currentClaims || 0) + 1
                   });
               }
-              alert("Protocol Authorized! Full Discount Applied.");
+              alert("Full Discount Applied!");
               setSelectedAuctionForUpgrade(null);
           })();
           return;
@@ -263,7 +263,7 @@ const AdminDashboard: React.FC = () => {
                             <div className="flex items-center gap-3">
                                 <AlertTriangle className="text-red-500 w-5 h-5 shrink-0" />
                                 <div>
-                                    <p className="text-xs font-black text-red-800 uppercase">System Notice: Deletion Protocol Scheduled</p>
+                                    <p className="text-xs font-black text-red-800 uppercase">System Notice: Deletion Scheduled</p>
                                     <p className="text-[10px] text-red-600 font-bold uppercase">Auction <b className="text-red-800">"{auction.title}"</b> will be purged in {diffDays} days ({new Date(targetPurge).toLocaleDateString()}).</p>
                                 </div>
                             </div>
@@ -435,7 +435,7 @@ const AdminDashboard: React.FC = () => {
                             </div>
                             <div className="flex-1 text-center md:text-left">
                                 <h5 className="font-black text-sm text-gray-800 uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-2">
-                                    <Clock className="w-4 h-4 text-orange-500" /> Data Retention Protocol
+                                    <Clock className="w-4 h-4 text-orange-500" /> Data Retention Policy
                                 </h5>
                                 <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-2xl">
                                     To maintain optimal system performance, auction data is automatically purged after 30 days of inactivity on Free accounts. 
@@ -455,7 +455,7 @@ const AdminDashboard: React.FC = () => {
   const renderPlans = () => (
       <div className="animate-fade-in">
           <div className="text-center max-w-2xl mx-auto mb-12">
-              <h2 className="text-3xl font-black text-gray-800 tracking-tighter mb-2 uppercase">Subscription Protocols</h2>
+              <h2 className="text-3xl font-black text-gray-800 tracking-tighter mb-2 uppercase">Subscription Plans</h2>
               <p className="text-gray-500 text-sm font-medium">Standardized tiers for small and mid-scale tournaments (Max 15 Teams).</p>
           </div>
 
@@ -519,7 +519,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white relative">
                   <div className="relative z-10">
-                      <h2 className="text-3xl font-black tracking-tighter mb-2 uppercase">Platform Legal Protocol</h2>
+                      <h2 className="text-3xl font-black tracking-tighter mb-2 uppercase">Platform Legal Policy</h2>
                       <p className="text-slate-400 text-sm font-medium">Terms of Service, Privacy & Organizer Guidelines</p>
                   </div>
                   <Book className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 text-white/5" />
@@ -528,7 +528,7 @@ const AdminDashboard: React.FC = () => {
                   {[
                       { icon: <ShieldCheck className="text-emerald-500"/>, title: "Data Protection", desc: "We utilize enterprise-grade encryption for all player data and payment records. We do not sell user data to third-party advertisers." },
                       { icon: <Scale className="text-blue-500"/>, title: "Organizer Liability", desc: "SM SPORTS provides the software environment. Organizers are solely responsible for match scheduling, team disputes, and real-world logistics." },
-                      { icon: <CreditCard className="text-purple-500"/>, title: "Refund Policy", desc: "Protocol upgrades are non-refundable once activated. System credits may be issued in event of verified server downtime exceeding 4 hours." },
+                      { icon: <CreditCard className="text-purple-500"/>, title: "Refund Policy", desc: "Upgrades are non-refundable once activated. System credits may be issued in event of verified server downtime exceeding 4 hours." },
                       { icon: <Info className="text-amber-500"/>, title: "Fair Play", desc: "Any attempt to manipulate the auction logic via automated bots or API vulnerabilities will result in permanent identity termination." }
                   ].map((item, idx) => (
                       <div key={idx} className="flex gap-6">
