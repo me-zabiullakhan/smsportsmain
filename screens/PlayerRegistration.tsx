@@ -740,7 +740,7 @@ const PlayerRegistration: React.FC = () => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.5 }}
-                                    className="golden-text font-cinzel font-black text-xs md:text-lg uppercase tracking-[0.6em] mb-12"
+                                    className="golden-text font-cinzel font-black text-sm md:text-2xl uppercase tracking-[0.6em] mb-12 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]"
                                 >
                                     THE STAGE OF CRICKET DREAMS
                                 </motion.p>
@@ -750,27 +750,34 @@ const PlayerRegistration: React.FC = () => {
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ delay: 0.8, duration: 1 }}
-                                    className="cinematic-frame max-w-4xl w-full p-1 md:p-2 mb-12 group"
+                                    className="cinematic-frame max-w-4xl w-full p-1 md:p-2 mb-12 group shadow-[0_0_60px_rgba(251,191,36,0.3)] border-amber-500/30"
                                 >
-                                    <div className="bg-black/90 rounded-[2.8rem] p-8 md:p-12 relative overflow-hidden">
+                                    <div className="bg-black/95 rounded-[2.8rem] p-8 md:p-16 relative overflow-hidden">
                                         {/* Stadium Lights Effect */}
-                                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1)_0%,transparent_50%)]" />
-                                        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.1)_0%,transparent_50%)]" />
+                                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.15)_0%,transparent_60%)]" />
+                                        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.15)_0%,transparent_60%)]" />
                                         
-                                        <div className="relative z-10 space-y-4">
-                                            <h2 className="text-xl md:text-4xl font-bebas font-black golden-text tracking-widest">
-                                                {auction?.title || "BANGALORE BIGBASH LEAGUE 2026"}
-                                            </h2>
+                                        <div className="relative z-10 space-y-6">
+                                            <div className="space-y-2">
+                                                <h2 className="text-2xl md:text-6xl font-cinzel font-black golden-text tracking-widest drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]">
+                                                    {auction?.title || "BBL 2026"}
+                                                </h2>
+                                                {auction?.fullTournamentName && (
+                                                    <p className="text-xs md:text-xl font-cinzel font-bold golden-text tracking-[0.3em] opacity-80">
+                                                        {auction.fullTournamentName}
+                                                    </p>
+                                                )}
+                                            </div>
                                             
-                                            <div className="flex flex-col items-center">
-                                                <p className="text-[10px] md:text-xs font-inter font-black text-amber-500/50 uppercase tracking-[0.4em] mb-2">
+                                            <div className="flex flex-col items-center pt-4">
+                                                <p className="text-xs md:text-xl font-cinzel font-black golden-text uppercase tracking-[0.5em] mb-4 opacity-70">
                                                     GET READY FOR
                                                 </p>
-                                                <div className="flex items-center justify-center gap-4">
-                                                    <span className="text-4xl md:text-7xl font-cinzel font-black golden-text tracking-tighter">
+                                                <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-8">
+                                                    <span className="text-4xl md:text-8xl font-cinzel font-black golden-text tracking-tighter">
                                                         SEASON
                                                     </span>
-                                                    <span className="text-7xl md:text-[10rem] font-cinzel font-black golden-text leading-none drop-shadow-[0_10px_30px_rgba(251,191,36,0.8)] shine-effect">
+                                                    <span className="text-8xl md:text-[12rem] font-cinzel font-black golden-text leading-none drop-shadow-[0_10px_50px_rgba(251,191,36,0.9)] shine-effect">
                                                         {auction?.season || "4"}
                                                     </span>
                                                 </div>
@@ -792,23 +799,22 @@ const PlayerRegistration: React.FC = () => {
                                     
                                     <div className="flex items-center justify-center gap-4 md:gap-8">
                                         <div className="h-[2px] flex-1 max-w-[150px] bg-gradient-to-r from-transparent via-amber-500/50 to-amber-500" />
-                                        <p className="text-[10px] md:text-lg font-inter font-black golden-text uppercase tracking-[0.4em] whitespace-nowrap">
+                                        <p className="text-[10px] md:text-2xl font-cinzel font-black golden-text uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-[0_0_10px_rgba(251,191,36,0.3)]">
                                             JOIN THE BATTLE, CREATE YOUR LEGACY
                                         </p>
                                         <div className="h-[2px] flex-1 max-w-[150px] bg-gradient-to-l from-transparent via-amber-500/50 to-amber-500" />
                                     </div>
                                 </motion.div>
-                                
-                                {/* Enter Button */}
+                                                      {/* Enter Button */}
                                 <motion.button
-                                    whileHover={{ scale: 1.05, boxShadow: "0 0 60px rgba(251,191,36,0.6)" }}
+                                    whileHover={{ scale: 1.05, boxShadow: "0 0 80px rgba(251,191,36,0.8)" }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setBattleStarted(true)}
-                                    className="relative group overflow-hidden bg-amber-600 hover:bg-amber-500 text-black font-black px-10 py-5 md:px-24 md:py-8 rounded-full text-lg md:text-3xl uppercase tracking-[0.2em] transition-all shadow-[0_0_40px_rgba(251,191,36,0.4)] flex items-center gap-4 md:gap-8 mx-auto w-full max-w-[320px] md:max-w-none md:w-auto"
+                                    className="relative group overflow-hidden bg-gradient-to-b from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-cinzel font-black px-10 py-6 md:px-32 md:py-10 rounded-full text-xl md:text-4xl uppercase tracking-[0.2em] transition-all shadow-[0_0_50px_rgba(251,191,36,0.5)] flex items-center justify-center gap-4 md:gap-10 mx-auto w-full max-w-[340px] md:max-w-none md:w-auto border-4 border-amber-200/30"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                    <Sword className="w-6 h-6 md:w-10 md:h-10" /> 
-                                    ENTER TOURNAMENT
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                    <Sword className="w-8 h-8 md:w-14 md:h-14" /> 
+                                    JOIN THE BATTLE
                                 </motion.button>
                             </motion.div>
                         )}
