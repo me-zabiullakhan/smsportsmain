@@ -111,9 +111,13 @@ const PlayerRegistration: React.FC = () => {
 
     // Captain Registration State
     const [isCaptain, setIsCaptain] = useState<boolean | null>(null);
+    const [hasTeamCode, setHasTeamCode] = useState<boolean | null>(null);
     const [captainCode, setCaptainCode] = useState('');
+    const [teamCode, setTeamCode] = useState('');
     const [codeStatus, setCodeStatus] = useState<{ type: 'success' | 'error' | 'loading' | null, message: string }>({ type: null, message: '' });
+    const [teamCodeStatus, setTeamCodeStatus] = useState<{ type: 'success' | 'error' | 'loading' | null, message: string }>({ type: null, message: '' });
     const [validatedCode, setValidatedCode] = useState<any>(null);
+    const [validatedTeamCode, setValidatedTeamCode] = useState<any>(null);
 
     const [formData, setFormData] = useState<any>({
         fullName: '', playerType: '', gender: '', mobile: '', dob: ''
@@ -240,6 +244,41 @@ const PlayerRegistration: React.FC = () => {
         }
     };
 
+    const validateTeamCode = async (code: string) => {
+        if (!code || !id) return;
+        setTeamCodeStatus({ type: 'loading', message: 'Verifying Team Protocol...' });
+        try {
+            const snap = await db.collection('auctions').doc(id).collection('captainCodes')
+                .where('teamCode', '==', code.toUpperCase())
+                .get();
+            
+            if (snap.empty) {
+                setTeamCodeStatus({ type: 'error', message: 'Invalid Team Code' });
+                setValidatedTeamCode(null);
+                return;
+            }
+
+            const codeData = { id: snap.docs[0].id, ...snap.docs[0].data() } as any;
+            
+            if (!codeData.isActive) {
+                setTeamCodeStatus({ type: 'error', message: 'This team code is no longer active' });
+                setValidatedTeamCode(null);
+            } else if ((codeData.teamUsedCount || 0) >= (codeData.teamMaxPlayers || 11)) {
+                setTeamCodeStatus({ type: 'error', message: 'Team limit reached' });
+                setValidatedTeamCode(null);
+            } else {
+                setTeamCodeStatus({ type: 'success', message: 'Team code applied successfully!' });
+                setValidatedTeamCode(codeData);
+                // Auto-fill team name if applicable
+                if (codeData.teamName) {
+                    setFormData(prev => ({ ...prev, teamName: codeData.teamName }));
+                }
+            }
+        } catch (err) {
+            setTeamCodeStatus({ type: 'error', message: 'Verification failed' });
+        }
+    };
+
     const submitToFirebase = async (razorpayId?: string) => {
         if (!id) return;
         setSubmitting(true);
@@ -251,6 +290,8 @@ const PlayerRegistration: React.FC = () => {
                 playerID: generatedID,
                 isCaptain: !!isCaptain,
                 captainCode: isCaptain ? captainCode.toUpperCase() : '',
+                teamCode: hasTeamCode ? teamCode.toUpperCase() : '',
+                registeredViaCode: (isCaptain && !!validatedCode) || (hasTeamCode && !!validatedTeamCode),
                 paymentScreenshot: config?.paymentMethod === 'MANUAL' ? paymentScreenshot : '',
                 razorpayPaymentId: razorpayId || '',
                 submittedAt: Date.now(), status: 'PENDING'
@@ -261,6 +302,13 @@ const PlayerRegistration: React.FC = () => {
             if (isCaptain && validatedCode) {
                 await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
                     currentUsage: (validatedCode.currentUsage || 0) + 1
+                });
+            }
+
+            // Update Team Code Usage if applicable
+            if (hasTeamCode && validatedTeamCode) {
+                await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
+                    teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1
                 });
             }
 
@@ -290,6 +338,10 @@ const PlayerRegistration: React.FC = () => {
 
         if (isCaptain && !validatedCode) {
             return alert("Please verify a valid captain code first.");
+        }
+
+        if (hasTeamCode && !validatedTeamCode) {
+            return alert("Please verify a valid team code first.");
         }
 
         // Check for required basic fields that are not handled by native 'required' attribute
@@ -367,6 +419,24 @@ const PlayerRegistration: React.FC = () => {
                     <p className="font-bold text-gray-500 uppercase text-xs tracking-widest leading-relaxed mb-8">
                         {config?.closedMessage || "The registration limit has been reached or the form has been closed by the organizer."}
                     </p>
+
+                    <div className="mb-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-3xl text-left">
+                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4">Do you have a code provided by captain?</p>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => { setIsClosed(false); setHasTeamCode(true); }}
+                                className="flex-1 py-3 bg-amber-500 text-black font-black rounded-xl text-[10px] uppercase tracking-widest hover:bg-amber-400 transition-all"
+                            >
+                                Yes, I have code
+                            </button>
+                            <button 
+                                onClick={() => { setIsClosed(false); setIsCaptain(true); }}
+                                className="flex-1 py-3 border-2 border-amber-500/30 text-amber-500 font-black rounded-xl text-[10px] uppercase tracking-widest hover:bg-amber-500/10 transition-all"
+                            >
+                                I am Captain
+                            </button>
+                        </div>
+                    </div>
 
                     {config?.enableWaitlist ? (
                         <form onSubmit={handleWaitlistSubmit} className="space-y-4 text-left">
@@ -454,6 +524,19 @@ const PlayerRegistration: React.FC = () => {
                         {isAdvaya ? 'Warrior Registry Confirmed' : 'Your spot is reserved'}
                     </p>
                     
+                    <div className="flex flex-wrap justify-center gap-2 mb-8">
+                        {isCaptain && (
+                            <div className="px-4 py-2 rounded-xl bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-500/20">
+                                <ShieldCheck className="w-4 h-4" /> Captain 🧑‍✈️
+                            </div>
+                        )}
+                        {hasTeamCode && (
+                            <div className="px-4 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                                <Users className="w-4 h-4" /> Team Player 🏏
+                            </div>
+                        )}
+                    </div>
+
                     <div className={`p-8 rounded-[2rem] mb-8 border-2 ${isAdvaya ? 'bg-black/40 border-amber-500/10' : 'bg-gray-50 border-gray-100'}`}>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
                             {isAdvaya ? 'Registry Status' : 'Registration Status'}
@@ -914,6 +997,78 @@ const PlayerRegistration: React.FC = () => {
                                                 </motion.div>
                                             )}
                                         </div>
+
+                                        {/* Team Code Option */}
+                                        {!isCaptain && (
+                                            <div className="bg-amber-500/5 border-2 border-amber-500/10 rounded-3xl p-6 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Team Protocol</p>
+                                                        <h4 className="text-sm font-black text-amber-100 uppercase tracking-tight">Do you have a Captain's Team Code?</h4>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        {[true, false].map(val => (
+                                                            <button 
+                                                                key={val ? 'yes' : 'no'}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setHasTeamCode(val);
+                                                                    if (!val) {
+                                                                        setTeamCode('');
+                                                                        setTeamCodeStatus({ type: null, message: '' });
+                                                                        setValidatedTeamCode(null);
+                                                                    }
+                                                                }}
+                                                                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${hasTeamCode === val ? 'bg-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 text-amber-500/50 border border-amber-900/20'}`}
+                                                            >
+                                                                {val ? 'YES' : 'NO'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {hasTeamCode && (
+                                                    <motion.div 
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        className="pt-4 border-t border-amber-500/10 space-y-4"
+                                                    >
+                                                        <div className="relative">
+                                                            <input 
+                                                                type="text"
+                                                                value={teamCode}
+                                                                onChange={e => setTeamCode(e.target.value.toUpperCase())}
+                                                                placeholder="ENTER TEAM CODE (e.g. ARSPLAYERS)"
+                                                                className="w-full bg-black/60 border-2 border-amber-900/30 rounded-2xl px-6 py-4 font-black text-amber-100 outline-none focus:border-amber-500 uppercase font-mono"
+                                                            />
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => validateTeamCode(teamCode)}
+                                                                className="absolute right-2 top-2 bottom-2 bg-amber-600 hover:bg-amber-500 text-black px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                            >
+                                                                VERIFY
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Get the team code from your team captain</p>
+                                                        
+                                                        {teamCodeStatus.type && (
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, y: -10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className={`p-4 rounded-2xl border flex items-center gap-3 ${
+                                                                    teamCodeStatus.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
+                                                                    teamCodeStatus.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                                                    'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                                                }`}
+                                                            >
+                                                                {teamCodeStatus.type === 'success' ? <ShieldCheck className="w-4 h-4" /> : teamCodeStatus.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+                                                                <span className="text-[10px] font-black uppercase tracking-widest">{teamCodeStatus.message}</span>
+                                                            </motion.div>
+                                                        )}
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {(!config?.basicFields || config.basicFields.name?.show !== false) && (
                                             <WarriorInput 

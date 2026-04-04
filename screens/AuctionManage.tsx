@@ -112,7 +112,7 @@ const AuctionManage: React.FC = () => {
     // Captain Code State
     const [showCodeModal, setShowCodeModal] = useState(false);
     const [editCode, setEditCode] = useState<Partial<CaptainCode>>({
-        code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true
+        code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCode: '', teamMaxPlayers: 11, teamUsedCount: 0
     });
 
     useEffect(() => {
@@ -381,17 +381,24 @@ const AuctionManage: React.FC = () => {
         e.preventDefault();
         if (!id) return;
         try {
+            const codeData = {
+                ...editCode,
+                code: editCode.code?.toUpperCase(),
+                teamCode: editCode.teamCode?.toUpperCase(),
+                updatedAt: Date.now()
+            };
             if (editCode.id) {
-                await db.collection('auctions').doc(id).collection('captainCodes').doc(editCode.id).update(editCode);
+                await db.collection('auctions').doc(id).collection('captainCodes').doc(editCode.id).update(codeData);
             } else {
                 await db.collection('auctions').doc(id).collection('captainCodes').add({
-                    ...editCode,
+                    ...codeData,
                     currentUsage: 0,
+                    teamUsedCount: 0,
                     createdAt: Date.now()
                 });
             }
             setShowCodeModal(false);
-            setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true });
+            setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCode: '', teamMaxPlayers: 11, teamUsedCount: 0 });
         } catch (err: any) { alert("Save failed: " + err.message); }
     };
 
@@ -403,7 +410,7 @@ const AuctionManage: React.FC = () => {
 
     const handleResetCodeUsage = async (codeId: string) => {
         if (window.confirm("Reset usage for this code?")) {
-            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ currentUsage: 0 });
+            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ currentUsage: 0, teamUsedCount: 0 });
         }
     };
 
@@ -1239,10 +1246,17 @@ const AuctionManage: React.FC = () => {
                                                 <img src={reg.profilePic} className="w-full h-full object-cover"/>
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex flex-wrap items-center gap-2 mb-1">
                                                     <p className="text-lg font-black text-gray-800 uppercase leading-none">{reg.fullName}</p>
                                                     {reg.isCaptain && (
-                                                        <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-200">Captain</span>
+                                                        <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-200 flex items-center gap-1">
+                                                            <ShieldCheck className="w-3 h-3" /> Captain 🧑‍✈️
+                                                        </span>
+                                                    )}
+                                                    {reg.teamCode && (
+                                                        <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-blue-100 flex items-center gap-1">
+                                                            <Users className="w-3 h-3" /> Team Player 🏏
+                                                        </span>
                                                     )}
                                                 </div>
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{reg.playerType} • {reg.mobile}</p>
@@ -1393,10 +1407,12 @@ const AuctionManage: React.FC = () => {
                                     <thead className="bg-gray-50 border-b border-gray-100">
                                         <tr>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Code</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Code</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Assigned To</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Name</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Usage</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Status</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Usage</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Team Usage</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Status</th>
                                             <th className="px-6 py-4 text-right"></th>
                                         </tr>
                                     </thead>
@@ -1405,6 +1421,9 @@ const AuctionManage: React.FC = () => {
                                             <tr key={code.id} className="hover:bg-gray-50 transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <span className="font-mono font-black text-blue-600 text-sm">{code.code}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="font-mono font-black text-amber-600 text-sm">{code.teamCode || '-'}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="font-black text-gray-800 text-sm uppercase">{code.assignedTo}</span>
@@ -1419,6 +1438,17 @@ const AuctionManage: React.FC = () => {
                                                             <div 
                                                                 className={`h-full transition-all ${code.currentUsage >= code.usageLimit ? 'bg-red-500' : 'bg-green-500'}`} 
                                                                 style={{ width: `${Math.min(100, (code.currentUsage / code.usageLimit) * 100)}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[10px] font-black text-gray-700 uppercase">{code.teamUsedCount || 0} / {code.teamMaxPlayers || 11}</span>
+                                                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className={`h-full transition-all ${(code.teamUsedCount || 0) >= (code.teamMaxPlayers || 11) ? 'bg-red-500' : 'bg-amber-500'}`} 
+                                                                style={{ width: `${Math.min(100, ((code.teamUsedCount || 0) / (code.teamMaxPlayers || 11)) * 100)}%` }}
                                                             />
                                                         </div>
                                                     </div>
@@ -1545,9 +1575,18 @@ const AuctionManage: React.FC = () => {
                         </div>
                         <form onSubmit={handleSaveCode} className="p-8 space-y-6">
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Captain Code</label>
-                                    <input required type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-blue-600 focus:bg-white focus:border-blue-400 outline-none transition-all uppercase font-mono" value={editCode.code} onChange={e => setEditCode({...editCode, code: e.target.value.toUpperCase()})} placeholder="e.g. CAPTAIN01" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Captain Code</label>
+                                        <input required type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-blue-600 focus:bg-white focus:border-blue-400 outline-none transition-all uppercase font-mono" value={editCode.code} onChange={e => setEditCode({...editCode, code: e.target.value.toUpperCase()})} placeholder="e.g. CAPTAIN01" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Code</label>
+                                        <div className="relative">
+                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-black text-amber-600 focus:bg-white focus:border-amber-400 outline-none transition-all uppercase font-mono" value={editCode.teamCode} onChange={e => setEditCode({...editCode, teamCode: e.target.value.toUpperCase()})} placeholder="e.g. TEAM01" />
+                                            <button type="button" onClick={() => setEditCode({...editCode, teamCode: Math.random().toString(36).substring(2, 8).toUpperCase()})} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"><RefreshCw className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Assigned Captain Name</label>
@@ -1557,10 +1596,14 @@ const AuctionManage: React.FC = () => {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Name (Optional)</label>
                                     <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.teamName} onChange={e => setEditCode({...editCode, teamName: e.target.value})} placeholder="Enter team name" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Usage Limit</label>
                                         <input required type="number" min="1" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.usageLimit} onChange={e => setEditCode({...editCode, usageLimit: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Team Max</label>
+                                        <input required type="number" min="1" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editCode.teamMaxPlayers} onChange={e => setEditCode({...editCode, teamMaxPlayers: Number(e.target.value)})} />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Status</label>

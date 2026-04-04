@@ -248,6 +248,9 @@ export interface CaptainCode {
     currentUsage: number;
     isActive: boolean;
     createdAt: number;
+    teamCode?: string;
+    teamMaxPlayers?: number;
+    teamUsedCount?: number;
 }
 
 export interface WelcomePopupConfig {
