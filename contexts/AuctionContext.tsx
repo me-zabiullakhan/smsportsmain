@@ -31,7 +31,8 @@ const initialState: AuctionState = {
     adminViewOverride: null,
     maxPlayersPerTeam: 25,
     systemLogoUrl: '',
-    isPaid: false
+    isPaid: false,
+    basePrice: 0
 };
 
 export const AuctionContext = createContext<AuctionContextType | null>(null);

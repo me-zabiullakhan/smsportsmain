@@ -61,6 +61,10 @@ service cloud.firestore {
         (request.auth.token.email == "info.digitalmount@gmail.com" && request.auth.token.email_verified == true);
     }
 
+    function isSuperAdmin() {
+      return isAdmin(); // For now, super admin is the one with the specific email
+    }
+
     function isValidEmail(email) {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
@@ -79,37 +83,43 @@ service cloud.firestore {
 
     match /auctions/{auctionId} {
       allow read: if true; // Publicly readable for registration
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isSuperAdmin();
 
       match /categories/{categoryId} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /players/{playerId} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /teams/{teamId} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /roles/{roleId} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /sponsors/{sponsorId} {
         allow read: if true;
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /registrations/{regId} {
-        allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.email);
+        allow read: if isAdmin() || isSuperAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.email);
         allow create: if true; // Allow anyone to register
-        allow update, delete: if isAdmin();
+        allow update, delete: if isAdmin() || isSuperAdmin();
+      }
+
+      match /captainCodes/{codeId} {
+        allow read: if true;
+        allow update: if true; // Allow incrementing usage count
+        allow write: if isAdmin() || isSuperAdmin();
       }
 
       match /waitlist/{waitId} {
@@ -118,7 +128,38 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    match /promoCodes/{promoId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /systemPopups/{popupId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /globalAssets/{assetId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /systemBroadcasts/{broadcastId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /appConfig/{configId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
     }
   }
 }

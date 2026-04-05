@@ -169,6 +169,7 @@ const AuctionManage: React.FC = () => {
                     date: data.date === 'TBD' ? '' : (data.date || ''), 
                     matchesDate: data.matchesDate || '',
                     sport: data.sport || '', 
+                    venue: data.venue || '',
                     purseValue: data.purseValue || 0,
                     basePrice: data.basePrice || 0, 
                     bidIncrement: data.bidIncrement || 0, 
@@ -490,7 +491,7 @@ const AuctionManage: React.FC = () => {
                         <button onClick={() => navigate('/admin')} className="text-gray-400 hover:text-gray-800 transition-colors p-2 hover:bg-gray-50 rounded-lg"><ArrowLeft className="w-5 h-5"/></button>
                         <h1 className="text-sm font-black uppercase tracking-widest text-gray-700 truncate max-w-[200px]">{auction?.title}</h1>
                     </div>
-                    <div className="flex gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
+                    <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
                         {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST', 'CAPTAIN_CODES'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
@@ -578,6 +579,10 @@ const AuctionManage: React.FC = () => {
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tournament Matches Date</label>
                                             <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.matchesDate} onChange={e => setSettingsForm({...settingsForm, matchesDate: e.target.value})} placeholder="e.g. 10th - 15th April" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tournament Venue</label>
+                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.venue || ''} onChange={e => setSettingsForm({...settingsForm, venue: e.target.value})} placeholder="e.g. Chinnaswamy Stadium" />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Total Teams</label>
@@ -2079,7 +2084,7 @@ const AuctionManage: React.FC = () => {
                                                 )}
                                             </div>
                                         ))}
-                                        {regConfig.customFields.length === 0 && (
+                                        {(regConfig.customFields || []).length === 0 && (
                                             <p className="text-[10px] font-bold text-gray-400 uppercase italic">No custom fields defined</p>
                                         )}
                                     </div>

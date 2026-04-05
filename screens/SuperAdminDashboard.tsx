@@ -66,6 +66,10 @@ const SuperAdminDashboard: React.FC = () => {
     const [promoForm, setPromoForm] = useState<Partial<PromoCode>>({
         code: '', discountType: 'PERCENT', discountValue: 0, maxClaims: 10, expiryDate: Date.now() + 604800000, active: true
     });
+    const [isAddingUser, setIsAddingUser] = useState(false);
+    const [userForm, setUserForm] = useState<Partial<UserProfile>>({
+        email: '', role: UserRole.SUPPORT, plan: 'FREE'
+    });
     const [popups, setPopups] = useState<SystemPopup[]>([]);
     const [isAddingPopup, setIsAddingPopup] = useState(false);
     const [popupForm, setPopupForm] = useState<Partial<SystemPopup>>({
@@ -115,6 +119,64 @@ const SuperAdminDashboard: React.FC = () => {
             else await db.collection('subscriptionPlans').add({ ...planForm, createdAt: Date.now() });
             setIsAddingPlan(false);
             setPlanForm({ id: '', name: '', price: 0, teams: 0 });
+        } catch (e: any) { alert(e.message); }
+        setIsProcessing(false);
+    };
+
+    const handleSavePromo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessing(true);
+        try {
+            await db.collection('promoCodes').add({ 
+                ...promoForm, 
+                createdAt: Date.now(),
+                currentClaims: 0 
+            });
+            setIsAddingPromo(false);
+            setPromoForm({ code: '', discountType: 'PERCENT', discountValue: 0, maxClaims: 10, expiryDate: Date.now() + 604800000, active: true });
+        } catch (e: any) { alert(e.message); }
+        setIsProcessing(false);
+    };
+
+    const handleSaveUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!userForm.email) return;
+        setIsProcessing(true);
+        try {
+            // Note: In a real app, you'd use Firebase Admin SDK to create the user account.
+            // Here we just add the profile to the users collection.
+            // The user will still need to sign up with this email.
+            const q = await db.collection('users').where('email', '==', userForm.email).get();
+            if (!q.empty) {
+                await db.collection('users').doc(q.docs[0].id).update(userForm);
+                alert("Identity Updated.");
+            } else {
+                // Generate a dummy UID if not exists, though normally UID comes from Auth
+                const dummyUid = 'manual_' + Math.random().toString(36).substr(2, 9);
+                await db.collection('users').doc(dummyUid).set({
+                    ...userForm,
+                    createdAt: Date.now()
+                });
+                alert("Identity Created. User must sign in with this email.");
+            }
+            setIsAddingUser(false);
+            setUserForm({ email: '', role: UserRole.SUPPORT, plan: 'FREE' });
+        } catch (e: any) { alert(e.message); }
+        setIsProcessing(false);
+    };
+
+    const handleSavePopup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessing(true);
+        try {
+            await db.collection('systemPopups').add({
+                ...popupForm,
+                imageUrl: popupPreviewImg,
+                createdAt: Date.now()
+            });
+            setIsAddingPopup(false);
+            setPopupForm({ title: '', message: '', showImage: false, showText: true, delaySeconds: 5, okButtonText: 'OK', closeButtonText: 'CLOSE', isActive: true, expiryDate: Date.now() + 86400000 * 7 });
+            setPopupPreviewImg('');
         } catch (e: any) { alert(e.message); }
         setIsProcessing(false);
     };
@@ -218,7 +280,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-black uppercase tracking-tighter">User Registry</h2>
-                            <button className="bg-blue-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2"><Plus className="w-4 h-4"/> ADD IDENTITY</button>
+                            <button onClick={() => setIsAddingUser(true)} className="bg-blue-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2"><Plus className="w-4 h-4"/> ADD IDENTITY</button>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
                             {userRegistry.map(user => (
@@ -285,6 +347,15 @@ const SuperAdminDashboard: React.FC = () => {
                                                     <span className="text-[10px] font-bold text-zinc-400">Lifetime Registry Active</span>
                                                     <button onClick={() => setAuctionEditForm({...auctionEditForm, isLifetime: !auctionEditForm.isLifetime})} className={`w-12 h-6 rounded-full transition-all relative ${auctionEditForm.isLifetime ? 'bg-red-600' : 'bg-zinc-700'}`}>
                                                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${auctionEditForm.isLifetime ? 'left-7' : 'left-1'}`}></div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-2">Subscription Access</label>
+                                                <div className="flex items-center justify-between bg-black/40 p-4 rounded-2xl border border-white/5">
+                                                    <span className="text-[10px] font-bold text-zinc-400">Manual Paid Activation</span>
+                                                    <button onClick={() => setAuctionEditForm({...auctionEditForm, isPaid: !auctionEditForm.isPaid})} className={`w-12 h-6 rounded-full transition-all relative ${auctionEditForm.isPaid ? 'bg-emerald-600' : 'bg-zinc-700'}`}>
+                                                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${auctionEditForm.isPaid ? 'left-7' : 'left-1'}`}></div>
                                                     </button>
                                                 </div>
                                             </div>
@@ -447,7 +518,84 @@ const SuperAdminDashboard: React.FC = () => {
                             <input placeholder="PLAN LABEL" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold uppercase tracking-widest outline-none focus:border-blue-600" value={planForm.name} onChange={e => setPlanForm({...planForm, name: e.target.value})} required />
                             <input type="number" placeholder="UNIT PRICE (₹)" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-blue-600" value={planForm.price} onChange={e => setPlanForm({...planForm, price: Number(e.target.value)})} required />
                             <input type="number" placeholder="MAX NODES (TEAMS)" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-blue-600" value={planForm.teams} onChange={e => setPlanForm({...planForm, teams: Number(e.target.value)})} required />
-                            <button type="submit" className="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95">AUTHORIZE SUBSCRIPTION</button>
+                            <button type="submit" disabled={isProcessing} className="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">AUTHORIZE SUBSCRIPTION</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isAddingPromo && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
+                    <div className="bg-zinc-900 p-10 rounded-[3rem] border border-white/10 w-full max-w-md shadow-[0_0_100px_rgba(16,185,129,0.2)]">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xl font-black uppercase tracking-tighter italic">Promo Protocol</h3>
+                            <button onClick={() => setIsAddingPromo(false)}><XCircle className="w-8 h-8 text-zinc-700 hover:text-white transition-colors"/></button>
+                        </div>
+                        <form onSubmit={handleSavePromo} className="space-y-6">
+                            <input placeholder="PROMO CODE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold uppercase tracking-widest outline-none focus:border-emerald-600" value={promoForm.code} onChange={e => setPromoForm({...promoForm, code: e.target.value.toUpperCase()})} required />
+                            <div className="grid grid-cols-2 gap-4">
+                                <select className="bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.discountType} onChange={e => setPromoForm({...promoForm, discountType: e.target.value as any})}>
+                                    <option value="PERCENT">PERCENTAGE</option>
+                                    <option value="FLAT">FLAT AMOUNT</option>
+                                </select>
+                                <input type="number" placeholder="VALUE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.discountValue} onChange={e => setPromoForm({...promoForm, discountValue: Number(e.target.value)})} required />
+                            </div>
+                            <input type="number" placeholder="MAX CLAIMS" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.maxClaims} onChange={e => setPromoForm({...promoForm, maxClaims: Number(e.target.value)})} required />
+                            <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">GENERATE PROMO</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isAddingUser && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
+                    <div className="bg-zinc-900 p-10 rounded-[3rem] border border-white/10 w-full max-w-md shadow-[0_0_100px_rgba(239,68,68,0.2)]">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xl font-black uppercase tracking-tighter italic">Identity Provisioning</h3>
+                            <button onClick={() => setIsAddingUser(false)}><XCircle className="w-8 h-8 text-zinc-700 hover:text-white transition-colors"/></button>
+                        </div>
+                        <form onSubmit={handleSaveUser} className="space-y-6">
+                            <input type="email" placeholder="USER EMAIL" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})} required />
+                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value as UserRole})}>
+                                <option value={UserRole.SUPPORT}>SUPPORT STAFF</option>
+                                <option value={UserRole.ADMIN}>ADMINISTRATOR</option>
+                                <option value={UserRole.SUPER_ADMIN}>SUPER ADMIN</option>
+                                <option value={UserRole.TEAM_OWNER}>TEAM OWNER</option>
+                            </select>
+                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.plan} onChange={e => setUserForm({...userForm, plan: e.target.value})}>
+                                <option value="FREE">FREE PLAN</option>
+                                <option value="PRO">PRO PLAN</option>
+                                <option value="ULTIMATE">ULTIMATE PLAN</option>
+                            </select>
+                            <button type="submit" disabled={isProcessing} className="w-full bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">PROVISION IDENTITY</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isAddingPopup && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
+                    <div className="bg-zinc-900 p-10 rounded-[3rem] border border-white/10 w-full max-w-lg shadow-[0_0_100px_rgba(59,130,246,0.2)]">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xl font-black uppercase tracking-tighter italic">Alert Deployment</h3>
+                            <button onClick={() => setIsAddingPopup(false)}><XCircle className="w-8 h-8 text-zinc-700 hover:text-white transition-colors"/></button>
+                        </div>
+                        <form onSubmit={handleSavePopup} className="space-y-6">
+                            <input placeholder="ALERT TITLE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold uppercase tracking-widest outline-none focus:border-blue-600" value={popupForm.title} onChange={e => setPopupForm({...popupForm, title: e.target.value})} required />
+                            <textarea placeholder="ALERT MESSAGE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-blue-600 min-h-[100px]" value={popupForm.message} onChange={e => setPopupForm({...popupForm, message: e.target.value})} required />
+                            <div className="flex items-center gap-4">
+                                <button type="button" onClick={() => document.getElementById('popup-img')?.click()} className="flex-1 bg-zinc-800 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <Upload className="w-4 h-4"/> {popupPreviewImg ? 'IMAGE LOADED' : 'ATTACH IMAGE'}
+                                </button>
+                                <input type="file" id="popup-img" className="hidden" accept="image/*" onChange={async (e) => {
+                                    if(e.target.files?.[0]) {
+                                        const base64 = await compressImage(e.target.files[0]);
+                                        setPopupPreviewImg(base64);
+                                        setPopupForm({...popupForm, showImage: true});
+                                    }
+                                }} />
+                            </div>
+                            <button type="submit" disabled={isProcessing} className="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">DEPLOY ALERT</button>
                         </form>
                     </div>
                 </div>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { AuctionSetup, RegistrationConfig, FormField, PlayerRole } from '../types';
-import { Upload, Calendar, CheckCircle, AlertTriangle, ArrowUpCircle, FileText, Home, ArrowLeft, Loader2, CreditCard, QrCode, ShieldCheck, AlignLeft, Sword, Shield, Trophy as TrophyIcon, Zap, Megaphone, Users, XCircle, Phone, MapPin, Clock, Trophy, Share2, ChevronRight, ChevronLeft, User, Info } from 'lucide-react';
+import { Upload, Calendar, CheckCircle, AlertTriangle, ArrowUpCircle, FileText, Home, ArrowLeft, Loader2, CreditCard, QrCode, ShieldCheck, AlignLeft, Sword, Shield, Trophy as TrophyIcon, Zap, Megaphone, Users, XCircle, Phone, MapPin, Clock, Trophy, Share2, ChevronRight, ChevronLeft, User, Info, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import heic2any from 'heic2any';
 
@@ -138,8 +138,7 @@ const PlayerRegistration: React.FC = () => {
 
     useEffect(() => {
         if (!id) return;
-        const unsubscribe = db.collection('registrations')
-            .where('auctionId', '==', id)
+        const unsubscribe = db.collection('auctions').doc(id).collection('registrations')
             .where('status', '==', 'APPROVED')
             .onSnapshot(snapshot => {
                 setApprovedCount(snapshot.size);
@@ -333,6 +332,22 @@ const PlayerRegistration: React.FC = () => {
         }
     };
 
+    const handleFirestoreError = (error: any, operation: string, path: string) => {
+        const errInfo = {
+            error: error.message || String(error),
+            operation,
+            path,
+            authInfo: {
+                userId: auth.currentUser?.uid,
+                email: auth.currentUser?.email,
+                emailVerified: auth.currentUser?.emailVerified,
+                isAnonymous: auth.currentUser?.isAnonymous
+            }
+        };
+        console.error(`Firestore Error [${operation}]:`, JSON.stringify(errInfo));
+        alert(`Error: ${error.message || "Missing or insufficient permissions."}`);
+    };
+
     const submitToFirebase = async (razorpayId?: string) => {
         if (!id) return;
         setSubmitting(true);
@@ -350,31 +365,43 @@ const PlayerRegistration: React.FC = () => {
                 razorpayPaymentId: razorpayId || '',
                 submittedAt: Date.now(), status: 'PENDING'
             };
-            await db.collection('auctions').doc(id).collection('registrations').add(submissionData);
+            
+            const regRef = db.collection('auctions').doc(id).collection('registrations');
+            await regRef.add(submissionData);
             
             // Update Captain Code Usage if applicable
             if (isCaptain && validatedCode) {
-                await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
-                    currentUsage: (validatedCode.currentUsage || 0) + 1
-                });
+                try {
+                    await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
+                        currentUsage: (validatedCode.currentUsage || 0) + 1
+                    });
+                } catch (e) {
+                    console.warn("Could not update captain code usage:", e);
+                }
             }
 
             // Update Team Code Usage if applicable
             if (hasTeamCode && validatedTeamCode) {
-                const updatedTeamCodes = validatedTeamCode.teamCodes?.map((tc: any) => {
-                    if (tc.code === validatedTeamCode.usedSpecificCode) {
-                        return { ...tc, isUsed: true, usedBy: formData.fullName };
-                    }
-                    return tc;
-                });
-                await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
-                    teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1,
-                    teamCodes: updatedTeamCodes
-                });
+                try {
+                    const updatedTeamCodes = validatedTeamCode.teamCodes?.map((tc: any) => {
+                        if (tc.code === validatedTeamCode.usedSpecificCode) {
+                            return { ...tc, isUsed: true, usedBy: formData.fullName };
+                        }
+                        return tc;
+                    });
+                    await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
+                        teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1,
+                        teamCodes: updatedTeamCodes
+                    });
+                } catch (e) {
+                    console.warn("Could not update team code usage:", e);
+                }
             }
 
             setSuccess(true);
-        } catch (e: any) { alert("Error: " + e.message); }
+        } catch (e: any) { 
+            handleFirestoreError(e, 'CREATE_REGISTRATION', `auctions/${id}/registrations`);
+        }
         finally { setSubmitting(false); }
     };
 
@@ -438,7 +465,7 @@ const PlayerRegistration: React.FC = () => {
         });
 
         // Payment
-        if (config?.registrationFee > 0) {
+        if (config?.fee > 0) {
             if (config.paymentMethod === 'MANUAL' && !paymentScreenshot) {
                 missingFields.push("Payment Proof/Screenshot");
             }
@@ -456,7 +483,7 @@ const PlayerRegistration: React.FC = () => {
         setSubmitting(true);
         
         // Handle Razorpay if enabled
-        if (config?.registrationFee > 0 && config.paymentMethod === 'RAZORPAY') {
+        if (config?.fee > 0 && config.paymentMethod === 'RAZORPAY') {
             handleRazorpayModal();
             return;
         }
@@ -969,14 +996,18 @@ const PlayerRegistration: React.FC = () => {
                         )}
 
                         {/* Progress Tracker */}
-                        <div className="flex items-center justify-between gap-2 max-w-2xl mx-auto">
+                        <div className="flex items-center justify-between gap-2 max-w-2xl mx-auto mb-8 overflow-x-auto no-scrollbar pb-2">
                             {steps.map((step, idx) => (
-                                <div key={step.id} className="flex-1 flex flex-col items-center gap-2">
-                                    <div className={`h-1 w-full rounded-full transition-all duration-500 ${idx <= currentStep ? 'bg-amber-500 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-white/10'}`} />
-                                    <span className={`text-[8px] font-black uppercase tracking-widest transition-colors ${idx === currentStep ? 'text-amber-500' : 'text-white/20'}`}>
+                                <button 
+                                    key={step.id} 
+                                    onClick={() => setCurrentStep(idx)}
+                                    className="flex-1 flex flex-col items-center gap-2 min-w-[80px] group transition-all"
+                                >
+                                    <div className={`h-1 w-full rounded-full transition-all duration-500 ${idx <= currentStep ? 'bg-amber-500 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-white/10 group-hover:bg-white/20'}`} />
+                                    <span className={`text-[8px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${idx === currentStep ? 'text-amber-500' : 'text-white/20 group-hover:text-white/40'}`}>
                                         {step.label}
                                     </span>
-                                </div>
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -1169,32 +1200,32 @@ const PlayerRegistration: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {(!config?.basicFields || config.basicFields.name?.show !== false) && (
+                                        {(!config?.basicFields || config?.basicFields?.name?.show !== false) && (
                                             <WarriorInput 
                                                 label="Warrior Name" 
                                                 value={formData.fullName} 
                                                 onChange={(e: any) => setFormData({...formData, fullName: e.target.value})} 
                                                 placeholder="ENTER FULL NAME" 
-                                                required={!config?.basicFields || config.basicFields.name?.required !== false} 
+                                                required={!config?.basicFields || config?.basicFields?.name?.required !== false} 
                                             />
                                         )}
-                                        {(!config?.basicFields || config.basicFields.mobile?.show !== false) && (
+                                        {(!config?.basicFields || config?.basicFields?.mobile?.show !== false) && (
                                             <WarriorInput 
                                                 label="Mobile Primary" 
                                                 type="tel" 
                                                 value={formData.mobile} 
                                                 onChange={(e: any) => setFormData({...formData, mobile: e.target.value})} 
                                                 placeholder="10 DIGIT NUMBER" 
-                                                required={!config?.basicFields || config.basicFields.mobile?.required !== false} 
+                                                required={!config?.basicFields || config?.basicFields?.mobile?.required !== false} 
                                             />
                                         )}
-                                        {(!config?.basicFields || config.basicFields.dob?.show !== false) && (
+                                        {(!config?.basicFields || config?.basicFields?.dob?.show !== false) && (
                                             <WarriorInput 
                                                 label="Date of Birth" 
                                                 type="date" 
                                                 value={formData.dob} 
                                                 onChange={(e: any) => setFormData({...formData, dob: e.target.value})} 
-                                                required={!config?.basicFields || config.basicFields.dob?.required !== false} 
+                                                required={!config?.basicFields || config?.basicFields?.dob?.required !== false} 
                                             />
                                         )}
                                         
@@ -1849,7 +1880,7 @@ const PlayerRegistration: React.FC = () => {
                                     {isAdvaya ? <Zap className="w-4 h-4"/> : <AlignLeft className="w-4 h-4"/>} {isAdvaya ? 'WARRIOR ATTRIBUTES' : 'Other Information'}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {config?.customFields.map((field, idx) => (
+                                    {(config?.customFields || []).map((field, idx) => (
                                         <motion.div 
                                             key={field.id} 
                                             initial={isAdvaya ? { opacity: 0, y: 10 } : {}}
@@ -1993,7 +2024,7 @@ const PlayerRegistration: React.FC = () => {
 
                     {/* RULES & TERMS SECTION */}
                     <div className="space-y-6">
-                        {config?.organizerContact && (
+                        {(config?.organizerContacts || []).length > 0 && (
                             <motion.div 
                                 initial={isAdvaya ? { opacity: 0 } : {}}
                                 animate={isAdvaya ? { opacity: 1 } : {}}
@@ -2002,15 +2033,51 @@ const PlayerRegistration: React.FC = () => {
                                 <h4 className={`text-xs font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-3 ${isAdvaya ? 'text-blue-500' : 'text-blue-600'}`}>
                                     <Phone className="w-5 h-5" /> {isAdvaya ? 'Organizer Contact' : 'Contact Person'}
                                 </h4>
-                                <div className="text-sm font-black tracking-widest">
-                                    {config.organizerContact}
+                                <div className="space-y-3">
+                                    {(config?.organizerContacts || []).map((contact, idx) => (
+                                        <div key={idx} className="flex items-center justify-between">
+                                            <div className="text-sm font-black tracking-widest uppercase">
+                                                {contact.name}
+                                            </div>
+                                            <a href={`tel:${contact.phone}`} className="text-blue-500 hover:text-blue-400 font-bold text-xs">
+                                                {contact.phone}
+                                            </a>
+                                        </div>
+                                    ))}
                                 </div>
-                                <p className="text-[9px] font-bold mt-2 opacity-60 uppercase tracking-widest">Contact for any registration related queries</p>
+                                <p className="text-[9px] font-bold mt-4 opacity-60 uppercase tracking-widest">Contact for any registration related queries</p>
                             </motion.div>
                         )}
+
+                        {/* Battle Oath for Single Page Form */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-8 rounded-[2.5rem] border-2 ${isAdvaya ? 'bg-amber-900/10 border-amber-500/20' : 'bg-amber-50 border-amber-100'}`}
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="pt-1">
+                                    <input 
+                                        type="checkbox" 
+                                        id="battle-oath-checkbox"
+                                        checked={formData.battleOath}
+                                        onChange={() => setFormData({...formData, battleOath: !formData.battleOath})}
+                                        className={`w-6 h-6 rounded-lg cursor-pointer accent-amber-600`}
+                                    />
+                                </div>
+                                <label htmlFor="battle-oath-checkbox" className="cursor-pointer">
+                                    <h4 className={`text-sm font-black uppercase tracking-widest mb-2 ${isAdvaya ? 'text-amber-500' : 'text-amber-700'}`}>
+                                        {isAdvaya ? 'BATTLE OATH ACCEPTANCE' : 'I Accept the Terms & Conditions'}
+                                    </h4>
+                                    <p className={`text-[10px] font-bold leading-relaxed uppercase tracking-widest ${isAdvaya ? 'text-amber-200/60' : 'text-amber-800/60'}`}>
+                                        I hereby declare that all information provided is accurate. I agree to abide by the tournament rules, maintain sportsmanship, and respect the organizer's decisions.
+                                    </p>
+                                </label>
+                            </div>
+                        </motion.div>
                     </div>
 
-                    <button disabled={submitting} type="submit" className={`w-full font-black py-5 rounded-[1.5rem] shadow-2xl transition-all flex items-center justify-center gap-4 group active:scale-95 uppercase text-sm tracking-widest ${isAdvaya ? 'bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'}`}>
+                    <button disabled={!formData.battleOath || submitting} type="submit" className={`w-full font-black py-5 rounded-[1.5rem] shadow-2xl transition-all flex items-center justify-center gap-4 group active:scale-95 uppercase text-sm tracking-widest ${isAdvaya ? 'bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20'} ${!formData.battleOath ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         {submitting ? <Loader2 className="animate-spin" /> : (config?.includePayment && config.paymentMethod === 'RAZORPAY' ? <><CreditCard className="w-6 h-6"/> {isAdvaya ? 'Authorize' : 'Pay'} ₹{config.fee}</> : (isAdvaya ? <><Sword className="w-5 h-5" /> JOIN THE BATTLE</> : 'Register Now'))}
                     </button>
                     

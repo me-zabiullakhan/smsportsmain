@@ -22,6 +22,57 @@ import { auth } from './firebase';
 import firebase from 'firebase/compat/app';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { UserRole } from './types';
+import { AlertTriangle, RefreshCcw } from 'lucide-react';
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-zinc-900 border border-red-500/20 rounded-[2.5rem] p-8 text-center shadow-2xl">
+            <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+              <AlertTriangle className="w-10 h-10 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Something went wrong</h2>
+            <p className="text-zinc-400 text-sm font-medium mb-8">
+              {this.state.error?.message || "An unexpected error occurred in the application."}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <RefreshCcw className="w-4 h-4" /> Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const AppContent: React.FC = () => {
   const { userProfile, activeAuctionId, state } = useAuction();
@@ -69,7 +120,7 @@ const AppContent: React.FC = () => {
   const showSupport = isLoggedIn && !isSupportStaff && !isLandingPage && !isObsView && !isRegistrationPage;
 
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/guide" element={<PlatformGuide />} />
@@ -119,7 +170,7 @@ const AppContent: React.FC = () => {
       </Routes>
       
       {showSupport && <SupportWidget />}
-    </>
+    </ErrorBoundary>
   );
 }
 

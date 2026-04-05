@@ -102,7 +102,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-end gap-2">
                     <span className={`h-2 w-2 rounded-full ${state.status === AuctionStatus.InProgress ? 'bg-green-500 animate-pulse-fast' : state.status === AuctionStatus.Finished ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
                     <p className={`font-bold text-sm ${state.status === AuctionStatus.InProgress ? 'text-green-400' : state.status === AuctionStatus.Finished ? 'text-red-400' : 'text-yellow-400'}`}>
-                        {state.status.replace('_', ' ')}
+                        {state.status?.replace('_', ' ') || 'LOADING...'}
                     </p>
                 </div>
              </div>
@@ -112,7 +112,7 @@ const Dashboard: React.FC = () => {
       </header>
       
       <div className="lg:hidden bg-secondary/50 border-b border-gray-700 px-4 py-1 flex justify-between items-center text-xs">
-          <div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${state.status === AuctionStatus.InProgress ? 'bg-green-500 animate-pulse-fast' : 'bg-yellow-500'}`}></span><span className="text-gray-300 uppercase font-semibold">{state.status.replace('_', ' ')}</span></div>
+          <div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${state.status === AuctionStatus.InProgress ? 'bg-green-500 animate-pulse-fast' : 'bg-yellow-500'}`}></span><span className="text-gray-300 uppercase font-semibold">{state.status?.replace('_', ' ') || 'LOADING...'}</span></div>
           <div className="text-gray-400">{isAdmin ? 'Admin Mode' : (isTeamOwner ? 'Live Bidding Enabled' : 'Read Only')}</div>
       </div>
 

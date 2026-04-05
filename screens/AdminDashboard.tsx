@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuction } from '../hooks/useAuction';
 // Standardized imports
-import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays } from 'lucide-react';
+import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown } from 'lucide-react';
 import { db } from '../firebase';
 import { AuctionSetup, UserPlan, UserRole, PromoCode, SystemPopup } from '../types';
 
@@ -585,10 +585,10 @@ const AdminDashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
-                <div className="hidden md:flex bg-gray-100 p-1 rounded-xl border border-gray-200 gap-1">
-                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'AUCTIONS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Auctions</button>
-                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'PLANS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Plans</button>
-                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'LEGAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Legal</button>
+                <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 gap-1 overflow-x-auto no-scrollbar">
+                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'AUCTIONS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Auctions</button>
+                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'PLANS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Plans</button>
+                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'LEGAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Legal</button>
                 </div>
                 <div className="w-px h-6 bg-gray-200 mx-2 hidden md:block"></div>
                 <button onClick={logout} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><LogOut className="w-5 h-5"/></button>

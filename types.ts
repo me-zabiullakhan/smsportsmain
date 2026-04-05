@@ -156,6 +156,7 @@ export interface AuctionState {
   obsLayout: OBSLayout;
   adminViewOverride: AdminViewOverride | null;
   maxPlayersPerTeam?: number; // Global Squad Limit
+  basePrice: number; // Global fallback base price
   systemLogoUrl?: string; // Global System Branding Logo
   isPaid?: boolean; // Per-auction payment status
   planId?: string; // Plan ID associated with auction
