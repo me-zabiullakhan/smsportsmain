@@ -145,6 +145,16 @@ const AuctionManage: React.FC = () => {
         code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCodes: [], teamMaxPlayers: 11, teamUsedCount: 0
     });
 
+    // Image Overlay State
+    const [overlayImage, setOverlayImage] = useState<{ 
+        url: string, 
+        title: string, 
+        type: 'PLAYER' | 'REGISTRATION', 
+        id: string, 
+        field: string 
+    } | null>(null);
+    const overlayInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
         if (!id) return;
         const unsubAuction = db.collection('auctions').doc(id).onSnapshot(doc => {
@@ -255,9 +265,28 @@ const AuctionManage: React.FC = () => {
         } catch (e: any) { alert("Update failed: " + e.message); }
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'MODAL' | 'LOGO' | 'QR' | 'REG_LOGO' | 'REG_BANNER') => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'MODAL' | 'LOGO' | 'QR' | 'REG_LOGO' | 'REG_BANNER' | 'OVERLAY') => {
         if (e.target.files && e.target.files[0]) {
             const base64 = await compressImage(e.target.files[0], type === 'REG_BANNER');
+            
+            if (type === 'OVERLAY' && overlayImage) {
+                try {
+                    if (overlayImage.type === 'PLAYER') {
+                        await db.collection('auctions').doc(id).collection('players').doc(overlayImage.id).update({ [overlayImage.field]: base64 });
+                    } else {
+                        await db.collection('auctions').doc(id).collection('registrations').doc(overlayImage.id).update({ [overlayImage.field]: base64 });
+                        if (selectedReg && selectedReg.id === overlayImage.id) {
+                            setSelectedReg({ ...selectedReg, [overlayImage.field]: base64 });
+                        }
+                    }
+                    setOverlayImage({ ...overlayImage, url: base64 });
+                    alert("Image updated successfully!");
+                } catch (err: any) {
+                    alert("Update failed: " + err.message);
+                }
+                return;
+            }
+
             if (type === 'MODAL') setPreviewImage(base64);
             if (type === 'LOGO') setSettingsForm({ ...settingsForm, logoUrl: base64 });
             if (type === 'QR') setRegConfig({ ...regConfig, qrCodeUrl: base64 });
@@ -666,7 +695,10 @@ const AuctionManage: React.FC = () => {
                                             <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
+                                                        <div 
+                                                            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shadow-sm cursor-pointer hover:border-blue-400 transition-all"
+                                                            onClick={() => p.photoUrl && setOverlayImage({ url: p.photoUrl, title: p.name, type: 'PLAYER', id: p.id, field: 'photoUrl' })}
+                                                        >
                                                             {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-5 h-5 m-2.5 text-gray-300"/>}
                                                         </div>
                                                         <div>
@@ -1905,14 +1937,19 @@ const AuctionManage: React.FC = () => {
                             {/* Left Column: Profile & Basic Info */}
                             <div className="space-y-6">
                                 <div className="relative group">
-                                    <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-gray-50 shadow-xl">
+                                    <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-gray-50 shadow-xl cursor-pointer group"
+                                         onClick={() => setOverlayImage({ url: selectedReg.profilePic, title: selectedReg.fullName, type: 'REGISTRATION', id: selectedReg.id, field: 'profilePic' })}
+                                    >
                                         <img src={selectedReg.profilePic} className="w-full h-full object-cover" alt="Profile" />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                                            <Eye className="w-10 h-10 text-white drop-shadow-lg" />
+                                        </div>
                                     </div>
                                     <button 
-                                        onClick={() => window.open(selectedReg.profilePic, '_blank')}
+                                        onClick={() => setOverlayImage({ url: selectedReg.profilePic, title: selectedReg.fullName, type: 'REGISTRATION', id: selectedReg.id, field: 'profilePic' })}
                                         className="absolute bottom-4 right-4 p-3 bg-white/90 backdrop-blur shadow-lg rounded-xl text-gray-600 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100"
                                     >
-                                        <ExternalLink className="w-5 h-5" />
+                                        <Eye className="w-5 h-5" />
                                     </button>
                                 </div>
 
@@ -2010,14 +2047,14 @@ const AuctionManage: React.FC = () => {
                                 {selectedReg.paymentScreenshot && (
                                     <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Payment Verification</p>
-                                        <div className="relative group aspect-video rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm">
+                                        <div 
+                                            className="relative group aspect-video rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm cursor-pointer"
+                                            onClick={() => setOverlayImage({ url: selectedReg.paymentScreenshot, title: selectedReg.fullName, type: 'REGISTRATION', id: selectedReg.id, field: 'paymentScreenshot' })}
+                                        >
                                             <img src={selectedReg.paymentScreenshot} className="w-full h-full object-cover" alt="Payment" />
-                                            <button 
-                                                onClick={() => window.open(selectedReg.paymentScreenshot, '_blank')}
-                                                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                            >
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                                                 <Eye className="w-8 h-8 text-white" />
-                                            </button>
+                                            </div>
                                         </div>
                                         {selectedReg.razorpayPaymentId && (
                                             <p className="mt-2 text-[10px] font-black text-blue-600 uppercase tracking-widest">ID: {selectedReg.razorpayPaymentId}</p>
@@ -2119,6 +2156,60 @@ const AuctionManage: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+            {/* Image Overlay Popup */}
+            {overlayImage && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex flex-col items-center justify-center p-4 md:p-12 animate-fade-in">
+                    {/* Controls Header */}
+                    <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                        <div className="flex flex-col">
+                            <h3 className="text-white font-black uppercase tracking-widest text-sm">{overlayImage.title}</h3>
+                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Full Screen Preview</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = overlayImage.url;
+                                    link.download = `${overlayImage.title.replace(/\s+/g, '_')}_${overlayImage.field}.jpg`;
+                                    link.click();
+                                }}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                            >
+                                <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
+                            </button>
+                            <button 
+                                onClick={() => overlayInputRef.current?.click()}
+                                className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20"
+                            >
+                                <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Update</span>
+                            </button>
+                            <button 
+                                onClick={() => setOverlayImage(null)}
+                                className="p-3 bg-white/10 hover:bg-red-600 text-white rounded-xl transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Image Container */}
+                    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                        <img 
+                            src={overlayImage.url} 
+                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                            alt="Preview"
+                        />
+                    </div>
+
+                    <input 
+                        type="file" 
+                        ref={overlayInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileUpload(e, 'OVERLAY')}
+                    />
                 </div>
             )}
         </div>

@@ -161,7 +161,7 @@ const PlayerRegistration: React.FC = () => {
     const [validatedTeamCode, setValidatedTeamCode] = useState<any>(null);
 
     const [formData, setFormData] = useState<any>({
-        fullName: '', playerType: '', gender: '', mobile: '', dob: ''
+        fullName: '', playerType: '', gender: '', mobile: '', dob: '', battleOath: false
     });
     const [profilePic, setProfilePic] = useState<string>('');
     const [paymentScreenshot, setPaymentScreenshot] = useState<string>('');
@@ -1480,11 +1480,11 @@ const PlayerRegistration: React.FC = () => {
                                                     <input 
                                                         type="checkbox" 
                                                         className="sr-only peer" 
-                                                        checked={agreedToRules}
-                                                        onChange={() => setAgreedToRules(!agreedToRules)}
+                                                        checked={formData.battleOath}
+                                                        onChange={() => setFormData({...formData, battleOath: !formData.battleOath})}
                                                     />
                                                     <div className="w-6 h-6 border-2 border-amber-900/50 rounded-lg flex items-center justify-center transition-all peer-checked:bg-amber-600 peer-checked:border-amber-600 group-hover:border-amber-500">
-                                                        <CheckCircle className={`w-4 h-4 text-black transition-opacity ${agreedToRules ? 'opacity-100' : 'opacity-0'}`} />
+                                                        <CheckCircle className={`w-4 h-4 text-black transition-opacity ${formData.battleOath ? 'opacity-100' : 'opacity-0'}`} />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-1">
@@ -1519,9 +1519,9 @@ const PlayerRegistration: React.FC = () => {
                             </button>
                         ) : (
                             <button 
-                                disabled={!agreedToRules || submitting}
+                                disabled={!formData.battleOath || submitting}
                                 onClick={handleSubmit}
-                                className={`px-16 py-6 rounded-full font-black uppercase tracking-widest transition-all shadow-[0_10px_40px_-10px_rgba(251,191,36,0.5)] active:scale-95 flex items-center gap-4 ${!agreedToRules || submitting ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' : 'bg-amber-600 hover:bg-amber-500 text-black'}`}
+                                className={`px-16 py-6 rounded-full font-black uppercase tracking-widest transition-all shadow-[0_10px_40px_-10px_rgba(251,191,36,0.5)] active:scale-95 flex items-center gap-4 ${!formData.battleOath || submitting ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' : 'bg-amber-600 hover:bg-amber-500 text-black'}`}
                             >
                                 {submitting ? <Loader2 className="animate-spin w-6 h-6" /> : <><Sword className="w-6 h-6" /> JOIN THE BATTLE</>}
                             </button>
