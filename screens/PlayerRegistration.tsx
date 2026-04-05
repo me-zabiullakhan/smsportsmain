@@ -4,26 +4,67 @@ import { db } from '../firebase';
 import { AuctionSetup, RegistrationConfig, FormField, PlayerRole } from '../types';
 import { Upload, Calendar, CheckCircle, AlertTriangle, ArrowUpCircle, FileText, Home, ArrowLeft, Loader2, CreditCard, QrCode, ShieldCheck, AlignLeft, Sword, Shield, Trophy as TrophyIcon, Zap, Megaphone, Users, XCircle, Phone, MapPin, Clock, Trophy, Share2, ChevronRight, ChevronLeft, User, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import heic2any from 'heic2any';
 
-const compressImage = (file: File): Promise<string> => {
+const compressImage = async (file: File): Promise<string> => {
+    let processedFile: File | Blob = file;
+    
+    // Handle HEIC/HEIF for iOS
+    if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        try {
+            const converted = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.8
+            });
+            processedFile = Array.isArray(converted) ? converted[0] : converted;
+        } catch (e) {
+            console.error("HEIC conversion failed:", e);
+        }
+    }
+
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processedFile);
         reader.onload = (event) => {
             const img = new Image();
             img.src = event.target?.result as string;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1200;
-                const MAX_HEIGHT = 1200;
                 let width = img.width;
                 let height = img.height;
-                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
-                else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                canvas.width = width; canvas.height = height;
+                
+                // Target smaller dimensions to stay under 1MB
+                const MAX_DIM = 800;
+                if (width > height) {
+                    if (width > MAX_DIM) {
+                        height *= MAX_DIM / width;
+                        width = MAX_DIM;
+                    }
+                } else {
+                    if (height > MAX_DIM) {
+                        width *= MAX_DIM / height;
+                        height = MAX_DIM;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/webp', 0.9)); 
+                
+                // Start with 0.7 quality and reduce if needed
+                let quality = 0.7;
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                
+                // Firestore limit is 1MB. Base64 adds ~33% overhead.
+                // 1,048,487 bytes is the limit. 800,000 chars is a safe bet.
+                while (dataUrl.length > 800000 && quality > 0.1) {
+                    quality -= 0.1;
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                resolve(dataUrl);
             };
             img.onerror = (err) => reject(err);
         };
@@ -356,15 +397,23 @@ const PlayerRegistration: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // 1. Check Slot Availability
+        if (isFull && !isCaptain && !hasTeamCode) {
+            return alert("Registrations are currently full. Only Captains or Team Members with codes can register.");
+        }
+
+        // 2. Code Validation
         if (isCaptain && !validatedCode) {
             return alert("Please verify a valid captain code first.");
         }
-
         if (hasTeamCode && !validatedTeamCode) {
             return alert("Please verify a valid team code first.");
         }
 
-        // Check for required basic fields that are not handled by native 'required' attribute
+        // 3. Comprehensive Field Validation
+        const missingFields: string[] = [];
+        
+        // Basic Fields (Config Driven)
         const basicFields = config?.basicFields || {
             name: { show: true, required: true },
             dob: { show: true, required: true },
@@ -374,35 +423,45 @@ const PlayerRegistration: React.FC = () => {
             role: { show: true, required: true }
         };
 
-        if (basicFields.photo?.required !== false && !profilePic && basicFields.photo?.show !== false) {
-            return alert("Please upload your player photo.");
-        }
-        if (basicFields.gender?.required !== false && !formData.gender && basicFields.gender?.show !== false) {
-            return alert("Please select your gender.");
-        }
-        if (basicFields.role?.required !== false && !formData.playerType && basicFields.role?.show !== false) {
-            return alert("Please select your role.");
-        }
-        if (basicFields.name?.required !== false && !formData.fullName && basicFields.name?.show !== false) {
-            return alert("Please enter your full name.");
-        }
-        if (basicFields.mobile?.required !== false && !formData.mobile && basicFields.mobile?.show !== false) {
-            return alert("Please enter your mobile number.");
-        }
-        if (basicFields.dob?.required !== false && !formData.dob && basicFields.dob?.show !== false) {
-            return alert("Please enter your date of birth.");
-        }
+        if (basicFields.name?.required !== false && !formData.fullName?.trim()) missingFields.push("Full Name");
+        if (basicFields.mobile?.required !== false && !formData.mobile?.trim()) missingFields.push("Mobile Number");
+        if (basicFields.dob?.required !== false && !formData.dob) missingFields.push("Date of Birth");
+        if (basicFields.gender?.required !== false && !formData.gender) missingFields.push("Gender");
+        if (basicFields.role?.required !== false && !formData.playerType) missingFields.push("Player Role");
+        if (basicFields.photo?.required !== false && !profilePic) missingFields.push("Player Photo");
 
-        if (config?.includePayment) {
-            if (config.paymentMethod === 'RAZORPAY') {
-                setSubmitting(true);
-                handleRazorpayModal();
-                return;
-            } else if (config.paymentMethod === 'MANUAL' && !paymentScreenshot) {
-                return alert("Please upload proof of payment.");
+        // Custom Fields
+        (config?.customFields || []).forEach(field => {
+            if (field.required && !formData[field.id]) {
+                missingFields.push(field.label);
+            }
+        });
+
+        // Payment
+        if (config?.registrationFee > 0) {
+            if (config.paymentMethod === 'MANUAL' && !paymentScreenshot) {
+                missingFields.push("Payment Proof/Screenshot");
             }
         }
-        submitToFirebase();
+
+        // Battle Oath
+        if (!formData.battleOath) {
+            missingFields.push("Battle Oath Acceptance");
+        }
+
+        if (missingFields.length > 0) {
+            return alert(`The following required fields are missing:\n\n• ${missingFields.join('\n• ')}`);
+        }
+
+        setSubmitting(true);
+        
+        // Handle Razorpay if enabled
+        if (config?.registrationFee > 0 && config.paymentMethod === 'RAZORPAY') {
+            handleRazorpayModal();
+            return;
+        }
+
+        await submitToFirebase();
     };
 
     const isAdvaya = config?.theme === 'ADVAYA';

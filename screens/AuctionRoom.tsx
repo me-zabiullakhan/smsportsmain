@@ -16,9 +16,9 @@ const AuctionRoom: React.FC = () => {
   const isTeamOwner = userProfile?.role === UserRole.TEAM_OWNER;
 
   return (
-    <div className="h-full">
+    <div className="min-h-full">
       {currentPlayer ? (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           {/* Center Column: Main Action (Live Player) - First on Mobile */}
           <div className="lg:col-span-2 lg:order-2 flex flex-col gap-6">

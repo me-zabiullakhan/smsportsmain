@@ -16,17 +16,35 @@ import firebase from 'firebase/compat/app';
 import * as XLSX from 'xlsx';
 import { useAuction } from '../hooks/useAuction';
 
-const compressImage = (file: File, isBanner: boolean = false): Promise<string> => {
+import heic2any from 'heic2any';
+
+const compressImage = async (file: File, isBanner: boolean = false): Promise<string> => {
+    let processedFile: File | Blob = file;
+    
+    // Handle HEIC/HEIF for iOS
+    if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        try {
+            const converted = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.8
+            });
+            processedFile = Array.isArray(converted) ? converted[0] : converted;
+        } catch (e) {
+            console.error("HEIC conversion failed:", e);
+        }
+    }
+
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processedFile);
         reader.onload = (event) => {
             const img = new Image();
             img.src = event.target?.result as string;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = isBanner ? 1920 : 800;
-                const MAX_HEIGHT = isBanner ? 1080 : 800;
+                const MAX_WIDTH = isBanner ? 1600 : 800;
+                const MAX_HEIGHT = isBanner ? 900 : 800;
                 let width = img.width;
                 let height = img.height;
                 if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
@@ -34,7 +52,18 @@ const compressImage = (file: File, isBanner: boolean = false): Promise<string> =
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', isBanner ? 0.95 : 0.85));
+                
+                let quality = isBanner ? 0.8 : 0.7;
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                
+                // Firestore limit is 1MB. Base64 adds ~33% overhead.
+                // 1,048,487 bytes is the limit. 800,000 chars is a safe bet.
+                while (dataUrl.length > 800000 && quality > 0.1) {
+                    quality -= 0.1;
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                resolve(dataUrl);
             };
             img.onerror = (err) => reject(err);
         };

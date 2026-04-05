@@ -116,8 +116,23 @@ const Dashboard: React.FC = () => {
           <div className="text-gray-400">{isAdmin ? 'Admin Mode' : (isTeamOwner ? 'Live Bidding Enabled' : 'Read Only')}</div>
       </div>
 
-      <main className="container mx-auto p-2 md:p-6 flex-grow">
-        {state.status === AuctionStatus.Finished ? (isTeamOwner && myTeam ? <TeamPostAuctionView team={myTeam} /> : <AdminPostAuctionView />) : isAdmin ? (<div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full"><div className="lg:col-span-3"><AuctionRoom /></div><div className="lg:col-span-1"><LiveAdminPanel /></div></div>) : (<div className="h-full"><AuctionRoom /></div>)}
+      <main className="flex-1 container mx-auto p-2 md:p-6 overflow-y-auto">
+        {state.status === AuctionStatus.Finished ? (
+          isTeamOwner && myTeam ? <TeamPostAuctionView team={myTeam} /> : <AdminPostAuctionView />
+        ) : isAdmin ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-full pb-10">
+            <div className="lg:col-span-3">
+              <AuctionRoom />
+            </div>
+            <div className="lg:col-span-1">
+              <LiveAdminPanel />
+            </div>
+          </div>
+        ) : (
+          <div className="min-h-full pb-10">
+            <AuctionRoom />
+          </div>
+        )}
       </main>
       <footer className="text-center py-3 border-t border-accent text-text-secondary text-xs bg-secondary">
         <p>SM SPORTS • Live Auction System • <a href={`/#/obs-overlay/${auctionId}`} target="_blank" className="text-highlight hover:underline">Open OBS Overlay</a></p>
