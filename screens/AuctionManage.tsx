@@ -446,20 +446,20 @@ const AuctionManage: React.FC = () => {
                         ` : ''}
 
                         <!-- Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 0 2mm 4mm 2mm; margin-bottom: 6mm; position: relative; z-index: 10;">
-                            <div style="display: flex; align-items: center; gap: 5mm;">
-                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 16mm; width: 16mm; object-fit: contain; border-radius: 2mm;" />` : ''}
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 2mm 4mm 6mm 4mm; margin-bottom: 8mm; position: relative; z-index: 10;">
+                            <div style="display: flex; align-items: center; gap: 6mm;">
+                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 18mm; width: 18mm; object-fit: contain; border-radius: 3mm;" />` : ''}
                                 <div style="display: flex; flex-direction: column; justify-content: center;">
-                                    <h1 style="margin: 0; font-size: 20pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
-                                    <p style="margin: 2mm 0 0 0; font-size: 9pt; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1.5px;">${systemBranding.tagline}</p>
+                                    <h1 style="margin: 0; font-size: 24pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
+                                    <p style="margin: 3mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px;">${systemBranding.tagline}</p>
                                 </div>
                             </div>
-                            <div style="text-align: right; display: flex; align-items: center; gap: 5mm;">
+                            <div style="text-align: right; display: flex; align-items: center; gap: 6mm;">
                                 <div style="display: flex; flex-direction: column; justify-content: center;">
-                                    <h2 style="margin: 0; font-size: 16pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
-                                    <p style="margin: 2mm 0 0 0; font-size: 8pt; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
+                                    <h2 style="margin: 0; font-size: 18pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
+                                    <p style="margin: 3mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
                                 </div>
-                                ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 16mm; width: 16mm; object-fit: contain;" />` : ''}
+                                ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 18mm; width: 18mm; object-fit: contain;" />` : ''}
                             </div>
                         </div>
 
@@ -515,47 +515,53 @@ const AuctionManage: React.FC = () => {
                                 return `
                                 <div style="
                                     background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.03)' : '#f9fafb'};
-                                    border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#f1f5f9'};
-                                    border-radius: ${isSingle ? '8mm' : '4mm'};
-                                    padding: ${isSingle ? '10mm' : isDense ? '2.5mm' : '5mm'};
+                                    border: 2px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.15)' : '#e2e8f0'};
+                                    border-radius: ${isSingle ? '10mm' : '6mm'};
+                                    padding: ${isSingle ? '15mm' : isDense ? '4mm' : '8mm'};
                                     display: flex;
                                     flex-direction: column;
-                                    gap: ${isSingle ? '8mm' : isDense ? '1.5mm' : '4mm'};
+                                    gap: ${isSingle ? '12mm' : isDense ? '3mm' : '6mm'};
                                     position: relative;
                                     overflow: hidden;
-                                    ${isSingle ? 'height: 100%; justify-content: center;' : ''}
+                                    height: 100%;
+                                    box-sizing: border-box;
+                                    ${isSingle ? 'justify-content: center;' : ''}
                                 ">
                                     ${selectedFields.includes('playerNumber') ? `
-                                        <div style="position: absolute; top: 0; right: 0; padding: ${isSingle ? '3mm 8mm' : '1mm 3mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; font-size: ${isSingle ? '18pt' : isDense ? '7pt' : '10pt'}; font-weight: 900; border-bottom-left-radius: 4mm; z-index: 5;">
+                                        <div style="position: absolute; top: 0; right: 0; padding: ${isSingle ? '4mm 12mm' : '2mm 6mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; font-size: ${isSingle ? '24pt' : isDense ? '10pt' : '14pt'}; font-weight: 900; border-bottom-left-radius: 6mm; z-index: 5; box-shadow: -2px 2px 10px rgba(0,0,0,0.1);">
                                             #${reg.playerNumber || playerNum}
                                         </div>
                                     ` : ''}
-                                    <div style="display: flex; gap: ${isSingle ? '10mm' : '3mm'}; align-items: ${isSingle ? 'center' : 'start'};">
+                                    <div style="display: flex; gap: ${isSingle ? '15mm' : '6mm'}; align-items: ${isSingle ? 'center' : 'start'};">
                                         ${selectedFields.includes('profilePic') ? `
-                                            <div style="width: ${isSingle ? '60mm' : isDense ? '18mm' : '30mm'}; height: ${isSingle ? '75mm' : isDense ? '22mm' : '35mm'}; border-radius: ${isSingle ? '6mm' : '2mm'}; overflow: hidden; border: ${isSingle ? '4px' : '2px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2433' : '#e2e8f0'}; flex-shrink: 0;">
+                                            <div style="width: ${isSingle ? '70mm' : isDense ? '22mm' : '35mm'}; height: ${isSingle ? '85mm' : isDense ? '28mm' : '45mm'}; border-radius: ${isSingle ? '8mm' : '4mm'}; overflow: hidden; border: ${isSingle ? '6px' : '3px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2444' : '#cbd5e1'}; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                                                 <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
                                             </div>
                                         ` : ''}
-                                        <div style="flex: 1; min-width: 0;">
-                                            ${selectedFields.includes('fullName') ? `<h3 style="margin: 0; font-size: ${isSingle ? '28pt' : isDense ? '9pt' : '14pt'}; font-weight: 900; text-transform: uppercase; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.fullName}</h3>` : ''}
-                                            <div style="display: inline-block; margin-top: ${isSingle ? '4mm' : '1mm'}; padding: ${isSingle ? '2mm 6mm' : '0.5mm 1.5mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; border-radius: ${isSingle ? '3mm' : '1mm'}; font-size: ${isSingle ? '14pt' : isDense ? '5pt' : '7pt'}; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: ${isSingle ? '6mm' : '2mm'};">
+                                            ${selectedFields.includes('fullName') ? `<h3 style="margin: 0; font-size: ${isSingle ? '36pt' : isDense ? '12pt' : '18pt'}; font-weight: 900; text-transform: uppercase; line-height: 1.1; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#0f172a'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.fullName}</h3>` : ''}
+                                            <div style="display: inline-block; width: fit-content; padding: ${isSingle ? '3mm 8mm' : '1mm 3mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; border-radius: ${isSingle ? '4mm' : '1.5mm'}; font-size: ${isSingle ? '18pt' : isDense ? '7pt' : '10pt'}; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                 ${reg.playerType}
                                             </div>
                                             
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: ${isSingle ? '6mm' : '1.5mm'}; margin-top: ${isSingle ? '8mm' : isDense ? '1.5mm' : '4mm'};">
-                                                ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Mobile</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.mobile}</p></div>` : ''}
-                                                ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">DOB</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.dob}</p></div>` : ''}
-                                                ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Gender</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.gender}</p></div>` : ''}
-                                                <div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Status</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; color: ${reg.status === 'APPROVED' ? '#10b981' : '#f59e0b'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.status}</p></div>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: ${isSingle ? '10mm' : '4mm'}; margin-top: ${isSingle ? '12mm' : isDense ? '2mm' : '6mm'};">
+                                                ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Mobile</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.mobile}</p></div>` : ''}
+                                                ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">DOB</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.dob}</p></div>` : ''}
+                                                ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Gender</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.gender}</p></div>` : ''}
+                                                <div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Status</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 900; color: ${reg.status === 'APPROVED' ? '#10b981' : '#f59e0b'};">${reg.status}</p></div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div style="display: grid; grid-template-columns: ${isSingle ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: ${isSingle ? '4mm' : '1.5mm'}; margin-top: auto;">
+                                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: ${isSingle ? '20mm' : '5mm'};">
+                                        <!-- Spacer to fill middle gap -->
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: ${isSingle ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: ${isSingle ? '6mm' : '3mm'}; margin-top: auto;">
                                         ${regConfig.customFields.filter(f => selectedFields.includes(f.id)).map(field => `
-                                            <div style="background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.05)' : '#ffffff'}; padding: ${isSingle ? '4mm' : '1.5mm'}; border-radius: ${isSingle ? '3mm' : '1.5mm'}; border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.05)' : '#f1f5f9'}; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;">
-                                                <p style="margin: 0; font-size: ${isSingle ? '8pt' : '5pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${field.label}</p>
-                                                <p style="margin: 0; font-size: ${isSingle ? '12pt' : isDense ? '7pt' : '9pt'}; font-weight: 700; word-break: break-all; line-height: 1.2;">${reg[field.id] || '-'}</p>
+                                            <div style="background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.06)' : '#ffffff'}; padding: ${isSingle ? '6mm' : '3mm'}; border-radius: ${isSingle ? '5mm' : '3mm'}; border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#e2e8f0'}; min-width: 0; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                                <p style="margin: 0; font-size: ${isSingle ? '10pt' : '6pt'}; font-weight: 900; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${field.label}</p>
+                                                <p style="margin: 2px 0 0 0; font-size: ${isSingle ? '16pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; word-break: break-all; line-height: 1.3; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#1e293b'};">${reg[field.id] || '-'}</p>
                                             </div>
                                         `).join('')}
                                     </div>
