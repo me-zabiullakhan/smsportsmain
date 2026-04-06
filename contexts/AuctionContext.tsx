@@ -31,6 +31,7 @@ const initialState: AuctionState = {
     adminViewOverride: null,
     maxPlayersPerTeam: 25,
     systemLogoUrl: '',
+    systemTagline: 'Your streaming partner',
     isPaid: false,
     basePrice: 0
 };
@@ -51,6 +52,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 setState(prev => ({ 
                     ...prev, 
                     systemLogoUrl: data?.systemLogoUrl || '',
+                    systemTagline: data?.systemTagline || 'Your streaming partner',
                     hideScoringSection: data?.hideScoringSection || false
                 }));
             }

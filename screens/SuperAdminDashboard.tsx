@@ -239,10 +239,25 @@ const SuperAdminDashboard: React.FC = () => {
                              </div>
                              <div className="flex-1 text-center md:text-left">
                                 <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">Master OS Identity</h2>
-                                <p className="text-zinc-400 text-sm max-w-xl mb-8 font-medium">Global system branding overrides tenant presets.</p>
-                                <button onClick={() => logoInputRef.current?.click()} className="bg-white text-black font-black px-10 py-4 rounded-2xl flex items-center gap-3 transition-all hover:bg-red-600 hover:text-white">
-                                    <Upload className="w-5 h-5" /> REFLASH BRANDING
-                                </button>
+                                <p className="text-zinc-400 text-sm max-w-xl mb-6 font-medium">Global system branding overrides tenant presets.</p>
+                                
+                                <div className="space-y-4 mb-8">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">System Tagline</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Your streaming partner"
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-red-600 transition-all"
+                                            value={state.systemTagline || ''}
+                                            onChange={async (e) => {
+                                                await db.collection('appConfig').doc('globalSettings').set({ systemTagline: e.target.value }, { merge: true });
+                                            }}
+                                        />
+                                    </div>
+                                    <button onClick={() => logoInputRef.current?.click()} className="bg-white text-black font-black px-10 py-4 rounded-2xl flex items-center gap-3 transition-all hover:bg-red-600 hover:text-white">
+                                        <Upload className="w-5 h-5" /> REFLASH BRANDING
+                                    </button>
+                                </div>
                                 <input ref={logoInputRef} type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                     if (e.target.files?.[0]) {
                                         const base64 = await compressImage(e.target.files[0]);
@@ -534,10 +549,18 @@ const SuperAdminDashboard: React.FC = () => {
                         <form onSubmit={handleSavePromo} className="space-y-6">
                             <input placeholder="PROMO CODE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold uppercase tracking-widest outline-none focus:border-emerald-600" value={promoForm.code} onChange={e => setPromoForm({...promoForm, code: e.target.value.toUpperCase()})} required />
                             <div className="grid grid-cols-2 gap-4">
-                                <select className="bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.discountType} onChange={e => setPromoForm({...promoForm, discountType: e.target.value as any})}>
-                                    <option value="PERCENT">PERCENTAGE</option>
-                                    <option value="FLAT">FLAT AMOUNT</option>
-                                </select>
+                                <div className="flex bg-black border border-white/10 rounded-2xl p-1">
+                                    {['PERCENT', 'FLAT'].map(type => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => setPromoForm({...promoForm, discountType: type as any})}
+                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${promoForm.discountType === type ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                        >
+                                            {type === 'PERCENT' ? 'PERCENT' : 'FLAT'}
+                                        </button>
+                                    ))}
+                                </div>
                                 <input type="number" placeholder="VALUE" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.discountValue} onChange={e => setPromoForm({...promoForm, discountValue: Number(e.target.value)})} required />
                             </div>
                             <input type="number" placeholder="MAX CLAIMS" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-emerald-600" value={promoForm.maxClaims} onChange={e => setPromoForm({...promoForm, maxClaims: Number(e.target.value)})} required />
@@ -556,23 +579,53 @@ const SuperAdminDashboard: React.FC = () => {
                         </div>
                         <form onSubmit={handleSaveUser} className="space-y-6">
                             <input type="email" placeholder="USER EMAIL" className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})} required />
-                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value as UserRole})}>
-                                <option value={UserRole.SUPPORT}>SUPPORT STAFF</option>
-                                <option value={UserRole.ADMIN}>ADMINISTRATOR</option>
-                                <option value={UserRole.SUPER_ADMIN}>SUPER ADMIN</option>
-                                <option value={UserRole.TEAM_OWNER}>TEAM OWNER</option>
-                            </select>
-                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.plan?.type} onChange={e => {
-                                const type = e.target.value as any;
-                                let plan: any = { type: 'FREE', maxTeams: 5, maxAuctions: 1 };
-                                if (type === 'BASIC') plan = { type: 'BASIC', maxTeams: 15, maxAuctions: 5 };
-                                if (type === 'PREMIUM') plan = { type: 'PREMIUM', maxTeams: 50, maxAuctions: 20 };
-                                setUserForm({...userForm, plan});
-                            }}>
-                                <option value="FREE">FREE PLAN</option>
-                                <option value="BASIC">BASIC PLAN</option>
-                                <option value="PREMIUM">PREMIUM PLAN</option>
-                            </select>
+                            
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Assign Identity Role</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { id: UserRole.SUPPORT, label: 'SUPPORT' },
+                                        { id: UserRole.ADMIN, label: 'ADMIN' },
+                                        { id: UserRole.SUPER_ADMIN, label: 'S-ADMIN' },
+                                        { id: UserRole.TEAM_OWNER, label: 'OWNER' }
+                                    ].map(r => (
+                                        <button
+                                            key={r.id}
+                                            type="button"
+                                            onClick={() => setUserForm({...userForm, role: r.id})}
+                                            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${userForm.role === r.id ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-black border-white/10 text-zinc-500 hover:border-white/20'}`}
+                                        >
+                                            {r.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Select Access Plan</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'FREE', label: 'FREE' },
+                                        { id: 'BASIC', label: 'BASIC' },
+                                        { id: 'PREMIUM', label: 'PREM' }
+                                    ].map(p => (
+                                        <button
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => {
+                                                let plan: any = { type: 'FREE', maxTeams: 5, maxAuctions: 1 };
+                                                if (p.id === 'BASIC') plan = { type: 'BASIC', maxTeams: 15, maxAuctions: 5 };
+                                                if (p.id === 'PREMIUM') plan = { type: 'PREMIUM', maxTeams: 50, maxAuctions: 20 };
+                                                setUserForm({...userForm, plan});
+                                            }}
+                                            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${userForm.plan?.type === p.id ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-black border-white/10 text-zinc-500 hover:border-white/20'}`}
+                                        >
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <button type="submit" disabled={isProcessing} className="w-full bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">PROVISION IDENTITY</button>
                         </form>
                     </div>

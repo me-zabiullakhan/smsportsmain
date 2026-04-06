@@ -158,6 +158,7 @@ export interface AuctionState {
   maxPlayersPerTeam?: number; // Global Squad Limit
   basePrice: number; // Global fallback base price
   systemLogoUrl?: string; // Global System Branding Logo
+  systemTagline?: string; // Global System Branding Tagline
   isPaid?: boolean; // Per-auction payment status
   planId?: string; // Plan ID associated with auction
   autoDeleteAt?: number; // Scheduled deletion timestamp

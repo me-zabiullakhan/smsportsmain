@@ -142,11 +142,30 @@ const AuctionManage: React.FC = () => {
     const [isEditingReg, setIsEditingReg] = useState(false);
     
     // PDF Export States
-    const [showPDFModal, setShowPDFModal] = useState(false);
     const [pdfTheme, setPdfTheme] = useState<'NORMAL' | 'ADVAYA'>('NORMAL');
-    const [selectedFields, setSelectedFields] = useState<string[]>(['fullName', 'mobile', 'dob', 'gender', 'playerType']);
+    const [selectedFields, setSelectedFields] = useState<string[]>(['playerNumber', 'fullName', 'mobile', 'dob', 'gender', 'playerType', 'profilePic']);
+    const [playersPerPage, setPlayersPerPage] = useState<1 | 2 | 4 | 6 | 9 | 'LIST'>(1);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [pdfProgress, setPdfProgress] = useState(0);
+    const [systemBranding, setSystemBranding] = useState({ logo: '', tagline: 'Your streaming partner' });
+
+    const autoAssignPlayerNumbers = async () => {
+        if (!auction?.id) return;
+        setIsGeneratingPDF(true);
+        try {
+            const sortedRegs = [...registrations].sort((a, b) => (a.submittedAt || 0) - (b.submittedAt || 0));
+            const batch = db.batch();
+            sortedRegs.forEach((reg, index) => {
+                const docRef = db.collection('auctions').doc(auction.id).collection('registrations').doc(reg.id);
+                batch.update(docRef, { playerNumber: index + 1 });
+            });
+            await batch.commit();
+            alert("Player numbers assigned successfully!");
+        } catch (e: any) {
+            alert("Error assigning numbers: " + e.message);
+        }
+        setIsGeneratingPDF(false);
+    };
 
     // Captain Code State
     const [showCodeModal, setShowCodeModal] = useState(false);
@@ -201,8 +220,18 @@ const AuctionManage: React.FC = () => {
         const unsubWaitlist = db.collection('auctions').doc(id).collection('waitlist').onSnapshot(s => setWaitlist(s.docs.map(d => ({id: d.id, ...d.data()}))));
         const unsubCodes = db.collection('auctions').doc(id).collection('captainCodes').onSnapshot(s => setCaptainCodes(s.docs.map(d => ({id: d.id, ...d.data()}) as CaptainCode)));
 
+        const unsubBranding = db.collection('appConfig').doc('globalSettings').onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                setSystemBranding({
+                    logo: data?.systemLogoUrl || '',
+                    tagline: data?.systemTagline || 'Your streaming partner'
+                });
+            }
+        });
+
         return () => {
-            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs(); unsubWaitlist(); unsubCodes();
+            unsubAuction(); unsubTeams(); unsubPlayers(); unsubCats(); unsubRoles(); unsubSponsors(); unsubRegs(); unsubWaitlist(); unsubCodes(); unsubBranding();
         };
     }, [id]);
 
@@ -378,60 +407,172 @@ const AuctionManage: React.FC = () => {
         document.body.appendChild(pdfContainer);
 
         try {
-            for (let i = 0; i < registrations.length; i++) {
-                const reg = registrations[i];
-                setPdfProgress(Math.round(((i + 1) / registrations.length) * 100));
+            const actualPlayersPerPage = playersPerPage === 'LIST' ? 15 : playersPerPage;
+            const totalPages = Math.ceil(registrations.length / actualPlayersPerPage);
+            
+            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                setPdfProgress(Math.round(((pageIndex + 1) / totalPages) * 100));
+                
+                const startIdx = pageIndex * actualPlayersPerPage;
+                const pageRegs = registrations.slice(startIdx, startIdx + actualPlayersPerPage);
 
-                // Render player profile to the hidden container
+                // Determine grid columns based on playersPerPage
+                let gridCols = 1;
+                let gridRows = '1fr';
+                if (playersPerPage === 2) { gridCols = 1; gridRows = '1fr 1fr'; }
+                if (playersPerPage === 4) { gridCols = 2; gridRows = '1fr 1fr'; }
+                if (playersPerPage === 6) { gridCols = 2; gridRows = '1fr 1fr 1fr'; }
+                if (playersPerPage === 9) { gridCols = 3; gridRows = '1fr 1fr 1fr'; }
+                if (playersPerPage === 'LIST') { gridCols = 1; gridRows = 'none'; }
+
+                // Render page content
                 pdfContainer.innerHTML = `
                     <div id="pdf-page" style="
                         width: 210mm; 
-                        min-height: 297mm; 
-                        padding: 20mm; 
+                        height: 297mm; 
+                        padding: 12mm; 
                         background: ${pdfTheme === 'ADVAYA' ? '#0a0a0a' : '#ffffff'};
                         color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'};
                         font-family: sans-serif;
                         box-sizing: border-box;
+                        position: relative;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
                     ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding-bottom: 10mm; margin-bottom: 10mm;">
-                            <div>
-                                <h1 style="margin: 0; font-size: 24pt; font-weight: 900; text-transform: uppercase;">${auction?.title || 'Tournament'}</h1>
-                                <p style="margin: 5px 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.7; letter-spacing: 2px; text-transform: uppercase;">Player Registration Profile</p>
-                            </div>
-                            ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 20mm; object-fit: contain;" />` : ''}
-                        </div>
+                        ${pdfTheme === 'ADVAYA' ? `
+                            <div style="position: absolute; top: 0; right: 0; width: 100mm; height: 100mm; background: radial-gradient(circle at top right, rgba(251,191,36,0.05) 0%, transparent 70%); pointer-events: none;"></div>
+                            <div style="position: absolute; bottom: 0; left: 0; width: 100mm; height: 100mm; background: radial-gradient(circle at bottom left, rgba(251,191,36,0.05) 0%, transparent 70%); pointer-events: none;"></div>
+                        ` : ''}
 
-                        <div style="display: flex; gap: 10mm; margin-bottom: 10mm;">
-                            <div style="width: 50mm; height: 50mm; border-radius: 10mm; overflow: hidden; border: 4px solid ${pdfTheme === 'ADVAYA' ? '#fbbf2433' : '#f3f4f6'}; background: ${pdfTheme === 'ADVAYA' ? '#1a1a1a' : '#f9fafb'};">
-                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
-                            </div>
-                            <div style="flex: 1;">
-                                <h2 style="margin: 0; font-size: 20pt; font-weight: 900; text-transform: uppercase;">${reg.fullName}</h2>
-                                <p style="margin: 5px 0 0 0; font-size: 12pt; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; opacity: 0.8;">${reg.playerType}</p>
-                                <div style="margin-top: 5mm; display: grid; grid-template-cols: 1fr 1fr; gap: 5mm;">
-                                    ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Mobile</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.mobile}</p></div>` : ''}
-                                    ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">DOB</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.dob}</p></div>` : ''}
-                                    ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Gender</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.gender}</p></div>` : ''}
-                                    <div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Status</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.status}</p></div>
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 0 2mm 4mm 2mm; margin-bottom: 6mm; position: relative; z-index: 10;">
+                            <div style="display: flex; align-items: center; gap: 5mm;">
+                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 16mm; width: 16mm; object-fit: contain; border-radius: 2mm;" />` : ''}
+                                <div style="display: flex; flex-direction: column; justify-content: center;">
+                                    <h1 style="margin: 0; font-size: 20pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
+                                    <p style="margin: 2mm 0 0 0; font-size: 9pt; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1.5px;">${systemBranding.tagline}</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <div style="margin-top: 10mm;">
-                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-left: 4px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding-left: 3mm; margin-bottom: 5mm;">Additional Information</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm;">
-                                ${regConfig.customFields.filter(f => selectedFields.includes(f.id)).map(field => `
-                                    <div style="background: ${pdfTheme === 'ADVAYA' ? '#151515' : '#f9fafb'}; padding: 4mm; border-radius: 5mm;">
-                                        <p style="margin: 0; font-size: 7pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">${field.label}</p>
-                                        <p style="margin: 2px 0 0 0; font-size: 9pt; font-weight: 700;">${reg[field.id] || '-'}</p>
-                                    </div>
-                                `).join('')}
+                            <div style="text-align: right; display: flex; align-items: center; gap: 5mm;">
+                                <div style="display: flex; flex-direction: column; justify-content: center;">
+                                    <h2 style="margin: 0; font-size: 16pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
+                                    <p style="margin: 2mm 0 0 0; font-size: 8pt; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
+                                </div>
+                                ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 16mm; width: 16mm; object-fit: contain;" />` : ''}
                             </div>
                         </div>
 
-                        <div style="margin-top: auto; padding-top: 10mm; border-top: 1px solid ${pdfTheme === 'ADVAYA' ? '#fbbf2411' : '#f3f4f6'}; display: flex; justify-content: space-between; align-items: center; opacity: 0.5;">
-                            <p style="font-size: 7pt; font-weight: 700;">Generated on ${new Date().toLocaleDateString()} • SM Sports Registry</p>
-                            <p style="font-size: 7pt; font-weight: 700;">Page ${i + 1} of ${registrations.length}</p>
+                        <!-- Players Grid -->
+                        <div style="
+                            flex: 1;
+                            display: ${playersPerPage === 'LIST' ? 'flex' : 'grid'};
+                            ${playersPerPage === 'LIST' ? 'flex-direction: column;' : ''}
+                            grid-template-columns: repeat(${gridCols}, 1fr);
+                            grid-template-rows: ${gridRows};
+                            gap: ${playersPerPage === 'LIST' ? '2mm' : '4mm'};
+                            align-content: start;
+                        ">
+                            ${pageRegs.map((reg, idx) => {
+                                const playerNum = startIdx + idx + 1;
+                                const isDense = (typeof playersPerPage === 'number' && playersPerPage > 4) || playersPerPage === 'LIST';
+                                const isSingle = playersPerPage === 1;
+                                const isList = playersPerPage === 'LIST';
+
+                                if (isList) {
+                                    return `
+                                    <div style="
+                                        background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.03)' : '#f9fafb'};
+                                        border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#f1f5f9'};
+                                        border-radius: 2mm;
+                                        padding: 2mm 4mm;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 4mm;
+                                    ">
+                                        <div style="font-size: 10pt; font-weight: 900; width: 10mm; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'};">#${reg.playerNumber || playerNum}</div>
+                                        ${selectedFields.includes('profilePic') ? `
+                                            <div style="width: 10mm; height: 10mm; border-radius: 1mm; overflow: hidden; flex-shrink: 0;">
+                                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            </div>
+                                        ` : ''}
+                                        <div style="flex: 1; min-width: 0;">
+                                            <h3 style="margin: 0; font-size: 10pt; font-weight: 900; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.fullName}</h3>
+                                            <p style="margin: 0; font-size: 7pt; font-weight: 700; opacity: 0.6;">${reg.playerType} • ${reg.mobile}</p>
+                                        </div>
+                                        <div style="display: flex; gap: 4mm;">
+                                            ${regConfig.customFields.slice(0, 2).map(field => `
+                                                <div style="text-align: right;">
+                                                    <p style="margin: 0; font-size: 5pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">${field.label}</p>
+                                                    <p style="margin: 0; font-size: 8pt; font-weight: 700;">${reg[field.id] || '-'}</p>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    `;
+                                }
+
+                                return `
+                                <div style="
+                                    background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.03)' : '#f9fafb'};
+                                    border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#f1f5f9'};
+                                    border-radius: ${isSingle ? '8mm' : '4mm'};
+                                    padding: ${isSingle ? '10mm' : isDense ? '2.5mm' : '5mm'};
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: ${isSingle ? '8mm' : isDense ? '1.5mm' : '4mm'};
+                                    position: relative;
+                                    overflow: hidden;
+                                    ${isSingle ? 'height: 100%; justify-content: center;' : ''}
+                                ">
+                                    ${selectedFields.includes('playerNumber') ? `
+                                        <div style="position: absolute; top: 0; right: 0; padding: ${isSingle ? '3mm 8mm' : '1mm 3mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; font-size: ${isSingle ? '18pt' : isDense ? '7pt' : '10pt'}; font-weight: 900; border-bottom-left-radius: 4mm; z-index: 5;">
+                                            #${reg.playerNumber || playerNum}
+                                        </div>
+                                    ` : ''}
+                                    <div style="display: flex; gap: ${isSingle ? '10mm' : '3mm'}; align-items: ${isSingle ? 'center' : 'start'};">
+                                        ${selectedFields.includes('profilePic') ? `
+                                            <div style="width: ${isSingle ? '60mm' : isDense ? '18mm' : '30mm'}; height: ${isSingle ? '75mm' : isDense ? '22mm' : '35mm'}; border-radius: ${isSingle ? '6mm' : '2mm'}; overflow: hidden; border: ${isSingle ? '4px' : '2px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2433' : '#e2e8f0'}; flex-shrink: 0;">
+                                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                            </div>
+                                        ` : ''}
+                                        <div style="flex: 1; min-width: 0;">
+                                            ${selectedFields.includes('fullName') ? `<h3 style="margin: 0; font-size: ${isSingle ? '28pt' : isDense ? '9pt' : '14pt'}; font-weight: 900; text-transform: uppercase; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.fullName}</h3>` : ''}
+                                            <div style="display: inline-block; margin-top: ${isSingle ? '4mm' : '1mm'}; padding: ${isSingle ? '2mm 6mm' : '0.5mm 1.5mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; border-radius: ${isSingle ? '3mm' : '1mm'}; font-size: ${isSingle ? '14pt' : isDense ? '5pt' : '7pt'}; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
+                                                ${reg.playerType}
+                                            </div>
+                                            
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: ${isSingle ? '6mm' : '1.5mm'}; margin-top: ${isSingle ? '8mm' : isDense ? '1.5mm' : '4mm'};">
+                                                ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Mobile</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.mobile}</p></div>` : ''}
+                                                ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">DOB</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.dob}</p></div>` : ''}
+                                                ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Gender</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.gender}</p></div>` : ''}
+                                                <div><p style="margin: 0; font-size: ${isSingle ? '10pt' : '4pt'}; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Status</p><p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '6pt' : '8pt'}; font-weight: 700; color: ${reg.status === 'APPROVED' ? '#10b981' : '#f59e0b'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.status}</p></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: ${isSingle ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: ${isSingle ? '4mm' : '1.5mm'}; margin-top: auto;">
+                                        ${regConfig.customFields.filter(f => selectedFields.includes(f.id)).map(field => `
+                                            <div style="background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.05)' : '#ffffff'}; padding: ${isSingle ? '4mm' : '1.5mm'}; border-radius: ${isSingle ? '3mm' : '1.5mm'}; border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.05)' : '#f1f5f9'}; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                                                <p style="margin: 0; font-size: ${isSingle ? '8pt' : '5pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${field.label}</p>
+                                                <p style="margin: 0; font-size: ${isSingle ? '12pt' : isDense ? '7pt' : '9pt'}; font-weight: 700; word-break: break-all; line-height: 1.2;">${reg[field.id] || '-'}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="margin-top: 4mm; padding-top: 3mm; border-top: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#f1f5f9'}; display: flex; justify-content: space-between; align-items: center; opacity: 0.6; position: relative; z-index: 10;">
+                            <div>
+                                <p style="font-size: 8pt; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Generated by SM Sports Registry</p>
+                                <p style="font-size: 7pt; font-weight: 700; margin-top: 0.5mm;">Official Tournament Document • ${new Date().toLocaleDateString()}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 9pt; font-weight: 900; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'};">PAGE ${pageIndex + 1} OF ${totalPages}</p>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -442,24 +583,18 @@ const AuctionManage: React.FC = () => {
                     backgroundColor: pdfTheme === 'ADVAYA' ? '#0a0a0a' : '#ffffff'
                 });
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                const imgProps = doc.getImageProperties(imgData);
-                const pdfWidth = doc.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                if (i > 0) doc.addPage();
-                doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (pageIndex > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
             }
 
-            doc.save(`REGISTRATIONS_${auction?.title?.replace(/\s+/g, '_')}.pdf`);
-            setShowPDFModal(false);
-        } catch (err) {
-            console.error(err);
-            alert("Failed to generate PDF. Please try again.");
+            doc.save(`${auction?.title || 'Tournament'}_Registry.pdf`);
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            alert("Failed to generate PDF. Check console for details.");
         } finally {
             document.body.removeChild(pdfContainer);
             setIsGeneratingPDF(false);
-            setPdfProgress(0);
         }
     };
 
@@ -1427,16 +1562,121 @@ const AuctionManage: React.FC = () => {
                 
                 {activeTab === 'REQUESTS' && (
                     <div className="space-y-6 animate-fade-in">
+                        {/* Export Hub Section */}
+                        <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm space-y-8">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Export Hub</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Download your registration data</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={exportRegistrationsToCSV} 
+                                        className="bg-gray-50 border border-gray-100 text-gray-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-gray-100 transition-all active:scale-95"
+                                    >
+                                        <Download className="w-4 h-4"/> Export CSV
+                                    </button>
+                                    <button 
+                                        onClick={generatePDF}
+                                        disabled={isGeneratingPDF}
+                                        className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileDown className="w-4 h-4"/>}
+                                        {isGeneratingPDF ? `Generating ${pdfProgress}%` : 'Generate PDF Registry'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-6 border-t border-gray-50">
+                                {/* Theme Selection */}
+                                <div className="space-y-4">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <Palette className="w-3 h-3 text-blue-500"/> Document Theme
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { id: 'NORMAL', label: 'Standard White', color: 'bg-white border-gray-200' },
+                                            { id: 'ADVAYA', label: 'Premium Dark', color: 'bg-black border-amber-900/30' }
+                                        ].map(t => (
+                                            <button 
+                                                key={t.id}
+                                                onClick={() => setPdfTheme(t.id as any)}
+                                                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === t.id ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                            >
+                                                <div className={`w-full h-10 rounded-lg flex items-center justify-center font-black text-[8px] border ${t.color} ${t.id === 'ADVAYA' ? 'text-amber-500' : 'text-gray-800'}`}>
+                                                    {t.id}
+                                                </div>
+                                                <span className="text-[9px] font-black uppercase">{t.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Players Per Page */}
+                                <div className="space-y-4">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                        <LayoutList className="w-3 h-3 text-blue-500"/> Players Per Page
+                                    </label>
+                                    <div className="grid grid-cols-6 gap-2">
+                                        {[1, 2, 4, 6, 9, 'LIST'].map(num => (
+                                            <button 
+                                                key={num}
+                                                onClick={() => setPlayersPerPage(num as any)}
+                                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${playersPerPage === num ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                            >
+                                                <span className="text-sm font-black">{num === 'LIST' ? 'List' : num}</span>
+                                                <span className="text-[7px] font-black uppercase">{num === 1 ? 'Single' : num === 'LIST' ? 'Table' : 'Grid'}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Field Selection */}
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                            <Hash className="w-3 h-3 text-blue-500"/> Player Numbering
+                                        </label>
+                                        <button 
+                                            onClick={autoAssignPlayerNumbers}
+                                            className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline"
+                                        >
+                                            Auto-Assign Numbers
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { id: 'playerNumber', label: 'Player #' },
+                                            { id: 'fullName', label: 'Full Name' },
+                                            { id: 'mobile', label: 'Mobile' },
+                                            { id: 'dob', label: 'DOB' },
+                                            { id: 'gender', label: 'Gender' },
+                                            { id: 'playerType', label: 'Role' },
+                                            { id: 'profilePic', label: 'Photo' },
+                                            ...regConfig.customFields.map(f => ({ id: f.id, label: f.label }))
+                                        ].map(field => (
+                                            <button 
+                                                key={field.id}
+                                                onClick={() => {
+                                                    if (selectedFields.includes(field.id)) {
+                                                        setSelectedFields(selectedFields.filter(f => f !== field.id));
+                                                    } else {
+                                                        setSelectedFields([...selectedFields, field.id]);
+                                                    }
+                                                }}
+                                                className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${selectedFields.includes(field.id) ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/10' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                            >
+                                                {field.label}
+                                                {selectedFields.includes(field.id) ? <Check className="w-2 h-2"/> : <Plus className="w-2 h-2 opacity-30"/>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="flex justify-between items-center mb-4 px-2">
                              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Registration Queue ({registrations.length})</h2>
-                             <div className="flex items-center gap-2">
-                                 <button onClick={exportRegistrationsToCSV} className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
-                                    <Download className="w-4 h-4"/> CSV
-                                 </button>
-                                 <button onClick={() => setShowPDFModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-blue-700 transition-all shadow-sm shadow-blue-600/20">
-                                    <FileDown className="w-4 h-4"/> PDF
-                                 </button>
-                             </div>
                         </div>
                         {registrations.length === 0 ? (
                             <div className="p-32 text-center text-gray-400 bg-white rounded-[3rem] border-2 border-dashed border-gray-200 flex flex-col items-center">
@@ -1574,23 +1814,23 @@ const AuctionManage: React.FC = () => {
                                                 )}
                                             </div>
                                             <div className="pt-4 border-t border-gray-50">
-                                                <select 
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-widest focus:bg-white focus:border-blue-400 outline-none transition-all"
-                                                    onChange={async (e) => {
-                                                        const pId = e.target.value;
-                                                        if (!pId) return;
-                                                        const p = players.find(x => x.id.toString() === pId);
-                                                        if (p) {
-                                                            await db.collection('auctions').doc(id!).collection('players').doc(pId).update({ category: item.name });
-                                                            e.target.value = "";
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="">+ Assign Warrior</option>
+                                                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">+ Assign Warrior</label>
+                                                <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto p-1 bg-gray-50 rounded-lg border border-gray-100 custom-scrollbar">
                                                     {players.filter(p => p.category !== item.name).map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} ({p.category})</option>
+                                                        <button
+                                                            key={p.id}
+                                                            onClick={async () => {
+                                                                await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: item.name });
+                                                            }}
+                                                            className="text-[8px] font-black uppercase py-1.5 px-2 bg-white border border-gray-100 rounded-md hover:border-blue-400 hover:text-blue-600 transition-all text-left truncate"
+                                                        >
+                                                            {p.name}
+                                                        </button>
                                                     ))}
-                                                </select>
+                                                    {players.filter(p => p.category !== item.name).length === 0 && (
+                                                        <p className="col-span-2 text-[8px] font-bold text-gray-300 uppercase italic text-center py-2">All warriors assigned</p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1989,21 +2229,34 @@ const AuctionManage: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Category</label>
-                                            <select className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.category || 'Standard'} onChange={e => setEditItem({...editItem, category: e.target.value})}>
-                                                <option value="Standard">Standard</option>
-                                                {categories.map(cat => (
-                                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Category</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {['Standard', ...categories.map(c => c.name)].map(cat => (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => setEditItem({...editItem, category: cat})}
+                                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${editItem?.category === cat || (!editItem?.category && cat === 'Standard') ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                                    >
+                                                        {cat}
+                                                    </button>
                                                 ))}
-                                            </select>
+                                            </div>
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Role</label>
-                                            <select className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.role || 'All Rounder'} onChange={e => setEditItem({...editItem, role: e.target.value})}>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Role</label>
+                                            <div className="flex flex-wrap gap-2">
                                                 {roles.map(role => (
-                                                    <option key={role.id} value={role.name}>{role.name}</option>
+                                                    <button
+                                                        key={role.id}
+                                                        type="button"
+                                                        onClick={() => setEditItem({...editItem, role: role.name})}
+                                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${editItem?.role === role.name || (!editItem?.role && role.name === 'All Rounder') ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                                    >
+                                                        {role.name}
+                                                    </button>
                                                 ))}
-                                            </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2096,48 +2349,60 @@ const AuctionManage: React.FC = () => {
                                                     <p className="text-sm font-black text-gray-800">{selectedReg.mobile}</p>
                                                 )}
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-4">
                                                 <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Player Type</label>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Player Type</label>
                                                     {isEditingReg ? (
-                                                        <select 
-                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
-                                                            value={selectedReg.playerType}
-                                                            onChange={e => setSelectedReg({...selectedReg, playerType: e.target.value})}
-                                                        >
-                                                            {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
-                                                        </select>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {roles.map(r => (
+                                                                <button
+                                                                    key={r.id}
+                                                                    type="button"
+                                                                    onClick={() => setSelectedReg({...selectedReg, playerType: r.name})}
+                                                                    className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedReg.playerType === r.name ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                                                >
+                                                                    {r.name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     ) : (
                                                         <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.playerType}</p>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Gender</label>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Gender</label>
                                                     {isEditingReg ? (
-                                                        <select 
-                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
-                                                            value={selectedReg.gender}
-                                                            onChange={e => setSelectedReg({...selectedReg, gender: e.target.value})}
-                                                        >
-                                                            <option value="Male">Male</option>
-                                                            <option value="Female">Female</option>
-                                                            <option value="Other">Other</option>
-                                                        </select>
+                                                        <div className="flex gap-2">
+                                                            {['Male', 'Female', 'Other'].map(g => (
+                                                                <button
+                                                                    key={g}
+                                                                    type="button"
+                                                                    onClick={() => setSelectedReg({...selectedReg, gender: g})}
+                                                                    className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedReg.gender === g ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                                                >
+                                                                    {g}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     ) : (
                                                         <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.gender}</p>
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Category</label>
+                                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Category</label>
                                                     {isEditingReg ? (
-                                                        <select 
-                                                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold"
-                                                            value={selectedReg.category || 'Standard'}
-                                                            onChange={e => setSelectedReg({...selectedReg, category: e.target.value})}
-                                                        >
-                                                            <option value="Standard">Standard</option>
-                                                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                                        </select>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {['Standard', ...categories.map(c => c.name)].map(cat => (
+                                                                <button
+                                                                    key={cat}
+                                                                    type="button"
+                                                                    onClick={() => setSelectedReg({...selectedReg, category: cat})}
+                                                                    className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedReg.category === cat || (!selectedReg.category && cat === 'Standard') ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                                                                >
+                                                                    {cat}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     ) : (
                                                         <p className="text-sm font-black text-gray-800 uppercase">{selectedReg.category || 'Standard'}</p>
                                                     )}
@@ -2318,105 +2583,43 @@ const AuctionManage: React.FC = () => {
                     />
                 </div>
             )}
-            {/* PDF Export Modal */}
-            {showPDFModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-transparent">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-600/20"><FileDown className="w-6 h-6"/></div>
-                                <div>
-                                    <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Export PDF Registry</h3>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Configure your document format</p>
-                                </div>
+            {/* PDF Generation Overlay */}
+            {isGeneratingPDF && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[3rem] p-12 max-w-md w-full text-center space-y-8 shadow-2xl">
+                        <div className="relative inline-block">
+                            <div className="w-32 h-32 rounded-full border-4 border-gray-100 flex items-center justify-center">
+                                <FileDown className="w-12 h-12 text-blue-600 animate-bounce" />
                             </div>
-                            <button onClick={() => !isGeneratingPDF && setShowPDFModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-6 h-6 text-gray-400"/></button>
+                            <svg className="absolute inset-0 w-32 h-32 -rotate-90">
+                                <circle
+                                    cx="64"
+                                    cy="64"
+                                    r="60"
+                                    fill="none"
+                                    stroke="#3b82f6"
+                                    strokeWidth="8"
+                                    strokeDasharray={2 * Math.PI * 60}
+                                    strokeDashoffset={2 * Math.PI * 60 * (1 - pdfProgress / 100)}
+                                    className="transition-all duration-300"
+                                />
+                            </svg>
                         </div>
-
-                        <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto no-scrollbar">
-                            {/* Theme Selection */}
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <Palette className="w-3 h-3"/> Select Document Theme
-                                </label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button 
-                                        onClick={() => setPdfTheme('NORMAL')}
-                                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === 'NORMAL' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
-                                    >
-                                        <div className="w-full h-12 bg-white border border-gray-200 rounded-lg flex items-center justify-center font-black text-[10px]">NORMAL</div>
-                                        <span className="text-[10px] font-black uppercase">Standard White</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => setPdfTheme('ADVAYA')}
-                                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === 'ADVAYA' ? 'border-amber-500 bg-amber-500/5 text-amber-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
-                                    >
-                                        <div className="w-full h-12 bg-black border border-amber-900/30 rounded-lg flex items-center justify-center font-black text-[10px] text-amber-500">ADVAYA</div>
-                                        <span className="text-[10px] font-black uppercase">Premium Dark</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Field Selection */}
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <ListChecks className="w-3 h-3"/> Select Fields to Include
-                                </label>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                    {[
-                                        { id: 'mobile', label: 'Mobile' },
-                                        { id: 'dob', label: 'DOB' },
-                                        { id: 'gender', label: 'Gender' },
-                                        { id: 'playerType', label: 'Role' },
-                                        ...regConfig.customFields.map(f => ({ id: f.id, label: f.label }))
-                                    ].map(field => (
-                                        <button 
-                                            key={field.id}
-                                            onClick={() => {
-                                                if (selectedFields.includes(field.id)) {
-                                                    setSelectedFields(selectedFields.filter(f => f !== field.id));
-                                                } else {
-                                                    setSelectedFields([...selectedFields, field.id]);
-                                                }
-                                            }}
-                                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all flex items-center justify-between ${selectedFields.includes(field.id) ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
-                                        >
-                                            <span className="truncate mr-2">{field.label}</span>
-                                            {selectedFields.includes(field.id) ? <Check className="w-3 h-3 flex-shrink-0"/> : <Plus className="w-3 h-3 opacity-30 flex-shrink-0"/>}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {isGeneratingPDF && (
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-blue-600">
-                                        <span>Generating PDF Pages...</span>
-                                        <span>{pdfProgress}%</span>
-                                    </div>
-                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${pdfProgress}%` }} />
-                                    </div>
-                                </div>
-                            )}
+                        <div>
+                            <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Forging PDF Registry</h3>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">Processing {registrations.length} Warriors...</p>
                         </div>
-
-                        <div className="p-8 bg-gray-50 border-t border-gray-100 flex gap-4">
-                            <button 
-                                onClick={() => setShowPDFModal(false)}
-                                disabled={isGeneratingPDF}
-                                className="flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={generatePDF}
-                                disabled={isGeneratingPDF || selectedFields.length === 0}
-                                className="flex-[2] bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
-                            >
-                                {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin"/> : <Printer className="w-4 h-4"/>}
-                                {isGeneratingPDF ? 'Processing...' : 'Start Export'}
-                            </button>
+                        <div className="bg-gray-50 rounded-2xl p-4">
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">
+                                <span>Progress</span>
+                                <span>{pdfProgress}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-blue-600 transition-all duration-300"
+                                    style={{ width: `${pdfProgress}%` }}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
