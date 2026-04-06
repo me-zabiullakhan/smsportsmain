@@ -140,6 +140,19 @@ const AuctionManage: React.FC = () => {
     const [showRegModal, setShowRegModal] = useState(false);
     const [selectedReg, setSelectedReg] = useState<RegisteredPlayer | null>(null);
     const [isEditingReg, setIsEditingReg] = useState(false);
+    const [expandedRegId, setExpandedRegId] = useState<string | null>(null);
+    const [allAuctions, setAllAuctions] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!userProfile?.uid) return;
+        const unsub = db.collection('auctions')
+            .where('createdBy', '==', userProfile.uid)
+            .onSnapshot(snap => {
+                const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                setAllAuctions(data);
+            });
+        return () => unsub();
+    }, [userProfile]);
     
     // PDF Export States
     const [pdfTheme, setPdfTheme] = useState<'NORMAL' | 'ADVAYA'>('NORMAL');
@@ -419,18 +432,21 @@ const AuctionManage: React.FC = () => {
                 // Determine grid columns based on playersPerPage
                 let gridCols = 1;
                 let gridRows = '1fr';
-                if (playersPerPage === 2) { gridCols = 1; gridRows = '1fr 1fr'; }
-                if (playersPerPage === 4) { gridCols = 2; gridRows = '1fr 1fr'; }
-                if (playersPerPage === 6) { gridCols = 2; gridRows = '1fr 1fr 1fr'; }
-                if (playersPerPage === 9) { gridCols = 3; gridRows = '1fr 1fr 1fr'; }
-                if (playersPerPage === 'LIST') { gridCols = 1; gridRows = 'none'; }
+                let cardHeight = '100%';
+                
+                if (playersPerPage === 1) { gridCols = 1; gridRows = '1fr'; cardHeight = '100%'; }
+                else if (playersPerPage === 2) { gridCols = 1; gridRows = 'repeat(2, 1fr)'; cardHeight = '100%'; }
+                else if (playersPerPage === 4) { gridCols = 2; gridRows = 'repeat(2, 1fr)'; cardHeight = '100%'; }
+                else if (playersPerPage === 6) { gridCols = 2; gridRows = 'repeat(3, 1fr)'; cardHeight = '100%'; }
+                else if (playersPerPage === 9) { gridCols = 3; gridRows = 'repeat(3, 1fr)'; cardHeight = '100%'; }
+                else if (playersPerPage === 'LIST') { gridCols = 1; gridRows = 'none'; cardHeight = 'auto'; }
 
                 // Render page content
                 pdfContainer.innerHTML = `
                     <div id="pdf-page" style="
                         width: 210mm; 
                         height: 297mm; 
-                        padding: 12mm; 
+                        padding: 8mm 10mm; 
                         background: ${pdfTheme === 'ADVAYA' ? '#0a0a0a' : '#ffffff'};
                         color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'};
                         font-family: sans-serif;
@@ -446,18 +462,18 @@ const AuctionManage: React.FC = () => {
                         ` : ''}
 
                         <!-- Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 2mm 4mm 6mm 4mm; margin-bottom: 8mm; position: relative; z-index: 10;">
-                            <div style="display: flex; align-items: center; gap: 6mm;">
-                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 18mm; width: 18mm; object-fit: contain; border-radius: 3mm;" />` : ''}
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 0 0 3mm 0; margin-bottom: 4mm; position: relative; z-index: 10; height: 25mm; flex-shrink: 0; box-sizing: border-box;">
+                            <div style="display: flex; align-items: center; gap: 5mm;">
+                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 18mm; width: 18mm; object-fit: contain; border-radius: 2mm;" />` : ''}
                                 <div style="display: flex; flex-direction: column; justify-content: center;">
-                                    <h1 style="margin: 0; font-size: 24pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
-                                    <p style="margin: 3mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px;">${systemBranding.tagline}</p>
+                                    <h1 style="margin: 0; font-size: 22pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
+                                    <p style="margin: 1mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px;">${systemBranding.tagline}</p>
                                 </div>
                             </div>
-                            <div style="text-align: right; display: flex; align-items: center; gap: 6mm;">
+                            <div style="text-align: right; display: flex; align-items: center; gap: 5mm;">
                                 <div style="display: flex; flex-direction: column; justify-content: center;">
-                                    <h2 style="margin: 0; font-size: 18pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
-                                    <p style="margin: 3mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
+                                    <h2 style="margin: 0; font-size: 15pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
+                                    <p style="margin: 1mm 0 0 0; font-size: 9pt; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
                                 </div>
                                 ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 18mm; width: 18mm; object-fit: contain;" />` : ''}
                             </div>
@@ -470,8 +486,10 @@ const AuctionManage: React.FC = () => {
                             ${playersPerPage === 'LIST' ? 'flex-direction: column;' : ''}
                             grid-template-columns: repeat(${gridCols}, 1fr);
                             grid-template-rows: ${gridRows};
-                            gap: ${playersPerPage === 'LIST' ? '2mm' : '4mm'};
+                            gap: 2mm;
                             align-content: start;
+                            min-height: 0;
+                            box-sizing: border-box;
                         ">
                             ${pageRegs.map((reg, idx) => {
                                 const playerNum = startIdx + idx + 1;
@@ -516,52 +534,48 @@ const AuctionManage: React.FC = () => {
                                 <div style="
                                     background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.03)' : '#f9fafb'};
                                     border: 2px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.15)' : '#e2e8f0'};
-                                    border-radius: ${isSingle ? '10mm' : '6mm'};
-                                    padding: ${isSingle ? '15mm' : isDense ? '4mm' : '8mm'};
+                                    border-radius: ${isSingle ? '10mm' : '3mm'};
+                                    padding: ${isSingle ? '12mm' : isDense ? '2mm' : '5mm'};
                                     display: flex;
                                     flex-direction: column;
-                                    gap: ${isSingle ? '12mm' : isDense ? '3mm' : '6mm'};
+                                    gap: ${isSingle ? '10mm' : isDense ? '1.5mm' : '3mm'};
                                     position: relative;
                                     overflow: hidden;
-                                    height: 100%;
+                                    height: ${cardHeight};
                                     box-sizing: border-box;
                                     ${isSingle ? 'justify-content: center;' : ''}
                                 ">
                                     ${selectedFields.includes('playerNumber') ? `
-                                        <div style="position: absolute; top: 0; right: 0; padding: ${isSingle ? '4mm 12mm' : '2mm 6mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; font-size: ${isSingle ? '24pt' : isDense ? '10pt' : '14pt'}; font-weight: 900; border-bottom-left-radius: 6mm; z-index: 5; box-shadow: -2px 2px 10px rgba(0,0,0,0.1);">
+                                        <div style="position: absolute; top: 0; right: 0; padding: ${isSingle ? '4mm 12mm' : '1mm 3mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; font-size: ${isSingle ? '24pt' : isDense ? '8pt' : '11pt'}; font-weight: 900; border-bottom-left-radius: 3mm; z-index: 5;">
                                             #${reg.playerNumber || playerNum}
                                         </div>
                                     ` : ''}
-                                    <div style="display: flex; gap: ${isSingle ? '15mm' : '6mm'}; align-items: ${isSingle ? 'center' : 'start'};">
+                                    <div style="display: flex; gap: ${isSingle ? '12mm' : '3mm'}; align-items: ${isSingle ? 'center' : 'start'};">
                                         ${selectedFields.includes('profilePic') ? `
-                                            <div style="width: ${isSingle ? '70mm' : isDense ? '22mm' : '35mm'}; height: ${isSingle ? '85mm' : isDense ? '28mm' : '45mm'}; border-radius: ${isSingle ? '8mm' : '4mm'}; overflow: hidden; border: ${isSingle ? '6px' : '3px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2444' : '#cbd5e1'}; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                            <div style="width: ${isSingle ? '70mm' : isDense ? '18mm' : '30mm'}; height: ${isSingle ? '85mm' : isDense ? '22mm' : '38mm'}; border-radius: ${isSingle ? '8mm' : '2mm'}; overflow: hidden; border: ${isSingle ? '6px' : '2px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2444' : '#cbd5e1'}; flex-shrink: 0;">
                                                 <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
                                             </div>
                                         ` : ''}
-                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: ${isSingle ? '6mm' : '2mm'};">
-                                            ${selectedFields.includes('fullName') ? `<h3 style="margin: 0; font-size: ${isSingle ? '36pt' : isDense ? '12pt' : '18pt'}; font-weight: 900; text-transform: uppercase; line-height: 1.1; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#0f172a'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reg.fullName}</h3>` : ''}
-                                            <div style="display: inline-block; width: fit-content; padding: ${isSingle ? '3mm 8mm' : '1mm 3mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; border-radius: ${isSingle ? '4mm' : '1.5mm'}; font-size: ${isSingle ? '18pt' : isDense ? '7pt' : '10pt'}; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: ${isSingle ? '6mm' : '1mm'};">
+                                            ${selectedFields.includes('fullName') ? `<h3 style="margin: 0; font-size: ${isSingle ? '36pt' : isDense ? '10pt' : '15pt'}; font-weight: 900; text-transform: uppercase; line-height: 1.1; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#0f172a'}; word-break: break-all; margin-bottom: 0.5mm;">${reg.fullName}</h3>` : ''}
+                                            <div style="display: inline-block; width: fit-content; padding: ${isSingle ? '3mm 8mm' : '0.5mm 2mm'}; background: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; color: ${pdfTheme === 'ADVAYA' ? '#000000' : '#ffffff'}; border-radius: ${isSingle ? '4mm' : '1mm'}; font-size: ${isSingle ? '18pt' : isDense ? '6pt' : '8pt'}; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0;">
                                                 ${reg.playerType}
                                             </div>
                                             
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: ${isSingle ? '10mm' : '4mm'}; margin-top: ${isSingle ? '12mm' : isDense ? '2mm' : '6mm'};">
-                                                ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Mobile</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.mobile}</p></div>` : ''}
-                                                ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">DOB</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.dob}</p></div>` : ''}
-                                                ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Gender</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.gender}</p></div>` : ''}
-                                                <div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '6pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Status</p><p style="margin: 2px 0 0 0; font-size: ${isSingle ? '20pt' : isDense ? '9pt' : '12pt'}; font-weight: 900; color: ${reg.status === 'APPROVED' ? '#10b981' : '#f59e0b'};">${reg.status}</p></div>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: ${isSingle ? '10mm' : '2mm'}; margin-top: ${isSingle ? '10mm' : isDense ? '1mm' : '3mm'};">
+                                                ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '4pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase;">Mobile</p><p style="margin: 0; font-size: ${isSingle ? '20pt' : isDense ? '7pt' : '10pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.mobile}</p></div>` : ''}
+                                                ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '4pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase;">DOB</p><p style="margin: 0; font-size: ${isSingle ? '20pt' : isDense ? '7pt' : '10pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.dob}</p></div>` : ''}
+                                                ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '4pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase;">Gender</p><p style="margin: 0; font-size: ${isSingle ? '20pt' : isDense ? '7pt' : '10pt'}; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#334155'};">${reg.gender}</p></div>` : ''}
+                                                <div><p style="margin: 0; font-size: ${isSingle ? '12pt' : '4pt'}; font-weight: 900; opacity: 0.6; text-transform: uppercase;">Status</p><p style="margin: 0; font-size: ${isSingle ? '20pt' : isDense ? '7pt' : '10pt'}; font-weight: 900; color: ${reg.status === 'APPROVED' ? '#10b981' : '#f59e0b'};">${reg.status}</p></div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: ${isSingle ? '20mm' : '5mm'};">
-                                        <!-- Spacer to fill middle gap -->
-                                    </div>
-
-                                    <div style="display: grid; grid-template-columns: ${isSingle ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: ${isSingle ? '6mm' : '3mm'}; margin-top: auto;">
+                                    <div style="display: grid; grid-template-columns: ${isSingle ? '1fr 1fr 1fr' : '1fr 1fr'}; gap: ${isSingle ? '6mm' : '1.5mm'}; margin-top: auto;">
                                         ${regConfig.customFields.filter(f => selectedFields.includes(f.id)).map(field => `
-                                            <div style="background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.06)' : '#ffffff'}; padding: ${isSingle ? '6mm' : '3mm'}; border-radius: ${isSingle ? '5mm' : '3mm'}; border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#e2e8f0'}; min-width: 0; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                                <p style="margin: 0; font-size: ${isSingle ? '10pt' : '6pt'}; font-weight: 900; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${field.label}</p>
-                                                <p style="margin: 2px 0 0 0; font-size: ${isSingle ? '16pt' : isDense ? '9pt' : '12pt'}; font-weight: 700; word-break: break-all; line-height: 1.3; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#1e293b'};">${reg[field.id] || '-'}</p>
+                                            <div style="background: ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.06)' : '#ffffff'}; padding: ${isSingle ? '6mm' : '1.5mm'}; border-radius: ${isSingle ? '5mm' : '1.5mm'}; border: 1px solid ${pdfTheme === 'ADVAYA' ? 'rgba(251,191,36,0.1)' : '#e2e8f0'}; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
+                                                <p style="margin: 0; font-size: ${isSingle ? '10pt' : '4.5pt'}; font-weight: 900; opacity: 0.7; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${field.label}</p>
+                                                <p style="margin: 0; font-size: ${isSingle ? '16pt' : isDense ? '7pt' : '9pt'}; font-weight: 700; word-break: break-all; line-height: 1.1; color: ${pdfTheme === 'ADVAYA' ? '#ffffff' : '#1e293b'};">${reg[field.id] || '-'}</p>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -738,7 +752,20 @@ const AuctionManage: React.FC = () => {
                 <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
                         <button onClick={() => navigate('/admin')} className="text-gray-400 hover:text-gray-800 transition-colors p-2 hover:bg-gray-50 rounded-lg"><ArrowLeft className="w-5 h-5"/></button>
-                        <h1 className="text-sm font-black uppercase tracking-widest text-gray-700 truncate max-w-[200px]">{auction?.title}</h1>
+                        <div className="relative">
+                            <select 
+                                value={id || ''} 
+                                onChange={(e) => navigate(`/manage/${e.target.value}`)}
+                                className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-xs font-black uppercase tracking-widest text-gray-700 outline-none focus:border-blue-500 shadow-sm cursor-pointer"
+                            >
+                                {allAuctions.map(a => (
+                                    <option key={a.id} value={a.id}>{a.title?.toUpperCase()}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                <ChevronDown className="w-4 h-4" />
+                            </div>
+                        </div>
                     </div>
                     <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
                         {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST', 'CAPTAIN_CODES'].map(tab => (
@@ -1599,20 +1626,27 @@ const AuctionManage: React.FC = () => {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                         <Palette className="w-3 h-3 text-blue-500"/> Document Theme
                                     </label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-2">
                                         {[
-                                            { id: 'NORMAL', label: 'Standard White', color: 'bg-white border-gray-200' },
-                                            { id: 'ADVAYA', label: 'Premium Dark', color: 'bg-black border-amber-900/30' }
-                                        ].map(t => (
+                                            { id: 'NORMAL', label: 'Standard White', desc: 'Clean & Professional' },
+                                            { id: 'ADVAYA', label: 'Premium Dark', desc: 'Gold & Black Warrior' }
+                                        ].map(theme => (
                                             <button 
-                                                key={t.id}
-                                                onClick={() => setPdfTheme(t.id as any)}
-                                                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === t.id ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                                key={theme.id}
+                                                onClick={() => setPdfTheme(theme.id as any)}
+                                                className={`p-3 rounded-xl border-2 text-left transition-all relative overflow-hidden group ${pdfTheme === theme.id ? 'border-blue-600 bg-blue-50/50 shadow-lg shadow-blue-600/10' : 'border-gray-100 bg-gray-50/50 hover:border-blue-200'}`}
                                             >
-                                                <div className={`w-full h-10 rounded-lg flex items-center justify-center font-black text-[8px] border ${t.color} ${t.id === 'ADVAYA' ? 'text-amber-500' : 'text-gray-800'}`}>
-                                                    {t.id}
+                                                <div className="relative z-10">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${pdfTheme === theme.id ? 'text-blue-600' : 'text-gray-700'}`}>{theme.label}</p>
+                                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{theme.desc}</p>
                                                 </div>
-                                                <span className="text-[9px] font-black uppercase">{t.label}</span>
+                                                {pdfTheme === theme.id && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                                                            <CheckCircle className="w-2.5 h-2.5 text-white" />
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -1623,15 +1657,16 @@ const AuctionManage: React.FC = () => {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                         <LayoutList className="w-3 h-3 text-blue-500"/> Players Per Page
                                     </label>
-                                    <div className="grid grid-cols-6 gap-2">
+                                    <div className="grid grid-cols-3 gap-2">
                                         {[1, 2, 4, 6, 9, 'LIST'].map(num => (
                                             <button 
                                                 key={num}
                                                 onClick={() => setPlayersPerPage(num as any)}
-                                                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${playersPerPage === num ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                                className={`py-3 rounded-xl border-2 text-center transition-all ${playersPerPage === num ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-blue-200'}`}
                                             >
-                                                <span className="text-sm font-black">{num === 'LIST' ? 'List' : num}</span>
-                                                <span className="text-[7px] font-black uppercase">{num === 1 ? 'Single' : num === 'LIST' ? 'Table' : 'Grid'}</span>
+                                                <p className="text-[10px] font-black uppercase tracking-widest">
+                                                    {num === 'LIST' ? 'List' : num}
+                                                </p>
                                             </button>
                                         ))}
                                     </div>
@@ -1717,11 +1752,8 @@ const AuctionManage: React.FC = () => {
                                         <div className="flex items-center gap-3">
                                             <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 ${reg.status === 'PENDING' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : reg.status === 'APPROVED' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>{reg.status}</div>
                                             <button 
-                                                onClick={() => {
-                                                    setSelectedReg(reg);
-                                                    setShowRegModal(true);
-                                                }}
-                                                className="p-2.5 bg-gray-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-xl transition-all"
+                                                onClick={() => setExpandedRegId(expandedRegId === reg.id ? null : reg.id)}
+                                                className={`p-2.5 rounded-xl transition-all ${expandedRegId === reg.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-gray-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600'}`}
                                                 title="View Details"
                                             >
                                                 <Eye className="w-4 h-4"/>
@@ -1744,12 +1776,52 @@ const AuctionManage: React.FC = () => {
                                                 </button>
                                             )}
                                         </div>
+
+                                        {expandedRegId === reg.id && (
+                                            <div className="mt-6 pt-6 border-t border-gray-100 animate-fade-in">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Mobile</p>
+                                                        <p className="text-xs font-bold text-gray-700">{reg.mobile}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">DOB</p>
+                                                        <p className="text-xs font-bold text-gray-700">{reg.dob}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Gender</p>
+                                                        <p className="text-xs font-bold text-gray-700">{reg.gender}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Role</p>
+                                                        <p className="text-xs font-bold text-gray-700">{reg.playerType}</p>
+                                                    </div>
+                                                    {regConfig.customFields.map(f => (
+                                                        <div key={f.id}>
+                                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">{f.label}</p>
+                                                            <p className="text-xs font-bold text-gray-700">{reg[f.id] || 'N/A'}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {reg.paymentProof && (
+                                                    <div className="mt-6">
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3">Payment Proof Document</p>
+                                                        <div className="relative group/img inline-block">
+                                                            <img src={reg.paymentProof} className="max-w-md rounded-2xl border-4 border-white shadow-xl" referrerPolicy="no-referrer" />
+                                                            <a href={reg.paymentProof} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                                                                <ExternalLink className="text-white w-8 h-8" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         )}
-                    </div>
-                )}
+                </div>
+            )}
 
                 {(activeTab === 'CATEGORIES' || activeTab === 'ROLES' || activeTab === 'SPONSORS') && (
                     <div className="space-y-6 animate-fade-in">

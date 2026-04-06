@@ -1234,15 +1234,15 @@ const PlayerRegistration: React.FC = () => {
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
                                                     Gender Identity {(config?.basicFields?.gender?.required !== false) && <span className="text-red-500">*</span>}
                                                 </label>
-                                                <div className="grid grid-cols-3 gap-4">
+                                                <div className="grid grid-cols-3 gap-3">
                                                     {['Male', 'Female', 'Other'].map(g => (
                                                         <button 
-                                                            key={g} 
-                                                            type="button" 
-                                                            onClick={() => setFormData({...formData, gender: g})} 
-                                                            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${formData.gender === g ? 'bg-amber-600 border-amber-600 text-black shadow-[0_0_20px_rgba(251,191,36,0.3)]' : 'bg-black/40 border-amber-900/20 text-amber-500/50 hover:border-amber-500/50'}`}
+                                                            key={g}
+                                                            type="button"
+                                                            onClick={() => setFormData({...formData, gender: g})}
+                                                            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${formData.gender === g ? 'bg-amber-600 border-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'}`}
                                                         >
-                                                            {g}
+                                                            {g.toUpperCase()}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -1285,42 +1285,22 @@ const PlayerRegistration: React.FC = () => {
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Select your primary skill on the field</p>
                                     </div>
                                     {(!config?.basicFields || config.basicFields.role?.show !== false) ? (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                            {roles.length > 0 ? (
-                                                roles.map(r => (
-                                                    <motion.button
+                                        <div className="max-w-xl mx-auto">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                {roles.map(r => (
+                                                    <button 
                                                         key={r.id}
-                                                        whileHover={{ y: -10 }}
-                                                        whileTap={{ scale: 0.95 }}
+                                                        type="button"
                                                         onClick={() => setFormData({...formData, playerType: r.name})}
-                                                        className={`relative p-8 rounded-[2.5rem] border-2 transition-all overflow-hidden group ${formData.playerType === r.name ? 'bg-amber-600 border-amber-500 text-black shadow-[0_20px_40px_-10px_rgba(251,191,36,0.4)]' : 'bg-black/60 border-amber-900/20 text-amber-100 hover:border-amber-500/50'}`}
+                                                        className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-3 group ${formData.playerType === r.name ? 'bg-amber-600 border-amber-600 text-black shadow-2xl shadow-amber-600/30' : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'}`}
                                                     >
-                                                        {isAdvaya && (
-                                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[inherit]">
-                                                                <motion.div
-                                                                    animate={{ rotate: 360 }}
-                                                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                                                    className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,#f59e0b_360deg)] opacity-60 blur-[6px]"
-                                                                />
-                                                                <div className={`absolute inset-[2px] rounded-[inherit] z-0 ${formData.playerType === r.name ? 'bg-amber-600' : 'bg-black/80'}`} />
-                                                            </div>
-                                                        )}
-                                                        <div className="relative z-10">
-                                                            <div className={`absolute top-0 right-0 w-12 h-12 rounded-full flex items-center justify-center ${formData.playerType === r.name ? 'bg-black/20' : 'bg-amber-500/10'}`}>
-                                                                {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
-                                                            </div>
-                                                            <div className="text-left mt-12">
-                                                                <h4 className={`text-xl font-black uppercase tracking-tight mb-2 ${formData.playerType === r.name ? 'text-black' : 'text-amber-500'}`}>{r.name}</h4>
-                                                                <p className={`text-[9px] font-black uppercase tracking-widest ${formData.playerType === r.name ? 'text-black/60' : 'text-slate-500'}`}>Primary Skillset</p>
-                                                            </div>
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${formData.playerType === r.name ? 'bg-black/20 text-black' : 'bg-amber-500/10 text-amber-500 group-hover:bg-amber-500/20'}`}>
+                                                            {r.name.toLowerCase().includes('bat') ? <Sword className="w-6 h-6" /> : r.name.toLowerCase().includes('bowl') ? <Zap className="w-6 h-6" /> : r.name.toLowerCase().includes('wicket') ? <ShieldCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
                                                         </div>
-                                                    </motion.button>
-                                                ))
-                                            ) : (
-                                                <div className="col-span-full p-12 text-center border-2 border-dashed border-amber-900/20 rounded-[3rem]">
-                                                    <p className="text-amber-500/50 font-black uppercase tracking-widest">No roles defined in registry</p>
-                                                </div>
-                                            )}
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-center">{r.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="p-12 text-center border-2 border-dashed border-amber-900/20 rounded-[3rem]">
@@ -1349,15 +1329,15 @@ const PlayerRegistration: React.FC = () => {
                                                         <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
                                                             {field.label} {field.required && <span className="text-red-500">*</span>}
                                                         </label>
-                                                        <div className="flex flex-wrap gap-3">
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                             {field.options?.map(opt => (
                                                                 <button 
-                                                                    key={opt} 
-                                                                    type="button" 
-                                                                    onClick={() => setFormData({...formData, [field.id]: opt})} 
-                                                                    className={`px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${formData[field.id] === opt ? 'bg-amber-600 border-amber-600 text-black shadow-[0_0_20px_rgba(251,191,36,0.3)]' : 'bg-black/40 border-amber-900/20 text-amber-500/50 hover:border-amber-500/50'}`}
+                                                                    key={opt}
+                                                                    type="button"
+                                                                    onClick={() => setFormData({...formData, [field.id]: opt})}
+                                                                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${formData[field.id] === opt ? 'bg-amber-600 border-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'}`}
                                                                 >
-                                                                    {opt}
+                                                                    {opt.toUpperCase()}
                                                                 </button>
                                                             ))}
                                                         </div>
