@@ -68,7 +68,7 @@ const SuperAdminDashboard: React.FC = () => {
     });
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [userForm, setUserForm] = useState<Partial<UserProfile>>({
-        email: '', role: UserRole.SUPPORT, plan: 'FREE'
+        email: '', role: UserRole.SUPPORT, plan: { type: 'FREE', maxTeams: 5, maxAuctions: 1 }
     });
     const [popups, setPopups] = useState<SystemPopup[]>([]);
     const [isAddingPopup, setIsAddingPopup] = useState(false);
@@ -160,7 +160,7 @@ const SuperAdminDashboard: React.FC = () => {
                 alert("Identity Created. User must sign in with this email.");
             }
             setIsAddingUser(false);
-            setUserForm({ email: '', role: UserRole.SUPPORT, plan: 'FREE' });
+            setUserForm({ email: '', role: UserRole.SUPPORT, plan: { type: 'FREE', maxTeams: 5, maxAuctions: 1 } });
         } catch (e: any) { alert(e.message); }
         setIsProcessing(false);
     };
@@ -562,10 +562,16 @@ const SuperAdminDashboard: React.FC = () => {
                                 <option value={UserRole.SUPER_ADMIN}>SUPER ADMIN</option>
                                 <option value={UserRole.TEAM_OWNER}>TEAM OWNER</option>
                             </select>
-                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.plan} onChange={e => setUserForm({...userForm, plan: e.target.value})}>
+                            <select className="w-full bg-black border border-white/10 rounded-2xl py-4 px-6 text-xs font-bold outline-none focus:border-red-600" value={userForm.plan?.type} onChange={e => {
+                                const type = e.target.value as any;
+                                let plan: any = { type: 'FREE', maxTeams: 5, maxAuctions: 1 };
+                                if (type === 'BASIC') plan = { type: 'BASIC', maxTeams: 15, maxAuctions: 5 };
+                                if (type === 'PREMIUM') plan = { type: 'PREMIUM', maxTeams: 50, maxAuctions: 20 };
+                                setUserForm({...userForm, plan});
+                            }}>
                                 <option value="FREE">FREE PLAN</option>
-                                <option value="PRO">PRO PLAN</option>
-                                <option value="ULTIMATE">ULTIMATE PLAN</option>
+                                <option value="BASIC">BASIC PLAN</option>
+                                <option value="PREMIUM">PREMIUM PLAN</option>
                             </select>
                             <button type="submit" disabled={isProcessing} className="w-full bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50">PROVISION IDENTITY</button>
                         </form>

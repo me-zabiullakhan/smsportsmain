@@ -7,13 +7,15 @@ import {
     DollarSign, Image as ImageIcon, Briefcase, FileText, Settings, QrCode, 
     AlignLeft, CheckSquare, Square, Palette, ChevronDown, Search, CheckCircle, 
     XCircle, Clock, Calendar, Info, ListPlus, Eye, EyeOff, Copy, Link as LinkIcon, 
-    Check as CheckIcon, ShieldCheck, Tag, User, TrendingUp, CreditCard, Shield, 
+    Check as CheckIcon, Check, ShieldCheck, Tag, User, TrendingUp, CreditCard, Shield, 
     UserCheck, UserX, Share2, Download, FileSpreadsheet, Filter, Key, 
     ExternalLink, LayoutList, ToggleRight, ToggleLeft, RefreshCw, FileUp, 
-    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone
+    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer
 } from 'lucide-react';
 import firebase from 'firebase/compat/app';
 import * as XLSX from 'xlsx';
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { useAuction } from '../hooks/useAuction';
 
 import heic2any from 'heic2any';
@@ -114,7 +116,7 @@ const AuctionManage: React.FC = () => {
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
     const [settingsForm, setSettingsForm] = useState({
-        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false
+        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false, venue: ''
     });
     const [slabs, setSlabs] = useState<BidIncrementSlab[]>([]);
     const [newSlab, setNewSlab] = useState({ from: '', increment: '' });
@@ -138,6 +140,13 @@ const AuctionManage: React.FC = () => {
     const [showRegModal, setShowRegModal] = useState(false);
     const [selectedReg, setSelectedReg] = useState<RegisteredPlayer | null>(null);
     const [isEditingReg, setIsEditingReg] = useState(false);
+    
+    // PDF Export States
+    const [showPDFModal, setShowPDFModal] = useState(false);
+    const [pdfTheme, setPdfTheme] = useState<'NORMAL' | 'ADVAYA'>('NORMAL');
+    const [selectedFields, setSelectedFields] = useState<string[]>(['fullName', 'mobile', 'dob', 'gender', 'playerType']);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const [pdfProgress, setPdfProgress] = useState(0);
 
     // Captain Code State
     const [showCodeModal, setShowCodeModal] = useState(false);
@@ -353,6 +362,105 @@ const AuctionManage: React.FC = () => {
             alert(`Imported ${data.length} records!`);
         };
         reader.readAsBinaryString(file);
+    };
+
+    const generatePDF = async () => {
+        if (registrations.length === 0) return alert("No registrations to export.");
+        setIsGeneratingPDF(true);
+        setPdfProgress(0);
+
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pdfContainer = document.createElement('div');
+        pdfContainer.style.position = 'fixed';
+        pdfContainer.style.left = '-9999px';
+        pdfContainer.style.top = '0';
+        pdfContainer.style.width = '210mm'; // A4 width
+        document.body.appendChild(pdfContainer);
+
+        try {
+            for (let i = 0; i < registrations.length; i++) {
+                const reg = registrations[i];
+                setPdfProgress(Math.round(((i + 1) / registrations.length) * 100));
+
+                // Render player profile to the hidden container
+                pdfContainer.innerHTML = `
+                    <div id="pdf-page" style="
+                        width: 210mm; 
+                        min-height: 297mm; 
+                        padding: 20mm; 
+                        background: ${pdfTheme === 'ADVAYA' ? '#0a0a0a' : '#ffffff'};
+                        color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'};
+                        font-family: sans-serif;
+                        box-sizing: border-box;
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding-bottom: 10mm; margin-bottom: 10mm;">
+                            <div>
+                                <h1 style="margin: 0; font-size: 24pt; font-weight: 900; text-transform: uppercase;">${auction?.title || 'Tournament'}</h1>
+                                <p style="margin: 5px 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.7; letter-spacing: 2px; text-transform: uppercase;">Player Registration Profile</p>
+                            </div>
+                            ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 20mm; object-fit: contain;" />` : ''}
+                        </div>
+
+                        <div style="display: flex; gap: 10mm; margin-bottom: 10mm;">
+                            <div style="width: 50mm; height: 50mm; border-radius: 10mm; overflow: hidden; border: 4px solid ${pdfTheme === 'ADVAYA' ? '#fbbf2433' : '#f3f4f6'}; background: ${pdfTheme === 'ADVAYA' ? '#1a1a1a' : '#f9fafb'};">
+                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+                            <div style="flex: 1;">
+                                <h2 style="margin: 0; font-size: 20pt; font-weight: 900; text-transform: uppercase;">${reg.fullName}</h2>
+                                <p style="margin: 5px 0 0 0; font-size: 12pt; font-weight: 700; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; opacity: 0.8;">${reg.playerType}</p>
+                                <div style="margin-top: 5mm; display: grid; grid-template-cols: 1fr 1fr; gap: 5mm;">
+                                    ${selectedFields.includes('mobile') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Mobile</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.mobile}</p></div>` : ''}
+                                    ${selectedFields.includes('dob') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">DOB</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.dob}</p></div>` : ''}
+                                    ${selectedFields.includes('gender') ? `<div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Gender</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.gender}</p></div>` : ''}
+                                    <div><p style="margin: 0; font-size: 8pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">Status</p><p style="margin: 2px 0 0 0; font-size: 10pt; font-weight: 700;">${reg.status}</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 10mm;">
+                            <h3 style="font-size: 10pt; font-weight: 900; text-transform: uppercase; border-left: 4px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding-left: 3mm; margin-bottom: 5mm;">Additional Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm;">
+                                ${regConfig.customFields.filter(f => selectedFields.includes(f.id)).map(field => `
+                                    <div style="background: ${pdfTheme === 'ADVAYA' ? '#151515' : '#f9fafb'}; padding: 4mm; border-radius: 5mm;">
+                                        <p style="margin: 0; font-size: 7pt; font-weight: 900; opacity: 0.5; text-transform: uppercase;">${field.label}</p>
+                                        <p style="margin: 2px 0 0 0; font-size: 9pt; font-weight: 700;">${reg[field.id] || '-'}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div style="margin-top: auto; padding-top: 10mm; border-top: 1px solid ${pdfTheme === 'ADVAYA' ? '#fbbf2411' : '#f3f4f6'}; display: flex; justify-content: space-between; align-items: center; opacity: 0.5;">
+                            <p style="font-size: 7pt; font-weight: 700;">Generated on ${new Date().toLocaleDateString()} • SM Sports Registry</p>
+                            <p style="font-size: 7pt; font-weight: 700;">Page ${i + 1} of ${registrations.length}</p>
+                        </div>
+                    </div>
+                `;
+
+                const canvas = await html2canvas(pdfContainer.querySelector('#pdf-page') as HTMLElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: pdfTheme === 'ADVAYA' ? '#0a0a0a' : '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                const imgProps = doc.getImageProperties(imgData);
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                if (i > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+
+            doc.save(`REGISTRATIONS_${auction?.title?.replace(/\s+/g, '_')}.pdf`);
+            setShowPDFModal(false);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to generate PDF. Please try again.");
+        } finally {
+            document.body.removeChild(pdfContainer);
+            setIsGeneratingPDF(false);
+            setPdfProgress(0);
+        }
     };
 
     const exportPlayersToCSV = () => {
@@ -702,7 +810,7 @@ const AuctionManage: React.FC = () => {
                                                     <div className="flex items-center gap-3">
                                                         <div 
                                                             className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shadow-sm cursor-pointer hover:border-blue-400 transition-all"
-                                                            onClick={() => p.photoUrl && setOverlayImage({ url: p.photoUrl, title: p.name, type: 'PLAYER', id: p.id, field: 'photoUrl' })}
+                                                            onClick={() => p.photoUrl && setOverlayImage({ url: p.photoUrl, title: p.name, type: 'PLAYER', id: String(p.id), field: 'photoUrl' })}
                                                         >
                                                             {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-5 h-5 m-2.5 text-gray-300"/>}
                                                         </div>
@@ -1049,18 +1157,6 @@ const AuctionManage: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-[11px] font-black text-blue-500 uppercase tracking-[0.25em] mb-6 flex items-center gap-2">
-                                            <Phone className="w-4 h-4"/> Organizer Contact Info
-                                        </h3>
-                                        <input 
-                                            className="w-full border-2 border-gray-100 rounded-xl px-6 py-4 text-xs font-bold text-gray-600 focus:border-blue-400 outline-none transition-all shadow-inner bg-gray-50/50"
-                                            placeholder="Enter contact number or email for queries..."
-                                            value={regConfig.organizerContact || ''}
-                                            onChange={e => setRegConfig({...regConfig, organizerContact: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div>
                                         <h3 className="text-[11px] font-black text-red-500 uppercase tracking-[0.25em] mb-6 flex items-center gap-2">
                                             <ShieldCheck className="w-4 h-4"/> Rules & Regulations
                                         </h3>
@@ -1333,9 +1429,14 @@ const AuctionManage: React.FC = () => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-4 px-2">
                              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Registration Queue ({registrations.length})</h2>
-                             <button onClick={exportRegistrationsToCSV} className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
-                                <Download className="w-4 h-4"/> Export Registration Data
-                             </button>
+                             <div className="flex items-center gap-2">
+                                 <button onClick={exportRegistrationsToCSV} className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
+                                    <Download className="w-4 h-4"/> CSV
+                                 </button>
+                                 <button onClick={() => setShowPDFModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-blue-700 transition-all shadow-sm shadow-blue-600/20">
+                                    <FileDown className="w-4 h-4"/> PDF
+                                 </button>
+                             </div>
                         </div>
                         {registrations.length === 0 ? (
                             <div className="p-32 text-center text-gray-400 bg-white rounded-[3rem] border-2 border-dashed border-gray-200 flex flex-col items-center">
@@ -2215,6 +2316,109 @@ const AuctionManage: React.FC = () => {
                         accept="image/*" 
                         onChange={(e) => handleFileUpload(e, 'OVERLAY')}
                     />
+                </div>
+            )}
+            {/* PDF Export Modal */}
+            {showPDFModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
+                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-transparent">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-600/20"><FileDown className="w-6 h-6"/></div>
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Export PDF Registry</h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Configure your document format</p>
+                                </div>
+                            </div>
+                            <button onClick={() => !isGeneratingPDF && setShowPDFModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-6 h-6 text-gray-400"/></button>
+                        </div>
+
+                        <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto no-scrollbar">
+                            {/* Theme Selection */}
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Palette className="w-3 h-3"/> Select Document Theme
+                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button 
+                                        onClick={() => setPdfTheme('NORMAL')}
+                                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === 'NORMAL' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                    >
+                                        <div className="w-full h-12 bg-white border border-gray-200 rounded-lg flex items-center justify-center font-black text-[10px]">NORMAL</div>
+                                        <span className="text-[10px] font-black uppercase">Standard White</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setPdfTheme('ADVAYA')}
+                                        className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${pdfTheme === 'ADVAYA' ? 'border-amber-500 bg-amber-500/5 text-amber-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                    >
+                                        <div className="w-full h-12 bg-black border border-amber-900/30 rounded-lg flex items-center justify-center font-black text-[10px] text-amber-500">ADVAYA</div>
+                                        <span className="text-[10px] font-black uppercase">Premium Dark</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Field Selection */}
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <ListChecks className="w-3 h-3"/> Select Fields to Include
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {[
+                                        { id: 'mobile', label: 'Mobile' },
+                                        { id: 'dob', label: 'DOB' },
+                                        { id: 'gender', label: 'Gender' },
+                                        { id: 'playerType', label: 'Role' },
+                                        ...regConfig.customFields.map(f => ({ id: f.id, label: f.label }))
+                                    ].map(field => (
+                                        <button 
+                                            key={field.id}
+                                            onClick={() => {
+                                                if (selectedFields.includes(field.id)) {
+                                                    setSelectedFields(selectedFields.filter(f => f !== field.id));
+                                                } else {
+                                                    setSelectedFields([...selectedFields, field.id]);
+                                                }
+                                            }}
+                                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all flex items-center justify-between ${selectedFields.includes(field.id) ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'}`}
+                                        >
+                                            <span className="truncate mr-2">{field.label}</span>
+                                            {selectedFields.includes(field.id) ? <Check className="w-3 h-3 flex-shrink-0"/> : <Plus className="w-3 h-3 opacity-30 flex-shrink-0"/>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {isGeneratingPDF && (
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-blue-600">
+                                        <span>Generating PDF Pages...</span>
+                                        <span>{pdfProgress}%</span>
+                                    </div>
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${pdfProgress}%` }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-8 bg-gray-50 border-t border-gray-100 flex gap-4">
+                            <button 
+                                onClick={() => setShowPDFModal(false)}
+                                disabled={isGeneratingPDF}
+                                className="flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={generatePDF}
+                                disabled={isGeneratingPDF || selectedFields.length === 0}
+                                className="flex-[2] bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin"/> : <Printer className="w-4 h-4"/>}
+                                {isGeneratingPDF ? 'Processing...' : 'Start Export'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
