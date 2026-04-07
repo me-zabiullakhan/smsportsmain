@@ -11,6 +11,7 @@ import AdminDashboard from './screens/AdminDashboard';
 import SuperAdminDashboard from './screens/SuperAdminDashboard';
 import CreateAuction from './screens/CreateAuction';
 import AuctionManage from './screens/AuctionManage';
+import CategoryArrangement from './screens/CategoryArrangement';
 import PlayerRegistration from './screens/PlayerRegistration';
 import ScoringDashboard from './screens/ScoringDashboard';
 import MatchScorer from './screens/MatchScorer';
@@ -153,6 +154,10 @@ const AppContent: React.FC = () => {
           
           <Route path="/admin/auction/:id/manage" element={
               isAdmin ? <AuctionManage /> : <Navigate to="/auth" replace />
+          } />
+          
+          <Route path="/admin/auction/:id/arrangement" element={
+              isAdmin ? <CategoryArrangement /> : <Navigate to="/auth" replace />
           } />
 
           <Route path="/scoring" element={

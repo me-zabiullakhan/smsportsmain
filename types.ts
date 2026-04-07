@@ -101,6 +101,7 @@ export interface AuctionCategory {
     basePrice: number;
     minPerTeam: number;
     maxPerTeam: number;
+    requiredPlayers?: number;
     bidIncrement: number;
     bidLimit: number;
     slabs: BidIncrementSlab[];
@@ -164,6 +165,8 @@ export interface AuctionState {
   autoDeleteAt?: number; // Scheduled deletion timestamp
   isLifetime?: boolean; // No auto-delete flag
   hideScoringSection?: boolean; // Global toggle for scoring section
+  unlimitedPurse?: boolean; // Toggle for purse validation
+  autoReserveFunds?: boolean; // Toggle for smart purse reservation
 }
 
 export enum UserRole {
@@ -344,6 +347,8 @@ export interface AuctionSetup {
     dateTBD?: boolean;
     matchesDate?: string;
     fullTournamentName?: string;
+    unlimitedPurse?: boolean;
+    autoReserveFunds?: boolean;
 }
 
 export type ScoreboardTheme = 'ICC_T20_2010' | 'ICC_T20_2012' | 'ICC_T20_2014' | 'ICC_T20_2016' | 'ICC_T20_2021' | 'ICC_T20_2022' | 'ICC_T20_2024' | 'CWC_2023' | 'DEFAULT';
@@ -451,6 +456,20 @@ export interface Tournament {
     name: string;
     createdAt: number;
     createdBy?: string;
+}
+
+export interface CategoryArrangementSlot {
+    playerId: string | number;
+    playerName: string;
+    category: string;
+}
+
+export interface CategoryArrangementDraft {
+    id?: string;
+    auctionId: string;
+    categoryId: string; 
+    slots: { [key: string]: CategoryArrangementSlot }; 
+    updatedAt: number;
 }
 
 export interface AuctionContextType {

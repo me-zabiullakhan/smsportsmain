@@ -10,7 +10,7 @@ import {
     Check as CheckIcon, Check, ShieldCheck, Tag, User, TrendingUp, CreditCard, Shield, 
     UserCheck, UserX, Share2, Download, FileSpreadsheet, Filter, Key, 
     ExternalLink, LayoutList, ToggleRight, ToggleLeft, RefreshCw, FileUp, 
-    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer
+    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2
 } from 'lucide-react';
 import firebase from 'firebase/compat/app';
 import * as XLSX from 'xlsx';
@@ -116,7 +116,8 @@ const AuctionManage: React.FC = () => {
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
     const [settingsForm, setSettingsForm] = useState({
-        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false, venue: ''
+        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false, venue: '',
+        unlimitedPurse: false, autoReserveFunds: false
     });
     const [slabs, setSlabs] = useState<BidIncrementSlab[]>([]);
     const [newSlab, setNewSlab] = useState({ from: '', increment: '' });
@@ -217,7 +218,9 @@ const AuctionManage: React.FC = () => {
                     playersPerTeam: data.playersPerTeam || 0, 
                     totalTeams: data.totalTeams || 0,
                     logoUrl: data.logoUrl || '',
-                    dateTBD: data.date === 'TBD' || !!data.dateTBD
+                    dateTBD: data.date === 'TBD' || !!data.dateTBD,
+                    unlimitedPurse: !!data.unlimitedPurse,
+                    autoReserveFunds: !!data.autoReserveFunds
                 });
                 if (data.slabs) setSlabs(data.slabs);
             }
@@ -464,7 +467,7 @@ const AuctionManage: React.FC = () => {
                         <!-- Header -->
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'}; padding: 0 0 3mm 0; margin-bottom: 4mm; position: relative; z-index: 10; height: 25mm; flex-shrink: 0; box-sizing: border-box;">
                             <div style="display: flex; align-items: center; gap: 5mm;">
-                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" style="height: 18mm; width: 18mm; object-fit: contain; border-radius: 2mm;" />` : ''}
+                                ${systemBranding.logo ? `<img src="${systemBranding.logo}" referrerpolicy="no-referrer" style="height: 18mm; width: 18mm; object-fit: contain; border-radius: 2mm;" />` : ''}
                                 <div style="display: flex; flex-direction: column; justify-content: center;">
                                     <h1 style="margin: 0; font-size: 22pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">SM SPORTS</h1>
                                     <p style="margin: 1mm 0 0 0; font-size: 10pt; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px;">${systemBranding.tagline}</p>
@@ -475,7 +478,7 @@ const AuctionManage: React.FC = () => {
                                     <h2 style="margin: 0; font-size: 15pt; font-weight: 900; text-transform: uppercase; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#1f2937'}; line-height: 1;">${auction?.title || 'Tournament'}</h2>
                                     <p style="margin: 1mm 0 0 0; font-size: 9pt; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">Official Player List</p>
                                 </div>
-                                ${auction?.logoUrl ? `<img src="${auction.logoUrl}" style="height: 18mm; width: 18mm; object-fit: contain;" />` : ''}
+                                ${auction?.logoUrl ? `<img src="${auction.logoUrl}" referrerpolicy="no-referrer" style="height: 18mm; width: 18mm; object-fit: contain;" />` : ''}
                             </div>
                         </div>
 
@@ -511,7 +514,7 @@ const AuctionManage: React.FC = () => {
                                         <div style="font-size: 10pt; font-weight: 900; width: 10mm; color: ${pdfTheme === 'ADVAYA' ? '#fbbf24' : '#3b82f6'};">#${reg.playerNumber || playerNum}</div>
                                         ${selectedFields.includes('profilePic') ? `
                                             <div style="width: 10mm; height: 10mm; border-radius: 1mm; overflow: hidden; flex-shrink: 0;">
-                                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                <img src="${reg.profilePic}" referrerpolicy="no-referrer" style="width: 100%; height: 100%; object-fit: cover;" />
                                             </div>
                                         ` : ''}
                                         <div style="flex: 1; min-width: 0;">
@@ -553,7 +556,7 @@ const AuctionManage: React.FC = () => {
                                     <div style="display: flex; gap: ${isSingle ? '12mm' : '3mm'}; align-items: ${isSingle ? 'center' : 'start'};">
                                         ${selectedFields.includes('profilePic') ? `
                                             <div style="width: ${isSingle ? '70mm' : isDense ? '18mm' : '30mm'}; height: ${isSingle ? '85mm' : isDense ? '22mm' : '38mm'}; border-radius: ${isSingle ? '8mm' : '2mm'}; overflow: hidden; border: ${isSingle ? '6px' : '2px'} solid ${pdfTheme === 'ADVAYA' ? '#fbbf2444' : '#cbd5e1'}; flex-shrink: 0;">
-                                                <img src="${reg.profilePic}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                <img src="${reg.profilePic}" referrerpolicy="no-referrer" style="width: 100%; height: 100%; object-fit: cover;" />
                                             </div>
                                         ` : ''}
                                         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: ${isSingle ? '6mm' : '1mm'};">
@@ -801,7 +804,7 @@ const AuctionManage: React.FC = () => {
                                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tournament Logo</label>
                                         <div onClick={() => logoInputRef.current?.click()} className="w-full aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-blue-400 transition-all overflow-hidden relative group">
                                             {settingsForm.logoUrl ? (
-                                                <img src={settingsForm.logoUrl} className="w-full h-full object-contain p-4" />
+                                                <img src={settingsForm.logoUrl} className="w-full h-full object-contain p-4" referrerPolicy="no-referrer" />
                                             ) : (
                                                 <div className="text-center">
                                                     <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
@@ -880,6 +883,32 @@ const AuctionManage: React.FC = () => {
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Standard Min Bid (₹)</label>
                                             <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.bidIncrement} onChange={e => setSettingsForm({...settingsForm, bidIncrement: Number(e.target.value)})} />
                                         </div>
+                                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-800 uppercase tracking-widest">Unlimited Purse</p>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Disable all budget restrictions</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setSettingsForm({...settingsForm, unlimitedPurse: !settingsForm.unlimitedPurse})}
+                                                    className={`w-12 h-6 rounded-full transition-all relative ${settingsForm.unlimitedPurse ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settingsForm.unlimitedPurse ? 'left-7' : 'left-1'}`} />
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-800 uppercase tracking-widest">Auto Reserve Funds</p>
+                                                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Reserve funds for remaining squad</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setSettingsForm({...settingsForm, autoReserveFunds: !settingsForm.autoReserveFunds})}
+                                                    className={`w-12 h-6 rounded-full transition-all relative ${settingsForm.autoReserveFunds ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settingsForm.autoReserveFunds ? 'left-7' : 'left-1'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
@@ -924,7 +953,7 @@ const AuctionManage: React.FC = () => {
                                 <div key={team.id} className="bg-white p-5 rounded-[1.5rem] border border-gray-200 shadow-sm flex items-center justify-between group">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 p-1">
-                                            {team.logoUrl ? <img src={team.logoUrl} className="w-full h-full object-contain" /> : <Users className="text-gray-300 w-6 h-6"/>}
+                                            {team.logoUrl ? <img src={team.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" /> : <Users className="text-gray-300 w-6 h-6"/>}
                                         </div>
                                         <div>
                                             <p className="font-black text-gray-800 uppercase text-sm leading-none">{team.name}</p>
@@ -953,6 +982,9 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
+                                <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="bg-amber-500 text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all">
+                                    <LayoutGrid className="w-4 h-4"/> Category Room
+                                </button>
                                 <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
@@ -980,7 +1012,7 @@ const AuctionManage: React.FC = () => {
                                                             className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shadow-sm cursor-pointer hover:border-blue-400 transition-all"
                                                             onClick={() => p.photoUrl && setOverlayImage({ url: p.photoUrl, title: p.name, type: 'PLAYER', id: String(p.id), field: 'photoUrl' })}
                                                         >
-                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-5 h-5 m-2.5 text-gray-300"/>}
+                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <User className="w-5 h-5 m-2.5 text-gray-300"/>}
                                                         </div>
                                                         <div>
                                                             <span className="font-black text-gray-800 text-sm uppercase leading-none">{p.name}</span>
@@ -1156,7 +1188,7 @@ const AuctionManage: React.FC = () => {
                                                         <label className="block text-[10px] font-black text-gray-500 uppercase mb-3">UPI QR Code Deployment</label>
                                                         <div onClick={() => qrInputRef.current?.click()} className="w-full h-48 bg-white border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all overflow-hidden relative group">
                                                             {regConfig.qrCodeUrl ? (
-                                                                <img src={regConfig.qrCodeUrl} className="h-full w-full object-contain p-4" />
+                                                                <img src={regConfig.qrCodeUrl} className="h-full w-full object-contain p-4" referrerPolicy="no-referrer" />
                                                             ) : (
                                                                 <div className="text-center">
                                                                     <QrCode className="w-10 h-10 mx-auto mb-2 text-gray-200" />
@@ -1546,7 +1578,7 @@ const AuctionManage: React.FC = () => {
                                                 <label className="block text-[10px] font-black text-gray-500 uppercase mb-2">Auction Logo</label>
                                                 <div onClick={() => regLogoInputRef.current?.click()} className="w-full aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50 transition-all overflow-hidden relative group">
                                                     {regConfig.logoUrl ? (
-                                                        <img src={regConfig.logoUrl} className="h-full w-full object-contain p-2" />
+                                                        <img src={regConfig.logoUrl} className="h-full w-full object-contain p-2" referrerPolicy="no-referrer" />
                                                     ) : (
                                                         <div className="text-center">
                                                             <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-300" />
@@ -1560,7 +1592,7 @@ const AuctionManage: React.FC = () => {
                                                 <label className="block text-[10px] font-black text-gray-500 uppercase mb-2">Form Banner</label>
                                                 <div onClick={() => regBannerInputRef.current?.click()} className="w-full aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50 transition-all overflow-hidden relative group">
                                                     {regConfig.bannerUrl ? (
-                                                        <img src={regConfig.bannerUrl} className="h-full w-full object-contain p-2" />
+                                                        <img src={regConfig.bannerUrl} className="h-full w-full object-contain p-2" referrerPolicy="no-referrer" />
                                                     ) : (
                                                         <div className="text-center">
                                                             <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-300" />
@@ -1729,8 +1761,17 @@ const AuctionManage: React.FC = () => {
                                 {registrations.map(reg => (
                                     <div key={reg.id} className="bg-white p-6 rounded-[1.5rem] border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 hover:shadow-md transition-shadow">
                                         <div className="flex items-center gap-6">
-                                            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-50">
-                                                <img src={reg.profilePic} className="w-full h-full object-cover"/>
+                                            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-50 flex items-center justify-center bg-gray-50 cursor-pointer group/pic relative"
+                                                 onClick={() => setOverlayImage({ url: reg.profilePic, title: reg.fullName, type: 'REGISTRATION', id: reg.id, field: 'profilePic' })}
+                                            >
+                                                {reg.profilePic ? (
+                                                    <img src={reg.profilePic} className="w-full h-full object-cover" alt={reg.fullName} referrerPolicy="no-referrer" />
+                                                ) : (
+                                                    <User className="w-8 h-8 text-gray-300" />
+                                                )}
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/pic:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <Maximize2 className="w-4 h-4 text-white" />
+                                                </div>
                                             </div>
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -1751,6 +1792,16 @@ const AuctionManage: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-2 ${reg.status === 'PENDING' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : reg.status === 'APPROVED' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>{reg.status}</div>
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedReg(reg);
+                                                    setShowRegModal(true);
+                                                }}
+                                                className="p-2.5 bg-gray-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-xl transition-all"
+                                                title="View Info"
+                                            >
+                                                <Info className="w-4 h-4"/>
+                                            </button>
                                             <button 
                                                 onClick={() => setExpandedRegId(expandedRegId === reg.id ? null : reg.id)}
                                                 className={`p-2.5 rounded-xl transition-all ${expandedRegId === reg.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-gray-100 hover:bg-blue-50 text-gray-400 hover:text-blue-600'}`}
@@ -1803,14 +1854,16 @@ const AuctionManage: React.FC = () => {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                {reg.paymentProof && (
+                                                {reg.paymentScreenshot && (
                                                     <div className="mt-6">
                                                         <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-3">Payment Proof Document</p>
-                                                        <div className="relative group/img inline-block">
-                                                            <img src={reg.paymentProof} className="max-w-md rounded-2xl border-4 border-white shadow-xl" referrerPolicy="no-referrer" />
-                                                            <a href={reg.paymentProof} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
-                                                                <ExternalLink className="text-white w-8 h-8" />
-                                                            </a>
+                                                        <div className="relative group/img inline-block cursor-pointer"
+                                                             onClick={() => setOverlayImage({ url: reg.paymentScreenshot, title: reg.fullName, type: 'REGISTRATION', id: reg.id, field: 'paymentScreenshot' })}
+                                                        >
+                                                            <img src={reg.paymentScreenshot} className="max-w-md rounded-2xl border-4 border-white shadow-xl" referrerPolicy="no-referrer" />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                                                                <Eye className="text-white w-8 h-8" />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1840,7 +1893,7 @@ const AuctionManage: React.FC = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
                                                 {item.imageUrl || item.photoUrl || item.logoUrl ? (
-                                                    <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" />
+                                                    <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                                                 ) : (
                                                     <Layers className="text-gray-300 w-6 h-6"/>
                                                 )}
@@ -1849,8 +1902,8 @@ const AuctionManage: React.FC = () => {
                                                 <p className="font-black text-gray-800 uppercase text-sm">{item.name}</p>
                                                 {activeTab === 'CATEGORIES' && (
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                        ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team
-                                                    </p>
+                                                    ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team • {item.requiredPlayers || 0} Required
+                                                </p>
                                                 )}
                                             </div>
                                         </div>
@@ -1875,7 +1928,7 @@ const AuctionManage: React.FC = () => {
                                                 {players.filter(p => p.category === item.name).map(p => (
                                                     <div key={p.id} className="flex items-center gap-2 bg-gray-50 pl-1 pr-2 py-1 rounded-full border border-gray-100">
                                                         <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden border border-white">
-                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-3 h-3 text-gray-400 m-auto" />}
+                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <User className="w-3 h-3 text-gray-400 m-auto" />}
                                                         </div>
                                                         <span className="text-[9px] font-bold text-gray-600 truncate max-w-[80px]">{p.name}</span>
                                                         <button onClick={async () => {
@@ -2222,7 +2275,7 @@ const AuctionManage: React.FC = () => {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Visual Asset</label>
                                     <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-video bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-blue-400 transition-all overflow-hidden relative group">
                                         {previewImage ? (
-                                            <img src={previewImage} className="w-full h-full object-contain p-4" />
+                                            <img src={previewImage} className="w-full h-full object-contain p-4" referrerPolicy="no-referrer" />
                                         ) : (
                                             <div className="text-center">
                                                 <Upload className="w-6 h-6 mx-auto mb-2 text-gray-300" />
@@ -2253,7 +2306,7 @@ const AuctionManage: React.FC = () => {
                                             <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.bidIncrement || 0} onChange={e => setEditItem({...editItem, bidIncrement: Number(e.target.value)})} />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Min Per Team</label>
                                             <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.minPerTeam || 0} onChange={e => setEditItem({...editItem, minPerTeam: Number(e.target.value)})} />
@@ -2261,6 +2314,10 @@ const AuctionManage: React.FC = () => {
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Max Per Team</label>
                                             <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.maxPerTeam || 0} onChange={e => setEditItem({...editItem, maxPerTeam: Number(e.target.value)})} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Required Players</label>
+                                            <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.requiredPlayers || 0} onChange={e => setEditItem({...editItem, requiredPlayers: Number(e.target.value)})} />
                                         </div>
                                     </div>
                                     <div>
@@ -2374,10 +2431,14 @@ const AuctionManage: React.FC = () => {
                             {/* Left Column: Profile & Basic Info */}
                             <div className="space-y-6">
                                 <div className="relative group">
-                                    <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-gray-50 shadow-xl cursor-pointer group"
+                                    <div className="aspect-square rounded-[2.5rem] overflow-hidden border-4 border-gray-50 shadow-xl cursor-pointer group bg-gray-50 flex items-center justify-center"
                                          onClick={() => setOverlayImage({ url: selectedReg.profilePic, title: selectedReg.fullName, type: 'REGISTRATION', id: selectedReg.id, field: 'profilePic' })}
                                     >
-                                        <img src={selectedReg.profilePic} className="w-full h-full object-cover" alt="Profile" />
+                                        {selectedReg.profilePic ? (
+                                            <img src={selectedReg.profilePic} className="w-full h-full object-cover" alt="Profile" referrerPolicy="no-referrer" />
+                                        ) : (
+                                            <User className="w-20 h-20 text-gray-300" />
+                                        )}
                                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                                             <Eye className="w-10 h-10 text-white drop-shadow-lg" />
                                         </div>
@@ -2500,7 +2561,7 @@ const AuctionManage: React.FC = () => {
                                             className="relative group aspect-video rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm cursor-pointer"
                                             onClick={() => setOverlayImage({ url: selectedReg.paymentScreenshot, title: selectedReg.fullName, type: 'REGISTRATION', id: selectedReg.id, field: 'paymentScreenshot' })}
                                         >
-                                            <img src={selectedReg.paymentScreenshot} className="w-full h-full object-cover" alt="Payment" />
+                                            <img src={selectedReg.paymentScreenshot} className="w-full h-full object-cover" alt="Payment" referrerPolicy="no-referrer" />
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                                                 <Eye className="w-8 h-8 text-white" />
                                             </div>
@@ -2645,11 +2706,19 @@ const AuctionManage: React.FC = () => {
 
                     {/* Image Container */}
                     <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                        <img 
-                            src={overlayImage.url} 
-                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                            alt="Preview"
-                        />
+                        {overlayImage.url ? (
+                            <img 
+                                src={overlayImage.url} 
+                                className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                                alt="Preview"
+                                referrerPolicy="no-referrer"
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center gap-4 text-white/20">
+                                <UserX className="w-24 h-24" />
+                                <p className="font-black uppercase tracking-widest">No Image Available</p>
+                            </div>
+                        )}
                     </div>
 
                     <input 

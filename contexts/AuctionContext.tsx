@@ -263,34 +263,43 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 }
             }
 
-            const absoluteMinBasePrice = Math.min(
-                state.basePrice || 100,
-                ...(state.categories.length > 0 ? state.categories.map(c => c.basePrice) : [100]),
-                ...(state.roles.length > 0 ? state.roles.map(r => r.basePrice) : [100])
-            );
-
-            let totalMandatoryUnmetCost = 0;
-            let totalMandatorySlotsUsed = 0;
-
-            state.categories.forEach(cat => {
-                const countInCat = team.players.filter(p => p.category === cat.name).length;
-                let neededInCat = Math.max(0, cat.minPerTeam - countInCat);
-                if (currentPlayer.category === cat.name) {
-                    neededInCat = Math.max(0, neededInCat - 1);
-                }
-                totalMandatoryUnmetCost += (neededInCat * cat.basePrice);
-                totalMandatorySlotsUsed += neededInCat;
-            });
-
-            const flexibleSlotsRemaining = Math.max(0, playersStillNeededAfterThis - totalMandatorySlotsUsed);
-            const flexibleCost = flexibleSlotsRemaining * absoluteMinBasePrice;
-            const totalSurvivalReserve = totalMandatoryUnmetCost + flexibleCost;
-            const biddingCapacity = team.budget - totalSurvivalReserve;
-
-            if (amount > biddingCapacity) {
-                throw new Error(
-                    `Bidding Capacity Exceeded! You must keep ${totalSurvivalReserve} to buy ${playersStillNeededAfterThis} more players (Minimum Prices) to complete your ${targetSquadSize} player squad.`
+            if (!state.unlimitedPurse) {
+                const absoluteMinBasePrice = Math.min(
+                    state.basePrice || 100,
+                    ...(state.categories.length > 0 ? state.categories.map(c => c.basePrice) : [100]),
+                    ...(state.roles.length > 0 ? state.roles.map(r => r.basePrice) : [100])
                 );
+
+                let totalMandatoryUnmetCost = 0;
+                let totalMandatorySlotsUsed = 0;
+
+                if (state.autoReserveFunds) {
+                    state.categories.forEach(cat => {
+                        const countInCat = team.players.filter(p => p.category === cat.name).length;
+                        let neededInCat = Math.max(0, cat.minPerTeam - countInCat);
+                        if (currentPlayer.category === cat.name) {
+                            neededInCat = Math.max(0, neededInCat - 1);
+                        }
+                        totalMandatoryUnmetCost += (neededInCat * cat.basePrice);
+                        totalMandatorySlotsUsed += neededInCat;
+                    });
+
+                    const flexibleSlotsRemaining = Math.max(0, playersStillNeededAfterThis - totalMandatorySlotsUsed);
+                    const flexibleCost = flexibleSlotsRemaining * absoluteMinBasePrice;
+                    const totalSurvivalReserve = totalMandatoryUnmetCost + flexibleCost;
+                    const biddingCapacity = team.budget - totalSurvivalReserve;
+
+                    if (amount > biddingCapacity) {
+                        throw new Error(
+                            `Insufficient purse to complete squad based on category requirements. You must reserve ₹${totalSurvivalReserve} for the remaining ${playersStillNeededAfterThis} players.`
+                        );
+                    }
+                } else {
+                    // Just check if they have enough budget for this bid
+                    if (amount > team.budget) {
+                        throw new Error("Insufficient Purse!");
+                    }
+                }
             }
         }
 

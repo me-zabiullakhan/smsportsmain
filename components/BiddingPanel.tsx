@@ -4,7 +4,7 @@ import { Gavel, Lock, AlertCircle, Users, AlertTriangle, Info } from 'lucide-rea
 
 const BiddingPanel: React.FC = () => {
     const { state, userProfile, placeBid, nextBid } = useAuction();
-    const { teams, highestBidder, biddingStatus, currentBid, currentPlayerId, players, status, categories, roles, maxPlayersPerTeam, basePrice: globalBasePrice } = state;
+    const { teams, highestBidder, biddingStatus, currentBid, currentPlayerId, players, status, categories, roles, maxPlayersPerTeam, basePrice: globalBasePrice, unlimitedPurse, autoReserveFunds } = state;
     const [isBidding, setIsBidding] = useState(false);
 
     if (!userProfile || !userProfile.teamId) return null;
@@ -24,17 +24,15 @@ const BiddingPanel: React.FC = () => {
 
     const currentPlayer = currentPlayerId ? players.find(p => String(p.id) === String(currentPlayerId)) : null;
 
-    // --- ULTIMATE SQUAD SURVIVAL CALCULATION ---
-    const { totalMandatoryReserve, playersStillNeededAfterThis, isCategoryMaxReached, categoryLimitMsg } = useMemo(() => {
+    // --- SMART PURSE VALIDATION ---
+    const { totalMandatoryReserve, playersStillNeededAfterThis, isCategoryMaxReached, categoryLimitMsg, maxBidAllowed } = useMemo(() => {
         const targetSquadSize = maxPlayersPerTeam || 11;
         const currentSquadCount = userTeam.players.length;
-        // How many more players do we need to buy AFTER the current one?
         const neededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
 
         let isCatMax = false;
         let catLimitMsg = "";
         
-        // 1. Check if we can even buy this specific player (Category Max Limit)
         if (currentPlayer && currentPlayer.category) {
             const catConfig = categories.find(c => c.name === currentPlayer.category);
             if (catConfig && catConfig.maxPerTeam > 0) {
@@ -46,7 +44,16 @@ const BiddingPanel: React.FC = () => {
             }
         }
 
-        // 2. Find the absolute floor price in the entire system
+        if (unlimitedPurse) {
+            return {
+                totalMandatoryReserve: 0,
+                playersStillNeededAfterThis: neededAfterThis,
+                isCategoryMaxReached: isCatMax,
+                categoryLimitMsg: catLimitMsg,
+                maxBidAllowed: Infinity
+            };
+        }
+
         const absoluteMinBasePrice = Math.min(
             globalBasePrice || 100,
             ...(categories.length > 0 ? categories.map(c => Number(c.basePrice) || 100) : [100]),
@@ -56,41 +63,40 @@ const BiddingPanel: React.FC = () => {
         let reserve = 0;
         let slotsUsedByMandatory = 0;
 
-        // 3. Calculate reserve for mandatory categories
-        categories.forEach(cat => {
-            const countInCat = userTeam.players.filter(p => p.category === cat.name).length;
-            let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - countInCat);
-            
-            // If the current bidding player belongs to this category, they will satisfy one of these needed slots
-            if (currentPlayer && currentPlayer.category === cat.name) {
-                neededInCat = Math.max(0, neededInCat - 1);
-            }
+        if (autoReserveFunds) {
+            // User's specific formula: sum(remainingPlayers(category) * basePrice(category))
+            categories.forEach(cat => {
+                const countInCat = userTeam.players.filter(p => p.category === cat.name).length;
+                let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - countInCat);
+                
+                if (currentPlayer && currentPlayer.category === cat.name) {
+                    neededInCat = Math.max(0, neededInCat - 1);
+                }
 
-            reserve += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
-            slotsUsedByMandatory += neededInCat;
-        });
+                reserve += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
+                slotsUsedByMandatory += neededInCat;
+            });
 
-        // 4. Calculate reserve for remaining "Flexible" slots to reach total squad size
-        const flexibleSlots = Math.max(0, neededAfterThis - slotsUsedByMandatory);
-        reserve += (flexibleSlots * absoluteMinBasePrice);
+            // Also account for any remaining slots to reach total squad size at min price
+            const flexibleSlots = Math.max(0, neededAfterThis - slotsUsedByMandatory);
+            reserve += (flexibleSlots * absoluteMinBasePrice);
+        }
 
         return {
             totalMandatoryReserve: reserve,
             playersStillNeededAfterThis: neededAfterThis,
             isCategoryMaxReached: isCatMax,
-            categoryLimitMsg: catLimitMsg
+            categoryLimitMsg: catLimitMsg,
+            maxBidAllowed: userTeam.budget - reserve
         };
-    }, [userTeam.players, categories, roles, maxPlayersPerTeam, globalBasePrice, currentPlayer]);
+    }, [userTeam.players, categories, roles, maxPlayersPerTeam, globalBasePrice, currentPlayer, unlimitedPurse, autoReserveFunds, userTeam.budget]);
 
     const targetSquadSize = maxPlayersPerTeam || 11;
-    const currentSquadCount = userTeam.players.length;
-    const biddingCapacity = userTeam.budget - totalMandatoryReserve;
+    const isSquadFull = targetSquadSize - userTeam.players.length <= 0;
     
     // Logic: A bid is blocked if the next required bid exceeds what we have left AFTER keeping money for future mandatory players.
-    const isBidLimitExceeded = nextBid > biddingCapacity;
-    const isSquadFull = targetSquadSize - currentSquadCount <= 0;
-
-    const canAfford = userTeam.budget >= nextBid;
+    const isBidLimitExceeded = !unlimitedPurse && nextBid > maxBidAllowed;
+    const canAfford = unlimitedPurse || userTeam.budget >= nextBid;
     const isLeading = highestBidder && String(highestBidder.id) === String(userTeam.id);
     const isLoadingBid = nextBid === 0;
     const isPaused = biddingStatus === 'PAUSED';
@@ -125,13 +131,13 @@ const BiddingPanel: React.FC = () => {
                             <span className="text-[10px] text-red-200 font-bold uppercase flex items-center"><Lock className="w-3 h-3 mr-1"/> Paused</span>
                         </div>
                     )}
-                    {!isSquadFull && (
+                    {!isSquadFull && !unlimitedPurse && (
                         <div className="mt-2 text-left hidden sm:block">
                             <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
-                                Max Limit: {Math.max(0, biddingCapacity)}
+                                Max Allowed Bid: {Math.max(0, maxBidAllowed)}
                             </p>
                             <p className="text-[8px] text-gray-500 uppercase font-medium mt-0.5 flex items-center">
-                                <Info className="w-2 h-2 mr-1"/> ₹{totalMandatoryReserve} reserved for {playersStillNeededAfterThis} more players
+                                <Info className="w-2 h-2 mr-1"/> Includes reserved funds based on remaining category requirements
                             </p>
                         </div>
                     )}
@@ -173,7 +179,7 @@ const BiddingPanel: React.FC = () => {
                     </button>
                     {isBidLimitExceeded && (
                         <span className="text-[10px] text-red-400 font-bold mt-1 uppercase tracking-wide">
-                            Limit: {Math.max(0, biddingCapacity)} (Reserve Reached)
+                            Max Allowed Bid: {Math.max(0, maxBidAllowed)}
                         </span>
                     )}
                 </div>
@@ -185,7 +191,7 @@ const BiddingPanel: React.FC = () => {
                 <div className="bg-red-950/20 border border-red-900/30 p-2 rounded mt-3">
                     <p className="text-red-400 text-[10px] flex items-start font-bold uppercase tracking-tight">
                         <AlertCircle className="w-3 h-3 mr-1.5 shrink-0 mt-0.5"/> 
-                        Bidding locked. You must reserve ₹{totalMandatoryReserve} to buy the remaining {playersStillNeededAfterThis} players to fill your required {targetSquadSize} player squad based on category minimums.
+                        Insufficient purse to complete squad based on category requirements. You must reserve ₹{totalMandatoryReserve} for the remaining {playersStillNeededAfterThis} players.
                     </p>
                 </div>
             )}

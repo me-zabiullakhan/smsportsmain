@@ -132,7 +132,13 @@ const PlayerPool: React.FC = () => {
             <div className="space-y-2">
                 {filteredPlayers.map(player => (
                     <div key={player.id} className={`p-3 rounded-lg flex items-center gap-3 transition-all border ${player.id === currentPlayer?.id && activeTab === 'upcoming' ? 'bg-highlight/10 border-highlight shadow-[0_0_10px_rgba(56,178,172,0.2)]' : 'bg-primary/40 border-transparent hover:border-gray-600 hover:bg-primary/60'}`}>
-                        <img src={player.photoUrl} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-gray-600"/>
+                        {player.photoUrl ? (
+                            <img src={player.photoUrl} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-gray-600"/>
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center border border-gray-600">
+                                <Users className="w-5 h-5 text-gray-500" />
+                            </div>
+                        )}
                         <div className="flex-grow min-w-0">
                             <h4 className="font-bold text-text-main text-sm truncate">{player.name}</h4>
                             <div className="flex gap-2 text-xs">
@@ -150,7 +156,9 @@ const PlayerPool: React.FC = () => {
                                 <div className="flex flex-col items-end">
                                     <span className="text-[10px] text-gray-500 uppercase tracking-wider">Sold To</span>
                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                        {player.teamLogo && <img src={player.teamLogo} alt="" className="w-4 h-4 rounded-full bg-gray-800" />}
+                                        {player.teamLogo ? (
+                                            <img src={player.teamLogo} alt="" className="w-4 h-4 rounded-full bg-gray-800" />
+                                        ) : null}
                                         <span className="text-xs font-bold text-highlight truncate max-w-[80px]">{player.soldTo}</span>
                                     </div>
                                 </div>
