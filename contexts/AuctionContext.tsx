@@ -157,7 +157,10 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
 
         const unsubTeams = db.collection('auctions').doc(activeAuctionId).collection('teams').onSnapshot(snap => {
-            const teams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+            const teams = snap.docs.map(d => {
+                const data = d.data();
+                return { id: d.id, ...data, players: data.players || [] } as Team;
+            });
             setState(prev => ({ ...prev, teams }));
         });
 
@@ -218,9 +221,18 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const { currentPlayerId, players, currentBid, bidIncrement, bidSlabs, categories } = state;
         const currentPlayer = players.find(p => String(p.id) === String(currentPlayerId));
         if (!currentPlayer) return 0;
+
         const basePrice = Number(currentPlayer.basePrice) || 0;
         const currentPrice = Number(currentBid) || 0;
-        if (currentPrice === 0) return basePrice > 0 ? basePrice : (Number(bidIncrement) || 100);
+
+        // 1. Initial Bid (No bids yet)
+        if (currentPrice === 0) {
+            // If basePrice is 0, use bidIncrement or default to 100
+            return basePrice > 0 ? basePrice : (Number(bidIncrement) || 100);
+        }
+
+        // 2. Subsequent Bids
+        // Priority 1: Category Specific Slabs
         if (currentPlayer.category) {
             const cat = categories.find(c => c.name === currentPlayer.category);
             if (cat && cat.slabs && cat.slabs.length > 0) {
@@ -229,12 +241,17 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                  if (activeSlab) return currentPrice + Number(activeSlab.increment);
             }
         }
+
+        // Priority 2: Global Slabs
         if (bidSlabs && bidSlabs.length > 0) {
             const sortedSlabs = [...bidSlabs].sort((a, b) => Number(b.from) - Number(a.from));
             const activeSlab = sortedSlabs.find(s => currentPrice >= Number(s.from));
             if (activeSlab) return currentPrice + Number(activeSlab.increment);
         }
-        return currentPrice + (Number(bidIncrement) || 100);
+
+        // Priority 3: Default Increment
+        const increment = Number(bidIncrement) || 100;
+        return currentPrice + increment;
     }, [state.currentBid, state.currentPlayerId, state.players, state.bidIncrement, state.bidSlabs, state.categories]);
 
     const placeBid = async (teamId: string | number, amount: number) => {

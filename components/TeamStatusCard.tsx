@@ -20,7 +20,7 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
         let reason = "";
 
         const targetSquadSize = maxPlayersPerTeam || 11;
-        const currentSquadCount = team.players.length;
+        const currentSquadCount = (team.players || []).length;
         const neededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
 
         // 1. Check Global Squad Limit
@@ -32,7 +32,7 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
         if (currentPlayer && currentPlayer.category) {
             const catConfig = categories.find(c => c.name === currentPlayer.category);
             if (catConfig && catConfig.maxPerTeam > 0) {
-                const count = team.players.filter(p => p.category === currentPlayer.category).length;
+                const count = (team.players || []).filter(p => p.category === currentPlayer.category).length;
                 if (count >= catConfig.maxPerTeam) {
                     return { isLimitReached: true, limitReason: "Cat. Full", biddingCapacity: 0 };
                 }
@@ -52,7 +52,7 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
         // 4. Mandatory Reserves
         if (currentPlayer) {
             categories.forEach(cat => {
-                const currentCountInCat = team.players.filter(p => p.category === cat.name).length;
+                const currentCountInCat = (team.players || []).filter(p => p.category === cat.name).length;
                 let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - currentCountInCat);
                 
                 if (currentPlayer.category === cat.name) {
@@ -115,7 +115,7 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
                 </p>
                 <p className="flex items-center text-text-secondary">
                     <Users className="w-4 h-4 mr-2 text-blue-400" />
-                    Players: <span className={`font-semibold ml-1 ${maxPlayersPerTeam && (maxPlayersPerTeam - team.players.length <= 0) ? 'text-red-400' : 'text-white'}`}>{team.players.length} / {maxPlayersPerTeam || '-'}</span>
+                    Players: <span className={`font-semibold ml-1 ${maxPlayersPerTeam && (maxPlayersPerTeam - (team.players || []).length <= 0) ? 'text-red-400' : 'text-white'}`}>{(team.players || []).length} / {maxPlayersPerTeam || '-'}</span>
                 </p>
             </div>
 
