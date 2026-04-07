@@ -502,6 +502,11 @@ const CategoryArrangement: React.FC = () => {
     const colCount = config.cols || 6;
     const prefix = currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT';
 
+    const maxCols = Math.max(6, ...categories.map(cat => {
+        const config = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
+        return config.cols || 6;
+    }));
+
     const addRow = () => {
         setCustomConfig(prev => ({
             ...prev,
@@ -851,19 +856,19 @@ const CategoryArrangement: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="text-right flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-4">
+                    <div className="text-right flex flex-col items-end justify-center">
+                        <div className="flex items-center gap-6">
+                            <div className="text-right">
+                                <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-2">{auctionName}</h2>
+                                <p className="text-amber-500 font-black tracking-[0.4em] text-lg uppercase opacity-80">OFFICIAL AUCTION BOARD</p>
+                            </div>
                             {auctionLogo ? (
-                                <img src={auctionLogo} className="w-20 h-20 rounded-2xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-2 shadow-lg shadow-amber-500/10" referrerPolicy="no-referrer" />
+                                <img src={auctionLogo} className="w-28 h-28 rounded-3xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-3 shadow-2xl shadow-amber-500/20" referrerPolicy="no-referrer" />
                             ) : (
-                                <div className="w-20 h-20 rounded-2xl bg-zinc-900 border-2 border-amber-500/30 flex items-center justify-center text-amber-500 font-black text-2xl">
+                                <div className="w-28 h-28 rounded-3xl bg-zinc-900 border-2 border-amber-500/30 flex items-center justify-center text-amber-500 font-black text-4xl shadow-2xl shadow-amber-500/20">
                                     {auctionName.substring(0, 2).toUpperCase()}
                                 </div>
                             )}
-                            <div className="text-right">
-                                <h2 className="text-5xl font-black text-white uppercase tracking-tighter leading-none">{auctionName}</h2>
-                                <p className="text-amber-500 font-black tracking-[0.3em] text-sm uppercase">OFFICIAL AUCTION BOARD</p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -883,7 +888,7 @@ const CategoryArrangement: React.FC = () => {
                                 <thead>
                                     <tr className="bg-zinc-900/90">
                                         <th className="w-32 p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">#</th>
-                                        {Array.from({ length: 10 }).map((_, c) => (
+                                        {Array.from({ length: maxCols }).map((_, c) => (
                                             <th key={c} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{c + 1}</th>
                                         ))}
                                     </tr>
@@ -905,14 +910,14 @@ const CategoryArrangement: React.FC = () => {
                                                     <td className="p-6 border border-amber-500/20 bg-zinc-900/40 text-center text-sm font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
                                                         {rowLabel}
                                                     </td>
-                                                    {Array.from({ length: 10 }).map((_, cIdx) => {
+                                                    {Array.from({ length: maxCols }).map((_, cIdx) => {
                                                         const col = cIdx + 1;
                                                         const slotId = `${rowLabel}_${col}`;
                                                         const slot = catSlots[slotId];
                                                         const globalIndex = (rIdx * cols) + col;
                                                         
                                                         // Only render if within current column count for this row
-                                                        if (col > cols) return <td key={slotId} className="p-6 border border-amber-500/20 bg-zinc-950/20"></td>;
+                                                        if (col > cols) return <td key={slotId} className="p-3 border border-amber-500/20 bg-zinc-950/20 opacity-10"></td>;
 
                                                         return (
                                                             <td key={slotId} className="p-3 border border-amber-500/20 min-w-[180px] relative">
