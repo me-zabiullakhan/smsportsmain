@@ -27,7 +27,8 @@ import {
     User,
     Trash2,
     Move,
-    Shuffle
+    Shuffle,
+    Plus
 } from 'lucide-react';
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
@@ -84,24 +85,47 @@ interface DroppableSlotProps {
     player?: CategoryArrangementSlot;
     onAction: (action: 'REMOVE' | 'MOVE', slotId: string) => void;
     isOver?: boolean;
+    index: number;
 }
 
-const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isOver }) => {
-    const { setNodeRef } = useDroppable({
+const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isOver, index }) => {
+    const { setNodeRef: setDropRef } = useDroppable({
         id: id,
     });
 
+    const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+        id: `slot-player-${id}`,
+        data: player ? { ...player, fromSlot: id } : undefined,
+        disabled: !player
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.3 : 1,
+    };
+
     return (
         <div 
-            ref={setNodeRef}
+            ref={setDropRef}
             className={`relative h-16 w-full border transition-all flex items-center justify-center group overflow-hidden ${
                 isOver ? 'bg-amber-500/30 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] z-10 scale-[1.02]' : 'bg-zinc-900/40 border-zinc-800/50'
             } ${player ? 'border-amber-500/40 bg-zinc-900/60' : 'border-dashed'}`}
         >
+            {/* Slot Number */}
+            <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-700 uppercase tracking-widest pointer-events-none z-0">
+                #{index}
+            </div>
+
             {player ? (
-                <div className="w-full h-full p-1.5 flex items-center gap-2 relative">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex-shrink-0 overflow-hidden">
-                        <User className="w-4 h-4 text-zinc-600 m-2" />
+                <div 
+                    ref={setDragRef}
+                    style={style}
+                    {...listeners}
+                    {...attributes}
+                    className="w-full h-full p-1.5 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        <User className="w-4 h-4 text-zinc-600" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-black text-amber-100 leading-tight uppercase tracking-tight truncate">{player.playerName}</p>
@@ -109,9 +133,12 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
                     </div>
                     
                     {/* Hover Actions */}
-                    <div className="absolute inset-0 bg-zinc-950/95 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-zinc-950/95 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm pointer-events-none group-hover:pointer-events-auto">
                         <button 
-                            onClick={() => onAction('REMOVE', id)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAction('REMOVE', id);
+                            }}
                             className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all active:scale-90"
                             title="Remove Player"
                         >
@@ -125,7 +152,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
                 </div>
             )}
             
-            {/* Slot ID Indicator (Optional, very subtle) */}
+            {/* Slot ID Indicator */}
             <div className="absolute bottom-0.5 right-1 text-[6px] font-black text-zinc-800 uppercase tracking-widest pointer-events-none">
                 {id.split('_')[0]}
             </div>
@@ -140,11 +167,13 @@ const CategoryArrangement: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [auctionName, setAuctionName] = useState<string>('');
+    const [auctionLogo, setAuctionLogo] = useState<string>('');
     const [players, setPlayers] = useState<Player[]>([]);
     const [categories, setCategories] = useState<AuctionCategory[]>([]);
     const [activeCategory, setActiveCategory] = useState<string>('');
     const [slots, setSlots] = useState<{ [key: string]: CategoryArrangementSlot }>({});
     const [allSlots, setAllSlots] = useState<{ [categoryId: string]: { [slotId: string]: CategoryArrangementSlot } }>({});
+    const [customConfig, setCustomConfig] = useState<{ [categoryId: string]: { rows: number, cols: number } }>({});
     const [search, setSearch] = useState('');
     const [filterCategory, setFilterCategory] = useState('ALL');
     const [history, setHistory] = useState<{ [key: string]: CategoryArrangementSlot }[]>([]);
@@ -174,7 +203,9 @@ const CategoryArrangement: React.FC = () => {
                 ]);
 
                 if (auctionSnap.exists) {
-                    setAuctionName(auctionSnap.data()?.name || 'SM SPORTS');
+                    const data = auctionSnap.data();
+                    setAuctionName(data?.name || data?.title || 'SM SPORTS');
+                    setAuctionLogo(data?.logoUrl || '');
                 }
 
                 const pList = playersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player));
@@ -187,10 +218,13 @@ const CategoryArrangement: React.FC = () => {
                 // Fetch all drafts
                 const draftsSnap = await db.collection('auctions').doc(id).collection('arrangementDrafts').get();
                 const draftsMap: { [key: string]: any } = {};
+                const configMap: { [key: string]: any } = {};
                 draftsSnap.docs.forEach(doc => {
                     draftsMap[doc.id] = doc.data().slots || {};
+                    configMap[doc.id] = doc.data().config || { rows: 0, cols: 0 };
                 });
                 setAllSlots(draftsMap);
+                setCustomConfig(configMap);
 
                 setLoading(false);
             } catch (err) {
@@ -218,7 +252,35 @@ const CategoryArrangement: React.FC = () => {
         if (!over) return;
 
         const slotId = over.id as string;
-        const player = active.data.current as Player;
+        const activeData = active.data.current as any;
+
+        // If dragging from another slot
+        if (activeData?.fromSlot) {
+            const fromSlotId = activeData.fromSlot;
+            if (fromSlotId === slotId) return;
+
+            const newSlots = { ...slots };
+            const playerInFromSlot = newSlots[fromSlotId];
+            const playerInToSlot = newSlots[slotId];
+
+            setHistory([...history, slots]);
+
+            if (playerInToSlot) {
+                // Swap
+                newSlots[slotId] = playerInFromSlot;
+                newSlots[fromSlotId] = playerInToSlot;
+            } else {
+                // Move
+                newSlots[slotId] = playerInFromSlot;
+                delete newSlots[fromSlotId];
+            }
+
+            setSlots(newSlots);
+            setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
+            return;
+        }
+
+        const player = activeData as Player;
 
         // If slot already filled, show inline swap/replace options
         if (slots[slotId]) {
@@ -248,6 +310,7 @@ const CategoryArrangement: React.FC = () => {
         };
 
         setSlots(newSlots);
+        setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
     };
 
     const handleSwap = () => {
@@ -279,6 +342,7 @@ const CategoryArrangement: React.FC = () => {
         };
 
         setSlots(newSlots);
+        setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
         setPendingSwap(null);
     };
 
@@ -294,6 +358,7 @@ const CategoryArrangement: React.FC = () => {
             const newSlots = { ...slots };
             delete newSlots[slotId];
             setSlots(newSlots);
+            setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
         }
     };
 
@@ -301,6 +366,7 @@ const CategoryArrangement: React.FC = () => {
         if (history.length === 0) return;
         const prev = history[history.length - 1];
         setSlots(prev);
+        setAllSlots(all => ({ ...all, [activeCategory]: prev }));
         setHistory(history.slice(0, -1));
     };
 
@@ -308,6 +374,7 @@ const CategoryArrangement: React.FC = () => {
         if (window.confirm("Clear all assignments for this category?")) {
             setHistory([...history, slots]);
             setSlots({});
+            setAllSlots(all => ({ ...all, [activeCategory]: {} }));
         }
     };
 
@@ -319,6 +386,7 @@ const CategoryArrangement: React.FC = () => {
                 auctionId: id,
                 categoryId: activeCategory,
                 slots: slots,
+                config: customConfig[activeCategory] || { rows: 0, cols: 0 },
                 updatedAt: Date.now()
             });
 
@@ -416,6 +484,7 @@ const CategoryArrangement: React.FC = () => {
 
         setHistory([...history, slots]);
         setSlots(newSlots);
+        setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
     };
 
     const filteredPlayers = players.filter(p => {
@@ -427,10 +496,32 @@ const CategoryArrangement: React.FC = () => {
     const currentCategory = categories.find(c => c.id === activeCategory);
     const isAllrounderTable = currentCategory?.name.toLowerCase() === 'allrounder';
     
+    const config = customConfig[activeCategory] || { rows: 0, cols: 0 };
     const totalRequired = currentCategory?.requiredPlayers || 6;
-    const rowCount = isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6);
-    const colCount = 6;
+    const rowCount = config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6));
+    const colCount = config.cols || 6;
     const prefix = currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT';
+
+    const addRow = () => {
+        setCustomConfig(prev => ({
+            ...prev,
+            [activeCategory]: {
+                rows: rowCount + 1,
+                cols: colCount
+            }
+        }));
+    };
+
+    const addCol = () => {
+        if (colCount >= 10) return; // Limit columns
+        setCustomConfig(prev => ({
+            ...prev,
+            [activeCategory]: {
+                rows: rowCount,
+                cols: colCount + 1
+            }
+        }));
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -577,15 +668,29 @@ const CategoryArrangement: React.FC = () => {
                                 <h3 className="text-lg font-black uppercase tracking-tight text-white">{currentCategory?.name} Board</h3>
                                 <div className="h-4 w-[1px] bg-zinc-800"></div>
                                 <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                                    {Object.keys(slots).length} / {isAllrounderTable ? categories.length * 6 : totalRequired} Slots Available
+                                    {Object.keys(slots).length} / {rowCount * colCount} Slots Available
                                 </p>
                             </div>
-                            <button 
-                                onClick={handleAutoFill}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                            >
-                                <Shuffle className="w-3.5 h-3.5" /> Auto Fill
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={addRow}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add Row
+                                </button>
+                                <button 
+                                    onClick={addCol}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add Column
+                                </button>
+                                <button 
+                                    onClick={handleAutoFill}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
+                                >
+                                    <Shuffle className="w-3.5 h-3.5" /> Auto Fill
+                                </button>
+                            </div>
                         </div>
 
                         {/* The Board */}
@@ -617,9 +722,9 @@ const CategoryArrangement: React.FC = () => {
                                                 <th className="w-24 p-5 bg-zinc-900/90 border border-amber-500/20 text-[12px] font-black text-amber-500 uppercase tracking-widest">
                                                     {isAllrounderTable ? 'CATEGORY' : '#'}
                                                 </th>
-                                                {[1, 2, 3, 4, 5, 6].map(col => (
-                                                    <th key={col} className="p-5 bg-zinc-900/90 border border-amber-500/20 text-[12px] font-black text-amber-500 uppercase tracking-widest">
-                                                        {col}
+                                                {Array.from({ length: colCount }).map((_, cIdx) => (
+                                                    <th key={cIdx + 1} className="p-5 bg-zinc-900/90 border border-amber-500/20 text-[12px] font-black text-amber-500 uppercase tracking-widest">
+                                                        {cIdx + 1}
                                                     </th>
                                                 ))}
                                             </tr>
@@ -633,9 +738,11 @@ const CategoryArrangement: React.FC = () => {
                                                         <td className="p-5 bg-zinc-900/60 border border-amber-500/20 text-center text-[10px] font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
                                                             {rowLabel}
                                                         </td>
-                                                        {[1, 2, 3, 4, 5, 6].map(col => {
+                                                        {Array.from({ length: colCount }).map((_, cIdx) => {
+                                                            const col = cIdx + 1;
                                                             const slotId = `${rowLabel}_${col}`;
                                                             const isTarget = pendingSwap?.slotId === slotId;
+                                                            const globalIndex = (rIdx * colCount) + col;
                                                             return (
                                                                 <td key={slotId} className="p-0 border border-amber-500/20 min-w-[160px] relative">
                                                                     <DroppableSlot 
@@ -643,6 +750,7 @@ const CategoryArrangement: React.FC = () => {
                                                                         player={slots[slotId]}
                                                                         onAction={handleAction}
                                                                         isOver={activeDragId !== null}
+                                                                        index={globalIndex}
                                                                     />
                                                                     {isTarget && (
                                                                         <div className="absolute inset-0 z-20 bg-zinc-950/95 flex flex-col items-center justify-center gap-2 p-2 animate-fade-in">
@@ -745,9 +853,13 @@ const CategoryArrangement: React.FC = () => {
                     
                     <div className="text-right flex flex-col items-end gap-2">
                         <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-2xl bg-zinc-900 border-2 border-amber-500/30 flex items-center justify-center text-amber-500 font-black text-2xl">
-                                {auctionName.substring(0, 2).toUpperCase()}
-                            </div>
+                            {auctionLogo ? (
+                                <img src={auctionLogo} className="w-20 h-20 rounded-2xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-2 shadow-lg shadow-amber-500/10" referrerPolicy="no-referrer" />
+                            ) : (
+                                <div className="w-20 h-20 rounded-2xl bg-zinc-900 border-2 border-amber-500/30 flex items-center justify-center text-amber-500 font-black text-2xl">
+                                    {auctionName.substring(0, 2).toUpperCase()}
+                                </div>
+                            )}
                             <div className="text-right">
                                 <h2 className="text-5xl font-black text-white uppercase tracking-tighter leading-none">{auctionName}</h2>
                                 <p className="text-amber-500 font-black tracking-[0.3em] text-sm uppercase">OFFICIAL AUCTION BOARD</p>
@@ -756,27 +868,8 @@ const CategoryArrangement: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-10">
-                    {/* Left: Player List */}
-                    <div className="w-1/4 space-y-6">
-                        <div className="bg-zinc-900/80 border-2 border-amber-500/30 rounded-[2rem] p-8 h-full shadow-2xl">
-                            <h3 className="text-2xl font-black text-amber-500 uppercase tracking-widest text-center mb-8 border-b border-amber-500/20 pb-4">PLAYER LIST</h3>
-                            <div className="space-y-3 max-h-[1200px] overflow-hidden">
-                                {players.filter(p => !Object.values(allSlots).some(catSlots => Object.values(catSlots).some(s => s.playerId === p.id))).slice(0, 25).map(p => (
-                                    <div key={p.id} className="text-lg font-bold text-zinc-300 uppercase tracking-tight border-b border-zinc-800/50 pb-2 truncate">
-                                        {p.name}
-                                    </div>
-                                ))}
-                                {players.filter(p => !Object.values(allSlots).some(catSlots => Object.values(catSlots).some(s => s.playerId === p.id))).length > 25 && (
-                                    <p className="text-xs font-black text-zinc-600 uppercase tracking-widest text-center pt-4">And {players.filter(p => !Object.values(allSlots).some(catSlots => Object.values(catSlots).some(s => s.playerId === p.id))).length - 25} more...</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right: Combined Auction Board */}
-                    <div className="w-3/4 space-y-8">
-                        <div className="text-center">
+                <div className="w-full space-y-8">
+                    <div className="text-center">
                             <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase tracking-tighter italic drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]">
                                 AUCTION BOARD
                             </h2>
@@ -790,17 +883,19 @@ const CategoryArrangement: React.FC = () => {
                                 <thead>
                                     <tr className="bg-zinc-900/90">
                                         <th className="w-32 p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">#</th>
-                                        {[1, 2, 3, 4, 5, 6].map(c => (
-                                            <th key={c} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{c}</th>
+                                        {Array.from({ length: 10 }).map((_, c) => (
+                                            <th key={c} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{c + 1}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {categories.map(cat => {
                                         const catSlots = allSlots[cat.id || ''] || {};
+                                        const catConfig = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
                                         const isAllrounder = cat.name.toLowerCase() === 'allrounder';
                                         const totalReq = cat.requiredPlayers || 6;
-                                        const rows = isAllrounder ? categories.length : Math.ceil(totalReq / 6);
+                                        const rows = catConfig.rows || (isAllrounder ? categories.length : Math.ceil(totalReq / 6));
+                                        const cols = catConfig.cols || 6;
                                         const pref = cat.name.substring(0, 3).toUpperCase();
 
                                         return Array.from({ length: rows }).map((_, rIdx) => {
@@ -810,11 +905,18 @@ const CategoryArrangement: React.FC = () => {
                                                     <td className="p-6 border border-amber-500/20 bg-zinc-900/40 text-center text-sm font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
                                                         {rowLabel}
                                                     </td>
-                                                    {[1, 2, 3, 4, 5, 6].map(col => {
+                                                    {Array.from({ length: 10 }).map((_, cIdx) => {
+                                                        const col = cIdx + 1;
                                                         const slotId = `${rowLabel}_${col}`;
                                                         const slot = catSlots[slotId];
+                                                        const globalIndex = (rIdx * cols) + col;
+                                                        
+                                                        // Only render if within current column count for this row
+                                                        if (col > cols) return <td key={slotId} className="p-6 border border-amber-500/20 bg-zinc-950/20"></td>;
+
                                                         return (
-                                                            <td key={slotId} className="p-3 border border-amber-500/20 min-w-[180px]">
+                                                            <td key={slotId} className="p-3 border border-amber-500/20 min-w-[180px] relative">
+                                                                <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest opacity-50">#{globalIndex}</div>
                                                                 {slot ? (
                                                                     <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg group">
                                                                         <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
@@ -841,7 +943,6 @@ const CategoryArrangement: React.FC = () => {
                             </table>
                         </div>
                     </div>
-                </div>
 
                 {/* Footer Branding */}
                 <div className="mt-20 pt-10 border-t-4 border-amber-500/30 flex items-center justify-between">
