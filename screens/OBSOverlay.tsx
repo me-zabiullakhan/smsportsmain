@@ -182,6 +182,68 @@ const OBSOverlay: React.FC = () => {
         )}
         {layout === 'MINIMAL' && <div className="min-h-screen w-full relative"><div className="absolute bottom-12 left-0 right-0 flex justify-center"><div className="bg-gradient-to-r from-indigo-900 to-blue-900 backdrop-blur-md rounded-full px-6 py-2 flex items-center gap-6 border-2 border-cyan-500 shadow-xl"><div className="flex items-center gap-3"><img src={player?.photoUrl} className="w-12 h-12 rounded-full border-2 border-white object-cover" /><div><h1 className="text-white font-bold text-lg leading-none">{player?.name}</h1><span className="text-xs text-cyan-400 uppercase font-bold">{player?.category}</span></div></div><div className="w-px h-8 bg-white/20"></div><div className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-green-400" /><span className="text-3xl font-black text-white tabular-nums">{bid.toLocaleString()}</span></div>{bidder && (<><div className="w-px h-8 bg-white/20"></div><div className="flex items-center gap-2">{bidder.logoUrl && <img src={bidder.logoUrl} className="w-8 h-8 object-contain bg-white rounded-full p-0.5" />}<span className="text-white font-bold">{bidder.name}</span></div></>)}{status !== 'LIVE' && (<div className={`px-3 py-1 rounded-full font-bold text-xs ${status === 'SOLD' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>{status}</div>)}</div></div></div>}
         {layout === 'VERTICAL' && <div className="min-h-screen w-full relative"><div className="absolute top-0 right-0 h-full w-[300px] bg-gradient-to-b from-indigo-900 to-slate-900 border-l-4 border-cyan-500 flex flex-col p-6 shadow-2xl"><div className="bg-white/10 rounded-full p-2 mb-4 flex justify-center mx-auto w-36 h-36 border-4 border-cyan-500 relative"><img src={player?.photoUrl} className="w-full h-full rounded-full object-cover" /></div><h1 className="text-white text-2xl font-black text-center mb-1 leading-tight">{player?.name}</h1><p className="text-cyan-400 text-center text-sm font-bold uppercase mb-6 tracking-widest">{player?.category}</p><div className="bg-white/10 p-4 rounded-xl text-center mb-6 border border-white/20"><p className="text-gray-300 text-xs uppercase mb-1 font-bold">Current Bid</p><p className="text-4xl font-black text-white">{bid.toLocaleString()}</p></div>{bidder ? (<div className="bg-indigo-800 p-4 rounded-xl border border-indigo-600"><p className="text-xs text-gray-300 uppercase mb-2 font-bold">Highest Bidder</p><div className="flex items-center gap-3">{bidder.logoUrl ? <img src={bidder.logoUrl} className="w-10 h-10 rounded-full bg-white p-0.5"/> : <div className="w-10 h-10 bg-gray-600 rounded-full"/>}<p className="font-bold text-white leading-tight">{bidder.name}</p></div></div>) : (<div className="text-center text-gray-500 italic mt-4">Waiting for bids...</div>)}<div className="mt-auto">{status === 'SOLD' && <div className="bg-green-600 text-white text-center py-2 font-black text-xl rounded uppercase animate-pulse shadow-lg">SOLD</div>}{status === 'UNSOLD' && <div className="bg-red-600 text-white text-center py-2 font-black text-xl rounded uppercase shadow-lg">UNSOLD</div>}</div></div></div>}
+        
+        {layout === 'ADVAYA' && (
+            <div className="min-h-screen w-full relative font-sans overflow-hidden">
+                <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between gap-6 animate-slide-up">
+                    {/* Player Info */}
+                    <div className="flex-1 bg-black/80 backdrop-blur-xl rounded-[32px] border border-white/10 p-6 flex items-center gap-8 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-teal-500"></div>
+                        <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-teal-500/30 shadow-lg shrink-0">
+                            <img src={player?.photoUrl} className="w-full h-full object-cover object-top" />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="bg-teal-500 text-black px-3 py-0.5 rounded-lg font-black text-[10px] uppercase tracking-widest">{player?.category}</span>
+                                <span className="text-white/40 font-mono text-[10px]">#{player?.id.toString().slice(-4)}</span>
+                            </div>
+                            <h1 className="text-4xl font-black uppercase tracking-tighter text-white truncate">{player?.name}</h1>
+                            <p className="text-teal-400 font-bold uppercase tracking-[0.2em] text-xs mt-1">{player?.speciality || player?.category}</p>
+                        </div>
+                    </div>
+
+                    {/* Bidding Info */}
+                    <div className="w-[450px] flex flex-col gap-4">
+                        <div className="bg-teal-500 rounded-[32px] p-6 flex items-center justify-between shadow-[0_20px_40px_rgba(20,184,166,0.3)] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-full bg-white/10 skew-x-[-20deg] translate-x-16"></div>
+                            <div>
+                                <p className="text-black/60 text-[10px] font-black uppercase tracking-widest mb-1">Current Bid</p>
+                                <p className="text-6xl font-black text-black tabular-nums leading-none tracking-tighter italic">{bid.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                                {status === 'SOLD' ? (
+                                    <span className="bg-black text-teal-500 px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest animate-pulse">SOLD</span>
+                                ) : status === 'UNSOLD' ? (
+                                    <span className="bg-red-600 text-white px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest">UNSOLD</span>
+                                ) : (
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-black/40 text-[10px] font-bold uppercase tracking-widest">Base</span>
+                                        <span className="text-black font-bold text-xl font-mono leading-none">₹{player?.basePrice.toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {bidder && (
+                            <div className="bg-black/80 backdrop-blur-xl rounded-full p-3 pl-6 flex items-center justify-between border border-white/10 shadow-2xl animate-slide-up">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-2 h-2 bg-teal-500 rounded-full animate-ping"></div>
+                                    <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">Leading:</span>
+                                    <span className="text-white font-black uppercase italic tracking-tight">{bidder.name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                        <p className="text-white/40 text-[8px] font-bold uppercase leading-none">Purse</p>
+                                        <p className="text-teal-400 font-mono font-bold text-sm leading-none mt-1">{bidder.budget.toLocaleString()}</p>
+                                    </div>
+                                    {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-10 h-10 object-contain bg-white p-1 rounded-full" /> : <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-xs text-white">{bidder.name.charAt(0)}</div>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
         <Marquee show={!!state.sponsorConfig?.showHighlights} content={marqueeContent} layout={state.obsLayout} />
     </>
   );

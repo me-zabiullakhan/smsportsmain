@@ -10,7 +10,7 @@ import {
     Check as CheckIcon, Check, ShieldCheck, Tag, User, TrendingUp, CreditCard, Shield, 
     UserCheck, UserX, Share2, Download, FileSpreadsheet, Filter, Key, 
     ExternalLink, LayoutList, ToggleRight, ToggleLeft, RefreshCw, FileUp, 
-    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2
+    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2, AlertTriangle
 } from 'lucide-react';
 import firebase from 'firebase/compat/app';
 import * as XLSX from 'xlsx';
@@ -143,6 +143,13 @@ const AuctionManage: React.FC = () => {
     const [isEditingReg, setIsEditingReg] = useState(false);
     const [expandedRegId, setExpandedRegId] = useState<string | null>(null);
     const [allAuctions, setAllAuctions] = useState<any[]>([]);
+    const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+    const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+
+    const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    };
 
     useEffect(() => {
         if (!userProfile?.uid) return;
@@ -174,9 +181,9 @@ const AuctionManage: React.FC = () => {
                 batch.update(docRef, { playerNumber: index + 1 });
             });
             await batch.commit();
-            alert("Player numbers assigned successfully!");
+            showNotification("Player numbers assigned successfully!", "success");
         } catch (e: any) {
-            alert("Error assigning numbers: " + e.message);
+            showNotification("Error assigning numbers: " + e.message);
         }
         setIsGeneratingPDF(false);
     };
@@ -260,23 +267,23 @@ const AuctionManage: React.FC = () => {
                 slabs
             };
             await db.collection('auctions').doc(id).update(updateData);
-            alert("Settings Saved Successfully!");
-        } catch (e: any) { alert("Save failed: " + e.message); }
+            showNotification("Settings Saved Successfully!", "success");
+        } catch (e: any) { showNotification("Save failed: " + e.message); }
     };
 
     const handleSaveRegistration = async () => {
         if (!id) return;
         try {
             await db.collection('auctions').doc(id).update({ registrationConfig: regConfig });
-            alert("Registration Settings Saved!");
-        } catch (e: any) { alert("Failed: " + e.message); }
+            showNotification("Registration Settings Saved!", "success");
+        } catch (e: any) { showNotification("Failed: " + e.message); }
     };
 
     const handleRevertToPending = async (regId: string) => {
         if (!id) return;
         try {
             await db.collection('auctions').doc(id).collection('registrations').doc(regId).update({ status: 'PENDING' });
-        } catch (e: any) { alert("Revert failed: " + e.message); }
+        } catch (e: any) { showNotification("Revert failed: " + e.message); }
     };
 
     const handleApproveAndAdd = async (reg: RegisteredPlayer) => {
@@ -288,7 +295,7 @@ const AuctionManage: React.FC = () => {
             // Check if already in pool (by name)
             const existing = players.find(p => p.name === reg.fullName);
             if (existing) {
-                alert(`${reg.fullName} is already in the player pool.`);
+                showNotification(`${reg.fullName} is already in the player pool.`);
                 return;
             }
 
@@ -305,8 +312,8 @@ const AuctionManage: React.FC = () => {
             };
             
             await db.collection('auctions').doc(id).collection('players').add(newPlayer);
-            alert(`${reg.fullName} approved and added to player pool!`);
-        } catch (e: any) { alert("Approval failed: " + e.message); }
+            showNotification(`${reg.fullName} approved and added to player pool!`, "success");
+        } catch (e: any) { showNotification("Approval failed: " + e.message); }
     };
 
     const handleUpdateRegistration = async (updatedReg: RegisteredPlayer) => {
@@ -316,8 +323,8 @@ const AuctionManage: React.FC = () => {
             await db.collection('auctions').doc(id).collection('registrations').doc(regId).update(data);
             setSelectedReg(updatedReg);
             setIsEditingReg(false);
-            alert("Registration details updated!");
-        } catch (e: any) { alert("Update failed: " + e.message); }
+            showNotification("Registration details updated!", "success");
+        } catch (e: any) { showNotification("Update failed: " + e.message); }
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'MODAL' | 'LOGO' | 'QR' | 'REG_LOGO' | 'REG_BANNER' | 'OVERLAY') => {
@@ -335,9 +342,9 @@ const AuctionManage: React.FC = () => {
                         }
                     }
                     setOverlayImage({ ...overlayImage, url: base64 });
-                    alert("Image updated successfully!");
+                    showNotification("Image updated successfully!", "success");
                 } catch (err: any) {
-                    alert("Update failed: " + err.message);
+                    showNotification("Update failed: " + err.message);
                 }
                 return;
             }
@@ -364,7 +371,7 @@ const AuctionManage: React.FC = () => {
                 await db.collection('auctions').doc(id).collection(col).add({ ...itemData, createdAt: Date.now() });
             }
             closeModal();
-        } catch (err: any) { alert("Save failed: " + err.message); }
+        } catch (err: any) { showNotification("Save failed: " + err.message); }
     };
 
     const closeModal = () => {
@@ -374,9 +381,14 @@ const AuctionManage: React.FC = () => {
     };
 
     const handleDelete = async (type: string, itemId: string) => {
-        if (window.confirm("Purge this record?")) {
-            await db.collection('auctions').doc(id!).collection(type.toLowerCase() + 's').doc(itemId).delete();
-        }
+        setConfirmAction({
+            title: "Purge Record",
+            message: "Are you sure you want to purge this record?",
+            onConfirm: async () => {
+                await db.collection('auctions').doc(id!).collection(type.toLowerCase() + 's').doc(itemId).delete();
+                setConfirmAction(null);
+            }
+        });
     };
 
     const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>, type: 'TEAM' | 'PLAYER') => {
@@ -404,13 +416,16 @@ const AuctionManage: React.FC = () => {
             });
             
             await batch.commit();
-            alert(`Imported ${data.length} records!`);
+            showNotification(`Imported ${data.length} records!`, "success");
         };
         reader.readAsBinaryString(file);
     };
 
     const generatePDF = async () => {
-        if (registrations.length === 0) return alert("No registrations to export.");
+        if (registrations.length === 0) {
+            showNotification("No registrations to export.");
+            return;
+        }
         setIsGeneratingPDF(true);
         setPdfProgress(0);
 
@@ -614,7 +629,7 @@ const AuctionManage: React.FC = () => {
             doc.save(`${auction?.title || 'Tournament'}_Registry.pdf`);
         } catch (error) {
             console.error("PDF Generation Error:", error);
-            alert("Failed to generate PDF. Check console for details.");
+            showNotification("Failed to generate PDF. Check console for details.");
         } finally {
             document.body.removeChild(pdfContainer);
             setIsGeneratingPDF(false);
@@ -622,7 +637,10 @@ const AuctionManage: React.FC = () => {
     };
 
     const exportPlayersToCSV = () => {
-        if (players.length === 0) return alert("No players to export.");
+        if (players.length === 0) {
+            showNotification("No players to export.");
+            return;
+        }
         const headers = ["ID", "Name", "Category", "Role", "Base Price", "Nationality", "Status", "Sold To", "Sold Price"];
         const rows = players.map(p => [
             p.id, p.name, p.category, p.role, p.basePrice, p.nationality, p.status || 'POOL', p.soldTo || '-', p.soldPrice || 0
@@ -638,7 +656,10 @@ const AuctionManage: React.FC = () => {
     };
 
     const exportRegistrationsToCSV = () => {
-        if (registrations.length === 0) return alert("No registrations to export.");
+        if (registrations.length === 0) {
+            showNotification("No registrations to export.");
+            return;
+        }
         
         // Dynamic headers based on custom fields
         const customFieldLabels = regConfig.customFields.map(f => f.label);
@@ -726,25 +747,35 @@ const AuctionManage: React.FC = () => {
             }
             setShowCodeModal(false);
             setEditCode({ code: '', assignedTo: '', teamName: '', usageLimit: 1, isActive: true, teamCodes: [], teamMaxPlayers: 11, teamUsedCount: 0 });
-        } catch (err: any) { alert("Save failed: " + err.message); }
+        } catch (err: any) { showNotification("Save failed: " + err.message); }
     };
 
     const handleDeleteCode = async (codeId: string) => {
-        if (window.confirm("Delete this captain code?")) {
-            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).delete();
-        }
+        setConfirmAction({
+            title: "Delete Code",
+            message: "Delete this captain code?",
+            onConfirm: async () => {
+                await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).delete();
+                setConfirmAction(null);
+            }
+        });
     };
 
     const handleResetCodeUsage = async (codeId: string) => {
-        if (window.confirm("Reset usage for this code?")) {
-            const code = captainCodes.find(c => c.id === codeId);
-            const resetTeamCodes = code?.teamCodes?.map(tc => ({ ...tc, isUsed: false, usedBy: undefined })) || [];
-            await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ 
-                currentUsage: 0, 
-                teamUsedCount: 0,
-                teamCodes: resetTeamCodes
-            });
-        }
+        setConfirmAction({
+            title: "Reset Usage",
+            message: "Reset usage for this code?",
+            onConfirm: async () => {
+                const code = captainCodes.find(c => c.id === codeId);
+                const resetTeamCodes = code?.teamCodes?.map(tc => ({ ...tc, isUsed: false, usedBy: undefined })) || [];
+                await db.collection('auctions').doc(id!).collection('captainCodes').doc(codeId).update({ 
+                    currentUsage: 0, 
+                    teamUsedCount: 0,
+                    teamCodes: resetTeamCodes
+                });
+                setConfirmAction(null);
+            }
+        });
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]"><Loader2 className="animate-spin text-blue-600"/></div>;
@@ -1932,9 +1963,14 @@ const AuctionManage: React.FC = () => {
                                                         </div>
                                                         <span className="text-[9px] font-bold text-gray-600 truncate max-w-[80px]">{p.name}</span>
                                                         <button onClick={async () => {
-                                                            if (window.confirm(`Remove ${p.name} from ${item.name}?`)) {
-                                                                await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: 'Standard' });
-                                                            }
+                                                            setConfirmAction({
+                                                                title: "Remove Player",
+                                                                message: `Remove ${p.name} from ${item.name}?`,
+                                                                onConfirm: async () => {
+                                                                    await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: 'Standard' });
+                                                                    setConfirmAction(null);
+                                                                }
+                                                            });
                                                         }} className="text-gray-300 hover:text-red-500 transition-colors">
                                                             <X className="w-3 h-3" />
                                                         </button>
@@ -2130,9 +2166,14 @@ const AuctionManage: React.FC = () => {
                                                     <td className="px-6 py-4 text-right">
                                                         <button 
                                                             onClick={async () => {
-                                                                if (window.confirm("Remove from waitlist?")) {
-                                                                    await db.collection('auctions').doc(id).collection('waitlist').doc(player.id).delete();
-                                                                }
+                                                                setConfirmAction({
+                                                                    title: "Remove from Waitlist",
+                                                                    message: "Remove from waitlist?",
+                                                                    onConfirm: async () => {
+                                                                        await db.collection('auctions').doc(id).collection('waitlist').doc(player.id).delete();
+                                                                        setConfirmAction(null);
+                                                                    }
+                                                                });
                                                             }}
                                                             className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
                                                         >
@@ -2767,6 +2808,44 @@ const AuctionManage: React.FC = () => {
                                     style={{ width: `${pdfProgress}%` }}
                                 />
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* NOTIFICATION BANNER */}
+            {notification && (
+                <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
+                    {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
+                    <span className="text-sm font-bold">{notification.message}</span>
+                    <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
+                </div>
+            )}
+
+            {/* CUSTOM CONFIRMATION MODAL */}
+            {confirmAction && (
+                <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100">
+                        <div className="flex items-center gap-4 mb-6 text-amber-500">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-xl font-black uppercase tracking-tighter text-gray-800">{confirmAction.title}</h3>
+                        </div>
+                        <p className="text-gray-500 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setConfirmAction(null)}
+                                className="flex-1 py-4 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-400 text-xs font-black uppercase tracking-widest transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmAction.onConfirm}
+                                className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-200"
+                            >
+                                Confirm
+                            </button>
                         </div>
                     </div>
                 </div>

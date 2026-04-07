@@ -291,13 +291,26 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 let totalMandatorySlotsUsed = 0;
 
                 if (state.autoReserveFunds) {
+                    const targetSquadSize = state.maxPlayersPerTeam || 11;
+                    const currentSquadCount = team.players.length;
+                    const playersStillNeededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
+                    
+                    const absoluteMinBasePrice = Math.min(
+                        state.basePrice || 100,
+                        ...(state.categories.length > 0 ? state.categories.map(c => Number(c.basePrice) || 100) : [100]),
+                        ...(state.roles.length > 0 ? state.roles.map(r => Number(r.basePrice) || 100) : [100])
+                    );
+
+                    let totalMandatoryUnmetCost = 0;
+                    let totalMandatorySlotsUsed = 0;
+
                     state.categories.forEach(cat => {
                         const countInCat = team.players.filter(p => p.category === cat.name).length;
-                        let neededInCat = Math.max(0, cat.minPerTeam - countInCat);
+                        let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - countInCat);
                         if (currentPlayer.category === cat.name) {
                             neededInCat = Math.max(0, neededInCat - 1);
                         }
-                        totalMandatoryUnmetCost += (neededInCat * cat.basePrice);
+                        totalMandatoryUnmetCost += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
                         totalMandatorySlotsUsed += neededInCat;
                     });
 
@@ -308,7 +321,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
                     if (amount > biddingCapacity) {
                         throw new Error(
-                            `Insufficient purse to complete squad based on category requirements. You must reserve ₹${totalSurvivalReserve} for the remaining ${playersStillNeededAfterThis} players.`
+                            `Insufficient purse to complete squad. You must reserve ₹${totalSurvivalReserve} for the remaining ${playersStillNeededAfterThis} players to meet minimum requirements.`
                         );
                     }
                 } else {

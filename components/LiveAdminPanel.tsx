@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuction } from '../hooks/useAuction';
 import { AuctionStatus, Team, Player, ProjectorLayout, OBSLayout, UserRole } from '../types';
 import TeamStatusCard from '../components/TeamStatusCard';
-import { Play, Check, X, ArrowLeft, Loader2, RotateCcw, AlertOctagon, DollarSign, Cast, Lock, Unlock, Monitor, ChevronDown, Shuffle, Search, User, Palette, Trophy, Gavel, Wallet, Eye, EyeOff, Clock, Zap, Undo2, RefreshCw, LayoutList, ShieldAlert, CreditCard } from 'lucide-react';
+import { Play, Check, X, ArrowLeft, Loader2, RotateCcw, AlertOctagon, DollarSign, Cast, Lock, Unlock, Monitor, ChevronDown, Shuffle, Search, User, Palette, Trophy, Gavel, Wallet, Eye, EyeOff, Clock, Zap, Undo2, RefreshCw, LayoutList, ShieldAlert, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const LiveAdminPanel: React.FC = () => {
@@ -31,6 +31,14 @@ const LiveAdminPanel: React.FC = () => {
 
   // Undo State
   const [lastAction, setLastAction] = useState<{playerId: string, type: 'SOLD' | 'UNSOLD', name: string} | null>(null);
+
+  const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+
+  const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+      setNotification({ message, type });
+      setTimeout(() => setNotification(null), 5000);
+  };
 
   // Sponsor Config Local State (debounce or immediate)
   const [sponsorLoop, setSponsorLoop] = useState(state.sponsorConfig?.loopInterval || 5);
@@ -67,13 +75,13 @@ const LiveAdminPanel: React.FC = () => {
       }
 
       if (teams.length === 0) {
-          alert("Cannot start auction: No teams added. Please go back to Dashboard > Edit Auction > Teams to add teams.");
+          showNotification("Cannot start auction: No teams added. Please go back to Dashboard > Edit Auction > Teams to add teams.");
           return;
       }
 
       const availablePlayers = players.filter(p => p.status !== 'SOLD' && p.status !== 'UNSOLD');
       if (availablePlayers.length === 0 && !showUnsold) {
-          alert("Cannot start auction: No more players available.");
+          showNotification("Cannot start auction: No more players available.");
           return;
       }
 
@@ -82,9 +90,14 @@ const LiveAdminPanel: React.FC = () => {
       const hasNextPlayer = await startAuction(specificId);
       
       if (!hasNextPlayer && !showUnsold) {
-          if (window.confirm("No more players available in the pool.\n\nDo you want to MARK AUCTION AS COMPLETED?")) {
-              await endAuction();
-          }
+          setConfirmAction({
+              title: "Pool Empty",
+              message: "No more players available in the pool. Do you want to MARK AUCTION AS COMPLETED?",
+              onConfirm: async () => {
+                  await endAuction();
+                  setConfirmAction(null);
+              }
+          });
       } else {
           // Clear manual selection
           setManualPlayerId('');
@@ -94,55 +107,97 @@ const LiveAdminPanel: React.FC = () => {
   }
 
   const handleResetFull = async () => {
-      if(!window.confirm("WARNING: This will reset the auction status to 'Not Started'. It will NOT remove sold players from teams. Proceed?")) return;
-      setIsProcessing(true);
-      await resetAuction();
-      setIsProcessing(false);
+      setConfirmAction({
+          title: "Reset Auction",
+          message: "WARNING: This will reset the auction status to 'Not Started'. It will NOT remove sold players from teams. Proceed?",
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  await resetAuction();
+              } catch (e) {
+                  showNotification((e as Error).message);
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
   }
 
   const handleResetPlayer = async () => {
-      if(!window.confirm("This will clear the current bid and timer for this player. Proceed?")) return;
-      setIsProcessing(true);
-      await resetCurrentPlayer();
-      setIsProcessing(false);
+      setConfirmAction({
+          title: "Reset Player",
+          message: "This will clear the current bid and timer for this player. Proceed?",
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  await resetCurrentPlayer();
+              } catch (e) {
+                  showNotification((e as Error).message);
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
   }
 
   const handleCancelSelection = async () => {
-      if(!window.confirm("Change Player? This will cancel the current round and allow you to select a different player.")) return;
-      setIsProcessing(true);
-      await undoPlayerSelection();
-      setIsProcessing(false);
+      setConfirmAction({
+          title: "Change Player",
+          message: "Change Player? This will cancel the current round and allow you to select a different player.",
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  await undoPlayerSelection();
+              } catch (e) {
+                  showNotification((e as Error).message);
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
   }
 
   const handleUndoLastAction = async () => {
       if (!lastAction) return;
-      if (!window.confirm(`Undo ${lastAction.type} status for ${lastAction.name}? This will return them to the pool.`)) return;
-      
-      setIsProcessing(true);
-      try {
-          await correctPlayerSale(lastAction.playerId, null, 0); // null team, 0 price = reset to pool
-          setLastAction(null);
-      } catch (e) {
-          console.error(e);
-          alert("Failed to undo action.");
-      } finally {
-          setIsProcessing(false);
-      }
+      setConfirmAction({
+          title: "Undo Action",
+          message: `Undo ${lastAction.type} status for ${lastAction.name}? This will return them to the pool.`,
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  await correctPlayerSale(lastAction.playerId, null, 0); // null team, 0 price = reset to pool
+                  setLastAction(null);
+              } catch (e) {
+                  console.error(e);
+                  showNotification("Failed to undo action.");
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
   }
 
   const handleResetSingleUnsold = async (playerId: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!window.confirm("Bring this player back to pool (remove UNSOLD status)?")) return;
-      
-      setIsProcessing(true);
-      try {
-          await correctPlayerSale(playerId, null, 0);
-          // If this player was selected in manual dropdown, they will now appear as normal available player
-      } catch (e) {
-          alert("Failed to reset player.");
-      } finally {
-          setIsProcessing(false);
-      }
+      setConfirmAction({
+          title: "Reset Unsold Player",
+          message: "Bring this player back to pool (remove UNSOLD status)?",
+          onConfirm: async () => {
+              setIsProcessing(true);
+              try {
+                  await correctPlayerSale(playerId, null, 0);
+              } catch (e) {
+                  showNotification("Failed to reset player.");
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
   }
   
   const copyOBSLink = (type: 'transparent' | 'green') => {
@@ -151,12 +206,7 @@ const LiveAdminPanel: React.FC = () => {
       const route = type === 'green' ? 'obs-green' : 'obs-overlay';
       const url = `${baseUrl}#/${route}/${activeAuctionId}`;
       navigator.clipboard.writeText(url);
-      
-      if (type === 'green') {
-          alert("PROJECTOR VIEW URL Copied!\n\nOpen this link on the projector screen.");
-      } else {
-          alert("OBS OVERLAY URL Copied!\n\nPaste this into OBS Browser Source.");
-      }
+      showNotification("URL Copied to Clipboard!", "success");
   };
   
   const handleSellClick = () => {
@@ -170,11 +220,11 @@ const LiveAdminPanel: React.FC = () => {
 
   const confirmSell = async () => {
       if (!selectedTeamId) {
-          alert("Please select a team to sell to.");
+          showNotification("Please select a team to sell to.");
           return;
       }
       if (finalPrice <= 0) {
-          alert("Price must be greater than 0.");
+          showNotification("Price must be greater than 0.");
           return;
       }
 
@@ -188,7 +238,7 @@ const LiveAdminPanel: React.FC = () => {
           setIsSellingMode(false);
       } catch(e) {
           console.error(e);
-          alert("Failed to sell player. Check console.");
+          showNotification("Failed to sell player. Check console.");
       } finally {
           setIsProcessing(false);
       }
@@ -196,16 +246,25 @@ const LiveAdminPanel: React.FC = () => {
 
   const handlePass = async () => {
       if (!hasPaidPlan) return;
-      if (window.confirm("Confirm UNSOLD?")) {
-          setIsProcessing(true);
-          const pid = state.currentPlayerId ? String(state.currentPlayerId) : '';
-          const pName = players.find(p => String(p.id) === String(pid))?.name || 'Player';
-
-          await passPlayer();
-          setLastAction({ playerId: String(pid), type: 'UNSOLD', name: pName });
-          setIsProcessing(false);
-      }
-  }
+      setConfirmAction({
+          title: "Mark Unsold",
+          message: "Are you sure you want to mark this player as UNSOLD?",
+          onConfirm: async () => {
+              setIsProcessing(true);
+              const pid = state.currentPlayerId ? String(state.currentPlayerId) : '';
+              const pName = players.find(p => String(p.id) === String(pid))?.name || 'Player';
+              try {
+                  await passPlayer();
+                  setLastAction({ playerId: String(pid), type: 'UNSOLD', name: pName });
+              } catch (e) {
+                  showNotification("Failed to mark unsold.");
+              } finally {
+                  setIsProcessing(false);
+                  setConfirmAction(null);
+              }
+          }
+      });
+  };
 
   const handleQuickBid = async (teamId: string | number) => {
       if (!hasPaidPlan) return;
@@ -261,11 +320,16 @@ const LiveAdminPanel: React.FC = () => {
                         <p className="text-gray-300 text-xs mb-4">There are {unsoldCount} unsold players. Do you want to bring them back into the bidding pool?</p>
                         <button 
                             onClick={async () => {
-                                if(window.confirm(`Bring back ${unsoldCount} unsold players to the pool?`)) {
-                                    setIsProcessing(true);
-                                    await resetUnsoldPlayers();
-                                    setIsProcessing(false);
-                                }
+                                setConfirmAction({
+                                    title: "Bring Back Unsold",
+                                    message: `Bring back ${unsoldCount} unsold players to the pool?`,
+                                    onConfirm: async () => {
+                                        setIsProcessing(true);
+                                        await resetUnsoldPlayers();
+                                        setIsProcessing(false);
+                                        setConfirmAction(null);
+                                    }
+                                });
                             }}
                             disabled={isProcessing}
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center"
@@ -282,11 +346,16 @@ const LiveAdminPanel: React.FC = () => {
                     <p className="text-gray-300 text-sm mb-6">All players have been auctioned. You can now finalize the event.</p>
                     <button 
                         onClick={async () => {
-                            if(window.confirm("Are you sure you want to finish the auction? This will enable the summary view for all users.")) {
-                                setIsProcessing(true);
-                                await endAuction();
-                                setIsProcessing(false);
-                            }
+                            setConfirmAction({
+                                title: "Finish Auction",
+                                message: "Are you sure you want to finish the auction? This will enable the summary view for all users.",
+                                onConfirm: async () => {
+                                    setIsProcessing(true);
+                                    await endAuction();
+                                    setIsProcessing(false);
+                                    setConfirmAction(null);
+                                }
+                            });
                         }}
                         disabled={isProcessing}
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-lg shadow-green-900/20 transition-all active:scale-95 flex items-center justify-center tracking-wide"
@@ -631,12 +700,12 @@ const LiveAdminPanel: React.FC = () => {
               </div>
 
               {/* Display & Sponsors Toolbar (Fully Inline Buttons) */}
-              <div className="flex flex-wrap gap-2 items-center bg-primary/50 rounded-lg p-2 w-full mt-1 border-t border-gray-700">
-                  <div className="flex items-center gap-2 flex-grow">
+              <div className="flex flex-col gap-2 bg-primary/50 rounded-lg p-2 w-full mt-1 border-t border-gray-700">
+                  <div className="flex items-center gap-2 w-full">
                       <div className="flex-1">
                           <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">Projector</label>
                           <div className="flex bg-gray-800 rounded p-0.5">
-                              {['STANDARD', 'IPL', 'MODERN'].map(l => (
+                              {['STANDARD', 'IPL', 'MODERN', 'ADVAYA'].map(l => (
                                   <button 
                                     key={l}
                                     onClick={() => updateTheme('PROJECTOR', l)}
@@ -650,7 +719,7 @@ const LiveAdminPanel: React.FC = () => {
                       <div className="flex-1">
                           <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">OBS</label>
                           <div className="flex bg-gray-800 rounded p-0.5">
-                              {['STANDARD', 'MINIMAL', 'VERTICAL'].map(l => (
+                              {['STANDARD', 'MINIMAL', 'VERTICAL', 'ADVAYA'].map(l => (
                                   <button 
                                     key={l}
                                     onClick={() => updateTheme('OBS', l)}
@@ -663,10 +732,24 @@ const LiveAdminPanel: React.FC = () => {
                       </div>
                   </div>
 
-                  <div className="w-px h-8 bg-gray-600 mx-1"></div>
+                  <div className="flex items-center gap-2 w-full pt-1 border-t border-gray-800">
+                      <div className="flex-1">
+                          <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">Admin View Override</label>
+                          <div className="flex flex-wrap gap-1 bg-gray-800 rounded p-1">
+                              {['NONE', 'SQUAD', 'PURSES', 'TOP_5', 'UNSOLD'].map(v => (
+                                  <button 
+                                    key={v}
+                                    onClick={() => setAdminView(v === 'NONE' ? null : { type: v as any })}
+                                    className={`px-1.5 py-0.5 rounded text-[7px] font-black transition-all ${(!state.adminViewOverride && v === 'NONE') || (state.adminViewOverride?.type === v) ? 'bg-amber-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                                  >
+                                      {v}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
 
-                  <div className="flex flex-col gap-1 items-end">
-                      <span className="text-[9px] text-gray-400 font-bold uppercase">Sponsors</span>
+                  <div className="flex items-center justify-between w-full pt-1 border-t border-gray-800">
                       <div className="flex items-center gap-1">
                           <button 
                               onClick={() => updateSponsorVisibility('PROJECTOR')}
@@ -682,6 +765,15 @@ const LiveAdminPanel: React.FC = () => {
                           >
                               <Cast className="w-3 h-3"/> OBS
                           </button>
+                          <button 
+                              onClick={toggleHighlights}
+                              className={`p-1 rounded flex items-center gap-1 text-[9px] font-bold border transition-colors ${state.sponsorConfig?.showHighlights ? 'bg-orange-600 border-orange-400 text-white' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
+                              title="Toggle Highlights Ticker"
+                          >
+                              <LayoutList className="w-3 h-3"/> Ticker
+                          </button>
+                      </div>
+                      <div className="flex items-center gap-1">
                           <div className="relative group w-10">
                               <input 
                                   type="number" 
@@ -699,6 +791,42 @@ const LiveAdminPanel: React.FC = () => {
           </div>
       </div>
       
+      {/* NOTIFICATION BANNER */}
+      {notification && (
+          <div className={`fixed top-4 right-4 z-[100] p-4 rounded-lg shadow-2xl border animate-slide-in flex items-center gap-3 max-w-md ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
+              {notification.type === 'error' ? <AlertOctagon className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
+              <span className="text-sm font-bold">{notification.message}</span>
+              <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
+          </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION MODAL (INLINE) */}
+      {confirmAction && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-sm w-full shadow-2xl">
+                  <div className="flex items-center gap-3 mb-4 text-amber-400">
+                      <AlertTriangle className="w-6 h-6" />
+                      <h3 className="text-lg font-black uppercase tracking-tighter">{confirmAction.title}</h3>
+                  </div>
+                  <p className="text-gray-300 text-sm mb-6 leading-relaxed">{confirmAction.message}</p>
+                  <div className="flex gap-3">
+                      <button 
+                        onClick={() => setConfirmAction(null)}
+                        className="flex-1 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold uppercase transition-all"
+                      >
+                          Cancel
+                      </button>
+                      <button 
+                        onClick={confirmAction.onConfirm}
+                        className="flex-1 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold uppercase transition-all shadow-lg shadow-amber-900/20"
+                      >
+                          Confirm
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* SELECTION MODE TOGGLE (Inline Segments) */}
       <div className="bg-primary/40 rounded-lg p-2 mb-4 flex justify-between items-center border border-gray-700">
           <span className="text-xs font-bold text-text-secondary uppercase ml-1">Selection Mode</span>

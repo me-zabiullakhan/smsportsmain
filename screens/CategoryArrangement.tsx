@@ -28,7 +28,11 @@ import {
     Trash2,
     Move,
     Shuffle,
-    Plus
+    Plus,
+    AlertTriangle,
+    CheckCircle,
+    XCircle,
+    X
 } from 'lucide-react';
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
@@ -181,6 +185,13 @@ const CategoryArrangement: React.FC = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [activeDragId, setActiveDragId] = useState<string | null>(null);
     const [pendingSwap, setPendingSwap] = useState<{ slotId: string, newPlayer: Player } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+    const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+
+    const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    };
     const boardRef = useRef<HTMLDivElement>(null);
     const exportRef = useRef<HTMLDivElement>(null);
 
@@ -371,11 +382,17 @@ const CategoryArrangement: React.FC = () => {
     };
 
     const handleReset = () => {
-        if (window.confirm("Clear all assignments for this category?")) {
-            setHistory([...history, slots]);
-            setSlots({});
-            setAllSlots(all => ({ ...all, [activeCategory]: {} }));
-        }
+        setConfirmAction({
+            title: "Clear Assignments",
+            message: "Are you sure you want to clear all assignments for this category? This cannot be undone.",
+            onConfirm: () => {
+                setHistory([...history, slots]);
+                setSlots({});
+                setAllSlots(all => ({ ...all, [activeCategory]: {} }));
+                setConfirmAction(null);
+                showNotification("Assignments cleared for current category.", "success");
+            }
+        });
     };
 
     const handleSave = async () => {
@@ -997,6 +1014,44 @@ const CategoryArrangement: React.FC = () => {
                     animation: fade-in 0.3s ease-out forwards;
                 }
             `}</style>
+
+            {/* NOTIFICATION BANNER */}
+            {notification && (
+                <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
+                    {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
+                    <span className="text-sm font-bold">{notification.message}</span>
+                    <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
+                </div>
+            )}
+
+            {/* CUSTOM CONFIRMATION MODAL */}
+            {confirmAction && (
+                <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-zinc-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-zinc-800">
+                        <div className="flex items-center gap-4 mb-6 text-amber-500">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-xl font-black uppercase tracking-tighter text-zinc-100">{confirmAction.title}</h3>
+                        </div>
+                        <p className="text-zinc-400 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setConfirmAction(null)}
+                                className="flex-1 py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-black uppercase tracking-widest transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmAction.onConfirm}
+                                className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-900/20"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

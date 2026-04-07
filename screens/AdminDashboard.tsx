@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuction } from '../hooks/useAuction';
 // Standardized imports
-import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown } from 'lucide-react';
+import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown, XCircle } from 'lucide-react';
 import { db } from '../firebase';
 import { AuctionSetup, UserPlan, UserRole, PromoCode, SystemPopup } from '../types';
 
@@ -28,6 +28,13 @@ const AdminDashboard: React.FC = () => {
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [promoError, setPromoError] = useState('');
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+
+  const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+      setNotification({ message, type });
+      setTimeout(() => setNotification(null), 5000);
+  };
 
   const isSuperAdmin = userProfile?.role === UserRole.SUPER_ADMIN;
 
@@ -175,8 +182,14 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleAuctionSubscription = (auctionId: string, plan: any) => {
-      if (!isRazorpayLoaded) return alert("Payment system is loading...");
-      if (plan.price === 0) return alert("This auction is already on the Free Plan.");
+      if (!isRazorpayLoaded) {
+          showNotification("Payment system is loading...");
+          return;
+      }
+      if (plan.price === 0) {
+          showNotification("This auction is already on the Free Plan.");
+          return;
+      }
 
       const finalPrice = calculateDiscountedPrice(plan.price);
       
@@ -193,7 +206,7 @@ const AdminDashboard: React.FC = () => {
                       currentClaims: (appliedPromo.currentClaims || 0) + 1
                   });
               }
-              alert("Full Discount Applied!");
+              showNotification("Full Discount Applied!", "success");
               setSelectedAuctionForUpgrade(null);
           })();
           return;
@@ -216,7 +229,7 @@ const AdminDashboard: React.FC = () => {
                       currentClaims: (appliedPromo.currentClaims || 0) + 1
                   });
               }
-              alert("Success! Your auction has been upgraded.");
+              showNotification("Success! Your auction has been upgraded.", "success");
               setSelectedAuctionForUpgrade(null);
           },
           prefill: { email: userProfile?.email },
@@ -230,14 +243,23 @@ const AdminDashboard: React.FC = () => {
       const baseUrl = window.location.href.split('#')[0];
       const url = `${baseUrl}#/auction/${auctionId}/register`;
       navigator.clipboard.writeText(url);
-      alert("✅ Registration link copied!");
+      showNotification("✅ Registration link copied!", "success");
   };
 
   const handleDeleteAuction = async (auctionId: string, title: string) => {
-      if (window.confirm(`Delete auction "${title}"?`)) {
-          try { await db.collection('auctions').doc(auctionId).delete(); } 
-          catch (e: any) { alert("Delete failed: " + e.message); }
-      }
+      setConfirmAction({
+          title: "Delete Auction",
+          message: `Are you sure you want to delete auction "${title}"? This action cannot be undone.`,
+          onConfirm: async () => {
+              try {
+                  await db.collection('auctions').doc(auctionId).delete();
+                  showNotification("Auction deleted successfully.", "success");
+              } catch (e: any) { 
+                  showNotification("Delete failed: " + e.message); 
+              }
+              setConfirmAction(null);
+          }
+      });
   };
 
   const renderAuctions = () => (
@@ -615,6 +637,44 @@ const AdminDashboard: React.FC = () => {
       <footer className="mt-auto py-10 text-center opacity-40">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em]">&copy; 2025 SM SPORTS CORE SYSTEM</p>
       </footer>
+
+      {/* NOTIFICATION BANNER */}
+      {notification && (
+          <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
+              {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
+              <span className="text-sm font-bold">{notification.message}</span>
+              <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
+          </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION MODAL */}
+      {confirmAction && (
+          <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100">
+                  <div className="flex items-center gap-4 mb-6 text-amber-500">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                          <AlertTriangle className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-xl font-black uppercase tracking-tighter text-gray-800">{confirmAction.title}</h3>
+                  </div>
+                  <p className="text-gray-500 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                  <div className="flex gap-3">
+                      <button 
+                          onClick={() => setConfirmAction(null)}
+                          className="flex-1 py-4 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-400 text-xs font-black uppercase tracking-widest transition-all"
+                      >
+                          Cancel
+                      </button>
+                      <button 
+                          onClick={confirmAction.onConfirm}
+                          className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-200"
+                      >
+                          Confirm
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

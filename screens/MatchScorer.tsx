@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { Match, InningsState, BatsmanStats, BowlerStats, ScoringAsset, OverlayView, OverlayAnimation, DecisionStatus, Team, Player, ScoreboardTheme } from '../types';
-import { ArrowLeft, Trophy, Users, RotateCcw, Save, Loader2, Undo2, CheckSquare, Square, Palette, ChevronDown, RefreshCw, Trash2, Check, Plus, Monitor, Play, Zap, Info, UserPlus, AlignLeft, ShieldCheck, MoreHorizontal, Settings, HelpCircle, XCircle, UserMinus, Layout, Image as ImageIcon, Globe, User, Star, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Trophy, Users, RotateCcw, Save, Loader2, Undo2, CheckSquare, Square, Palette, ChevronDown, RefreshCw, Trash2, Check, Plus, Monitor, Play, Zap, Info, UserPlus, AlignLeft, ShieldCheck, MoreHorizontal, Settings, HelpCircle, XCircle, UserMinus, Layout, Image as ImageIcon, Globe, User, Star, BarChart2, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import { useAuction } from '../hooks/useAuction';
 
 const MatchScorer: React.FC = () => {
