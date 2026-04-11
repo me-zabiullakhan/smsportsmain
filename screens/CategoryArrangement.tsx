@@ -158,7 +158,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
             
             {/* Slot ID Indicator */}
             <div className="absolute bottom-0.5 right-1 text-[6px] font-black text-zinc-800 uppercase tracking-widest pointer-events-none">
-                {id.split('_')[0]}
+                {index}
             </div>
         </div>
     );
