@@ -116,8 +116,8 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
             } ${player ? 'border-amber-500/40 bg-zinc-900/60' : 'border-dashed'}`}
         >
             {/* Slot Number */}
-            <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-700 uppercase tracking-widest pointer-events-none z-0">
-                #{index}
+            <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest pointer-events-none z-0">
+                #{index + 1}
             </div>
 
             {player ? (
@@ -129,7 +129,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
                     className="w-full h-full p-1.5 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
                 >
                     <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                        <User className="w-4 h-4 text-zinc-600" />
+                        <span className="text-[10px] font-black text-zinc-500">{index + 1}</span>
                     </div>
                     <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-black text-amber-100 leading-tight uppercase tracking-tight truncate">{player.playerName}</p>
@@ -152,14 +152,11 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isO
                 </div>
             ) : (
                 <div className="flex flex-col items-center gap-1 opacity-20 group-hover:opacity-40 transition-opacity">
-                    <div className="w-1 h-1 rounded-full bg-amber-500"></div>
+                    <span className="text-[14px] font-black text-zinc-600">{index + 1}</span>
                 </div>
             )}
             
-            {/* Slot ID Indicator */}
-            <div className="absolute bottom-0.5 right-1 text-[6px] font-black text-zinc-800 uppercase tracking-widest pointer-events-none">
-                {index}
-            </div>
+            {/* Slot ID Indicator removed for cleaner UI as requested */}
         </div>
     );
 };

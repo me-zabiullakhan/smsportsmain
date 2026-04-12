@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Team, UserRole } from '../types';
 import { useAuction } from '../hooks/useAuction';
 import { Wallet, Users, Gavel } from 'lucide-react';
+import { calculateMaxBid } from '../utils';
 
 interface Props {
     team: Team;
@@ -16,12 +17,8 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
 
     // --- REFINED SQUAD SURVIVAL CALCULATION ---
     const { isLimitReached, limitReason, biddingCapacity } = useMemo(() => {
-        let reached = false;
-        let reason = "";
-
         const targetSquadSize = maxPlayersPerTeam || 11;
         const currentSquadCount = (team.players || []).length;
-        const neededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
 
         // 1. Check Global Squad Limit
         if (targetSquadSize - currentSquadCount <= 0) {
@@ -39,43 +36,17 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
             }
         }
 
-        // 3. Find absolute system min price
-        const absoluteMinBasePrice = Math.min(
-            globalBasePrice || 100,
-            ...(categories.length > 0 ? categories.map(c => Number(c.basePrice) || 100) : [100]),
-            ...(roles.length > 0 ? roles.map(r => Number(r.basePrice) || 100) : [100])
-        );
+        const { maxBid, reservedAmount } = calculateMaxBid(team, state, currentPlayer);
 
-        let reserve = 0;
-        let slotsUsedByMandatory = 0;
-
-        // 4. Mandatory Reserves
-        if (currentPlayer) {
-            categories.forEach(cat => {
-                const currentCountInCat = (team.players || []).filter(p => p.category === cat.name).length;
-                let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - currentCountInCat);
-                
-                if (currentPlayer.category === cat.name) {
-                    neededInCat = Math.max(0, neededInCat - 1);
-                }
-
-                reserve += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
-                slotsUsedByMandatory += neededInCat;
-            });
-
-            const flexibleSlots = Math.max(0, neededAfterThis - slotsUsedByMandatory);
-            reserve += (flexibleSlots * absoluteMinBasePrice);
-        }
-
-        const capacity = team.budget - reserve;
-
-        if (nextBid > capacity) {
+        let reached = false;
+        let reason = "";
+        if (nextBid > maxBid) {
             reached = true;
             reason = "Reserve Hit";
         }
 
-        return { isLimitReached: reached, limitReason: reason, biddingCapacity: capacity };
-    }, [team.players, team.budget, categories, roles, maxPlayersPerTeam, globalBasePrice, currentPlayer, nextBid]);
+        return { isLimitReached: reached, limitReason: reason, biddingCapacity: maxBid };
+    }, [team.players, team.budget, categories, roles, maxPlayersPerTeam, globalBasePrice, currentPlayer, nextBid, state.unlimitedPurse, state.autoReserveFunds]);
 
     const canAfford = team.budget >= nextBid;
     const isHighest = state.highestBidder?.id === team.id;

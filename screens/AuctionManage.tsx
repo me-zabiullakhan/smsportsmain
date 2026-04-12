@@ -13,6 +13,7 @@ import {
     Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2, AlertTriangle
 } from 'lucide-react';
 import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 import * as XLSX from 'xlsx';
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";

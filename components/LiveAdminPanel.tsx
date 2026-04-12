@@ -4,9 +4,10 @@ import { AuctionStatus, Team, Player, ProjectorLayout, OBSLayout, UserRole } fro
 import TeamStatusCard from '../components/TeamStatusCard';
 import { Play, Check, X, ArrowLeft, Loader2, RotateCcw, AlertOctagon, DollarSign, Cast, Lock, Unlock, Monitor, ChevronDown, Shuffle, Search, User, Palette, Trophy, Gavel, Wallet, Eye, EyeOff, Clock, Zap, Undo2, RefreshCw, LayoutList, ShieldAlert, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { calculateMaxBid } from '../utils';
 
 const LiveAdminPanel: React.FC = () => {
-  const { state, userProfile, sellPlayer, passPlayer, startAuction, undoPlayerSelection, endAuction, resetAuction, resetCurrentPlayer, resetUnsoldPlayers, updateBiddingStatus, toggleSelectionMode, updateTheme, activeAuctionId, placeBid, nextBid, updateSponsorConfig, correctPlayerSale } = useAuction();
+  const { state, userProfile, sellPlayer, passPlayer, startAuction, undoPlayerSelection, endAuction, resetAuction, resetCurrentPlayer, resetUnsoldPlayers, updateBiddingStatus, toggleSelectionMode, updateTheme, activeAuctionId, placeBid, nextBid, updateSponsorConfig, correctPlayerSale, setAdminView } = useAuction();
   const { teams, players, biddingStatus, playerSelectionMode, categories, maxPlayersPerTeam } = state;
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -573,19 +574,8 @@ const LiveAdminPanel: React.FC = () => {
                                 }
                             }
                             if (allowed) {
-                                let reservedBudget = 0;
-                                categories.forEach(cat => {
-                                    if (cat.maxPerTeam > 0) {
-                                        const playersInCat = team.players.filter(p => p.category === cat.name).length;
-                                        let slotsToFill = Math.max(0, cat.maxPerTeam - playersInCat);
-                                        if (currentPlayer.category === cat.name) {
-                                            slotsToFill = Math.max(0, slotsToFill - 1);
-                                        }
-                                        reservedBudget += slotsToFill * cat.basePrice;
-                                    }
-                                });
-                                const maxAllowedBid = team.budget - reservedBudget;
-                                if (nextBid > maxAllowedBid) { allowed = false; reason = 'MAX BID'; }
+                                const { maxBid } = calculateMaxBid(team, state, currentPlayer);
+                                if (nextBid > maxBid) { allowed = false; reason = 'MAX BID'; }
                             }
                         }
 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuction } from '../hooks/useAuction';
 import { Gavel, Lock, AlertCircle, Users, AlertTriangle, Info } from 'lucide-react';
+import { calculateMaxBid } from '../utils';
 
 const BiddingPanel: React.FC = () => {
     const { state, userProfile, placeBid, nextBid } = useAuction();
@@ -26,10 +27,6 @@ const BiddingPanel: React.FC = () => {
 
     // --- SMART PURSE VALIDATION ---
     const { totalMandatoryReserve, playersStillNeededAfterThis, isCategoryMaxReached, categoryLimitMsg, maxBidAllowed } = useMemo(() => {
-        const targetSquadSize = maxPlayersPerTeam || 11;
-        const currentSquadCount = userTeam.players.length;
-        const neededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
-
         let isCatMax = false;
         let catLimitMsg = "";
         
@@ -44,50 +41,14 @@ const BiddingPanel: React.FC = () => {
             }
         }
 
-        if (unlimitedPurse) {
-            return {
-                totalMandatoryReserve: 0,
-                playersStillNeededAfterThis: neededAfterThis,
-                isCategoryMaxReached: isCatMax,
-                categoryLimitMsg: catLimitMsg,
-                maxBidAllowed: Infinity
-            };
-        }
-
-        const absoluteMinBasePrice = Math.min(
-            globalBasePrice || 100,
-            ...(categories.length > 0 ? categories.map(c => Number(c.basePrice) || 100) : [100]),
-            ...(roles.length > 0 ? roles.map(r => Number(r.basePrice) || 100) : [100])
-        );
-
-        let reserve = 0;
-        let slotsUsedByMandatory = 0;
-
-        if (autoReserveFunds) {
-            // User's specific formula: sum(remainingPlayers(category) * basePrice(category))
-            categories.forEach(cat => {
-                const countInCat = userTeam.players.filter(p => p.category === cat.name).length;
-                let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - countInCat);
-                
-                if (currentPlayer && currentPlayer.category === cat.name) {
-                    neededInCat = Math.max(0, neededInCat - 1);
-                }
-
-                reserve += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
-                slotsUsedByMandatory += neededInCat;
-            });
-
-            // Also account for any remaining slots to reach total squad size at min price
-            const flexibleSlots = Math.max(0, neededAfterThis - slotsUsedByMandatory);
-            reserve += (flexibleSlots * absoluteMinBasePrice);
-        }
+        const { maxBid, reservedAmount, playersNeeded } = calculateMaxBid(userTeam, state, currentPlayer);
 
         return {
-            totalMandatoryReserve: reserve,
-            playersStillNeededAfterThis: neededAfterThis,
+            totalMandatoryReserve: reservedAmount,
+            playersStillNeededAfterThis: playersNeeded,
             isCategoryMaxReached: isCatMax,
             categoryLimitMsg: catLimitMsg,
-            maxBidAllowed: userTeam.budget - reserve
+            maxBidAllowed: maxBid
         };
     }, [userTeam.players, categories, roles, maxPlayersPerTeam, globalBasePrice, currentPlayer, unlimitedPurse, autoReserveFunds, userTeam.budget]);
 

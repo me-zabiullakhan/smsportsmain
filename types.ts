@@ -151,6 +151,7 @@ export interface AuctionState {
   playerSelectionMode: 'MANUAL' | 'AUTO';
   auctionLogoUrl?: string;
   tournamentName?: string;
+  sport?: string;
   sponsors: Sponsor[];
   sponsorConfig: SponsorConfig;
   projectorLayout: ProjectorLayout;

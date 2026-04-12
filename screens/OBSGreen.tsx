@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuction } from '../hooks/useAuction';
 import { useParams } from 'react-router-dom';
-import { Globe, User, TrendingUp, Wallet, Trophy, Star, AlertTriangle, Users } from 'lucide-react';
+import { Globe, User, TrendingUp, Wallet, Trophy, Star, AlertTriangle, Users, Zap } from 'lucide-react';
 import { Team, Player, AuctionStatus, ProjectorLayout } from '../types';
 
 interface DisplayState {

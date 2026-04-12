@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext, useMemo } from '
 import { AuctionContextType, AuctionState, UserProfile, Team, Player, AuctionStatus, BiddingStatus, AdminViewOverride, BidIncrementSlab, UserRole, SponsorConfig } from '../types';
 import { db, auth } from '../firebase';
 import firebase from 'firebase/compat/app';
+import { calculateMaxBid } from '../utils';
 
 // Initial State
 const initialState: AuctionState = {
@@ -281,54 +282,12 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
 
             if (!state.unlimitedPurse) {
-                const absoluteMinBasePrice = Math.min(
-                    state.basePrice || 100,
-                    ...(state.categories.length > 0 ? state.categories.map(c => c.basePrice) : [100]),
-                    ...(state.roles.length > 0 ? state.roles.map(r => r.basePrice) : [100])
-                );
+                const { maxBid, reservedAmount, playersNeeded } = calculateMaxBid(team, state, currentPlayer);
 
-                let totalMandatoryUnmetCost = 0;
-                let totalMandatorySlotsUsed = 0;
-
-                if (state.autoReserveFunds) {
-                    const targetSquadSize = state.maxPlayersPerTeam || 11;
-                    const currentSquadCount = team.players.length;
-                    const playersStillNeededAfterThis = Math.max(0, targetSquadSize - (currentSquadCount + 1));
-                    
-                    const absoluteMinBasePrice = Math.min(
-                        state.basePrice || 100,
-                        ...(state.categories.length > 0 ? state.categories.map(c => Number(c.basePrice) || 100) : [100]),
-                        ...(state.roles.length > 0 ? state.roles.map(r => Number(r.basePrice) || 100) : [100])
+                if (amount > maxBid) {
+                    throw new Error(
+                        `Insufficient purse to complete squad. You must reserve ₹${reservedAmount} for the remaining ${playersNeeded} players to meet minimum requirements.`
                     );
-
-                    let totalMandatoryUnmetCost = 0;
-                    let totalMandatorySlotsUsed = 0;
-
-                    state.categories.forEach(cat => {
-                        const countInCat = team.players.filter(p => p.category === cat.name).length;
-                        let neededInCat = Math.max(0, (Number(cat.minPerTeam) || 0) - countInCat);
-                        if (currentPlayer.category === cat.name) {
-                            neededInCat = Math.max(0, neededInCat - 1);
-                        }
-                        totalMandatoryUnmetCost += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
-                        totalMandatorySlotsUsed += neededInCat;
-                    });
-
-                    const flexibleSlotsRemaining = Math.max(0, playersStillNeededAfterThis - totalMandatorySlotsUsed);
-                    const flexibleCost = flexibleSlotsRemaining * absoluteMinBasePrice;
-                    const totalSurvivalReserve = totalMandatoryUnmetCost + flexibleCost;
-                    const biddingCapacity = team.budget - totalSurvivalReserve;
-
-                    if (amount > biddingCapacity) {
-                        throw new Error(
-                            `Insufficient purse to complete squad. You must reserve ₹${totalSurvivalReserve} for the remaining ${playersStillNeededAfterThis} players to meet minimum requirements.`
-                        );
-                    }
-                } else {
-                    // Just check if they have enough budget for this bid
-                    if (amount > team.budget) {
-                        throw new Error("Insufficient Purse!");
-                    }
                 }
             }
         }
@@ -347,6 +306,15 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (!finalTeam) throw new Error("No team selected to sell to");
         const player = state.players.find(p => String(p.id) === String(state.currentPlayerId));
         if (!player) return;
+
+        // Reserve Check for Admin Sale
+        if (!state.unlimitedPurse) {
+            const { maxBid, reservedAmount, playersNeeded } = calculateMaxBid(finalTeam, state, player);
+            if (finalPrice > maxBid) {
+                throw new Error(`Cannot sell: Team needs ₹${reservedAmount} in reserve to buy remaining ${playersNeeded} players.`);
+            }
+        }
+
         await db.runTransaction(async (transaction) => {
             const auctionRef = db.collection('auctions').doc(activeAuctionId);
             const playerRef = auctionRef.collection('players').doc(String(player.id));

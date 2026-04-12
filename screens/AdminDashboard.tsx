@@ -4,6 +4,8 @@ import { useAuction } from '../hooks/useAuction';
 // Standardized imports
 import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown, XCircle } from 'lucide-react';
 import { db } from '../firebase';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 import { AuctionSetup, UserPlan, UserRole, PromoCode, SystemPopup } from '../types';
 
 const AdminDashboard: React.FC = () => {
@@ -203,7 +205,7 @@ const AdminDashboard: React.FC = () => {
               });
               if (appliedPromo) {
                   await db.collection('promoCodes').doc(appliedPromo.id).update({
-                      currentClaims: (appliedPromo.currentClaims || 0) + 1
+                      currentClaims: firebase.firestore.FieldValue.increment(1)
                   });
               }
               showNotification("Full Discount Applied!", "success");
@@ -226,7 +228,7 @@ const AdminDashboard: React.FC = () => {
               });
               if (appliedPromo) {
                   await db.collection('promoCodes').doc(appliedPromo.id).update({
-                      currentClaims: (appliedPromo.currentClaims || 0) + 1
+                      currentClaims: firebase.firestore.FieldValue.increment(1)
                   });
               }
               showNotification("Success! Your auction has been upgraded.", "success");
