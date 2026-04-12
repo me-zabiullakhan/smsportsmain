@@ -83,7 +83,7 @@ const WarriorInput = ({ label, value, onChange, type = "text", required = false,
                 onChange={onChange}
                 placeholder={placeholder}
                 rows={4}
-                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer min-h-[120px] resize-none"
+                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-10 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer min-h-[120px] resize-none"
             />
         ) : type === 'select' ? (
             <div className="relative">
@@ -91,7 +91,7 @@ const WarriorInput = ({ label, value, onChange, type = "text", required = false,
                     required={required}
                     value={value}
                     onChange={onChange}
-                    className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer appearance-none cursor-pointer"
+                    className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-10 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer appearance-none cursor-pointer"
                 >
                     <option value="" className="bg-zinc-900 text-amber-900/50">{placeholder || 'SELECT OPTION'}</option>
                     {options.map((opt: string) => (
@@ -109,10 +109,10 @@ const WarriorInput = ({ label, value, onChange, type = "text", required = false,
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
+                className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-10 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer"
             />
         )}
-        <label className="absolute left-6 top-2 text-[10px] font-black uppercase tracking-widest text-amber-500/50 transition-all peer-focus:text-amber-500">
+        <label className="absolute left-6 top-2 text-[10px] font-black uppercase tracking-widest text-amber-500/50 transition-all peer-focus:text-amber-500 pointer-events-none select-none max-w-[calc(100%-3rem)] truncate">
             {label} {required && <span className="text-red-500">*</span>}
         </label>
     </div>

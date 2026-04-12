@@ -1014,9 +1014,6 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
-                                <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="bg-amber-500 text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all">
-                                    <LayoutGrid className="w-4 h-4"/> Category Room
-                                </button>
                                 <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
@@ -1912,11 +1909,18 @@ const AuctionManage: React.FC = () => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Manage {activeTab}</h2>
-                            <button onClick={() => {
-                                setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
-                                setEditItem({});
-                                setShowModal(true);
-                            }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg"><Plus className="w-4 h-4"/> Add New</button>
+                            <div className="flex gap-2">
+                                {activeTab === 'CATEGORIES' && (
+                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="bg-amber-500 text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all">
+                                        <LayoutGrid className="w-4 h-4"/> Category Room
+                                    </button>
+                                )}
+                                <button onClick={() => {
+                                    setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
+                                    setEditItem({});
+                                    setShowModal(true);
+                                }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg"><Plus className="w-4 h-4"/> Add New</button>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(activeTab === 'CATEGORIES' ? categories : activeTab === 'ROLES' ? roles : sponsors).map((item: any) => (

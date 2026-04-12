@@ -183,6 +183,8 @@ const CategoryArrangement: React.FC = () => {
     const [activeDragId, setActiveDragId] = useState<string | null>(null);
     const [pendingSwap, setPendingSwap] = useState<{ slotId: string, newPlayer: Player } | null>(null);
     const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [tempCategoryName, setTempCategoryName] = useState('');
     const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
 
     const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
@@ -531,6 +533,17 @@ const CategoryArrangement: React.FC = () => {
         }));
     };
 
+    const removeRow = () => {
+        if (rowCount <= 1) return;
+        setCustomConfig(prev => ({
+            ...prev,
+            [activeCategory]: {
+                rows: rowCount - 1,
+                cols: colCount
+            }
+        }));
+    };
+
     const addCol = () => {
         if (colCount >= 10) return; // Limit columns
         setCustomConfig(prev => ({
@@ -540,6 +553,143 @@ const CategoryArrangement: React.FC = () => {
                 cols: colCount + 1
             }
         }));
+    };
+
+    const removeCol = () => {
+        if (colCount <= 1) return;
+        setCustomConfig(prev => ({
+            ...prev,
+            [activeCategory]: {
+                rows: rowCount,
+                cols: colCount - 1
+            }
+        }));
+    };
+
+    const handleUpdateCategoryName = async () => {
+        if (!id || !activeCategory || !tempCategoryName.trim() || !currentCategory) return;
+        const newName = tempCategoryName.trim();
+        const oldName = currentCategory.name;
+        if (newName === oldName) {
+            setIsEditingName(false);
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const oldPrefix = oldName.substring(0, 3).toUpperCase();
+            const newPrefix = newName.substring(0, 3).toUpperCase();
+
+            const batch = db.batch();
+
+            // 1. Update category name in Firestore
+            const catRef = db.collection('auctions').doc(id).collection('categories').doc(activeCategory);
+            batch.update(catRef, { name: newName });
+
+            // 2. Update all players belonging to this category in the main players collection
+            const playersToUpdate = players.filter(p => p.category === oldName);
+            playersToUpdate.forEach(p => {
+                const pRef = db.collection('auctions').doc(id).collection('players').doc(p.id);
+                batch.update(pRef, { category: newName });
+            });
+
+            // 3. Update all arrangement drafts to reflect the new category name in slots
+            // and migrate slot IDs if prefix changed or if it's an all-rounder board
+            const draftsSnap = await db.collection('auctions').doc(id).collection('arrangementDrafts').get();
+            
+            draftsSnap.docs.forEach(draftDoc => {
+                const draftData = draftDoc.data();
+                const draftSlots = draftData.slots || {};
+                const draftCategory = categories.find(c => c.id === draftDoc.id);
+                const isThisDraftAllRounder = draftCategory?.name.toLowerCase() === 'allrounder';
+                
+                let changed = false;
+                const updatedDraftSlots: { [key: string]: CategoryArrangementSlot } = {};
+
+                Object.entries(draftSlots).forEach(([slotId, slot]: [string, any]) => {
+                    let newSlotId = slotId;
+                    const newSlot = { ...slot };
+
+                    // Update category name inside the slot if it matches
+                    if (slot.category === oldName) {
+                        newSlot.category = newName;
+                        changed = true;
+                    }
+
+                    // Migration Logic for Slot IDs:
+                    // Case A: This is the draft for the category we are renaming (Prefix migration)
+                    if (draftDoc.id === activeCategory && oldPrefix !== newPrefix && !isThisDraftAllRounder) {
+                        if (slotId.startsWith(oldPrefix)) {
+                            newSlotId = slotId.replace(oldPrefix, newPrefix);
+                            changed = true;
+                        }
+                    }
+                    
+                    // Case B: This is an All Rounder draft (Name migration)
+                    if (isThisDraftAllRounder) {
+                        if (slotId.startsWith(oldName + "_")) {
+                            newSlotId = slotId.replace(oldName + "_", newName + "_");
+                            changed = true;
+                        }
+                    }
+
+                    updatedDraftSlots[newSlotId] = newSlot;
+                });
+
+                if (changed) {
+                    batch.update(draftDoc.ref, { slots: updatedDraftSlots });
+                }
+            });
+
+            await batch.commit();
+
+            // Update local state
+            setPlayers(prev => prev.map(p => p.category === oldName ? { ...p, category: newName } : p));
+            setCategories(prev => prev.map(c => c.id === activeCategory ? { ...c, name: newName } : c));
+            
+            // Update allSlots local state
+            const newAllSlots = { ...allSlots };
+            Object.keys(newAllSlots).forEach(catId => {
+                const draftSlots = newAllSlots[catId] || {};
+                const draftCategory = categories.find(c => c.id === catId);
+                const isThisDraftAllRounder = draftCategory?.name.toLowerCase() === 'allrounder';
+                
+                const updatedDraftSlots: { [key: string]: CategoryArrangementSlot } = {};
+                
+                Object.entries(draftSlots).forEach(([slotId, slot]) => {
+                    let newSlotId = slotId;
+                    const newSlot = { ...slot };
+                    if (slot.category === oldName) newSlot.category = newName;
+                    
+                    if (catId === activeCategory && oldPrefix !== newPrefix && !isThisDraftAllRounder) {
+                        if (slotId.startsWith(oldPrefix)) {
+                            newSlotId = slotId.replace(oldPrefix, newPrefix);
+                        }
+                    }
+                    
+                    if (isThisDraftAllRounder) {
+                        if (slotId.startsWith(oldName + "_")) {
+                            newSlotId = slotId.replace(oldName + "_", newName + "_");
+                        }
+                    }
+                    
+                    updatedDraftSlots[newSlotId] = newSlot;
+                });
+                newAllSlots[catId] = updatedDraftSlots;
+            });
+            setAllSlots(newAllSlots);
+            
+            // Update current slots if activeCategory was the one renamed
+            setSlots(newAllSlots[activeCategory] || {});
+
+            setIsEditingName(false);
+            showNotification("Category updated across all records", "success");
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to update category name", "error");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (loading) return (
@@ -693,18 +843,38 @@ const CategoryArrangement: React.FC = () => {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={addRow}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Add Row
-                                </button>
-                                <button 
-                                    onClick={addCol}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Add Column
-                                </button>
+                                <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                    <button 
+                                        onClick={addRow}
+                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 transition-all border-r border-zinc-800"
+                                        title="Add Row"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button 
+                                        onClick={removeRow}
+                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-red-500 hover:bg-zinc-800 transition-all"
+                                        title="Remove Row"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                    <button 
+                                        onClick={addCol}
+                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 transition-all border-r border-zinc-800"
+                                        title="Add Column"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button 
+                                        onClick={removeCol}
+                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-red-500 hover:bg-zinc-800 transition-all"
+                                        title="Remove Column"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                                 <button 
                                     onClick={handleAutoFill}
                                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
@@ -730,7 +900,44 @@ const CategoryArrangement: React.FC = () => {
                                     </h2>
                                     <div className="flex items-center justify-center gap-4">
                                         <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                                        <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{currentCategory?.name}</p>
+                                        {isEditingName ? (
+                                            <div className="flex items-center gap-2 animate-fade-in">
+                                                <input 
+                                                    type="text"
+                                                    value={tempCategoryName}
+                                                    onChange={(e) => setTempCategoryName(e.target.value)}
+                                                    className="bg-zinc-900 border border-amber-500/50 rounded-lg px-3 py-1 text-sm font-black text-amber-500 uppercase tracking-widest outline-none focus:ring-2 ring-amber-500/20"
+                                                    autoFocus
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleUpdateCategoryName();
+                                                        if (e.key === 'Escape') setIsEditingName(false);
+                                                    }}
+                                                />
+                                                <button 
+                                                    onClick={handleUpdateCategoryName}
+                                                    className="p-1.5 bg-amber-500 text-zinc-950 rounded-lg hover:bg-amber-400 transition-all"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsEditingName(false)}
+                                                    className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 transition-all"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => {
+                                                    setTempCategoryName(currentCategory?.name || '');
+                                                    setIsEditingName(true);
+                                                }}
+                                                className="group flex items-center gap-3 px-4 py-1 rounded-full hover:bg-amber-500/10 transition-all"
+                                            >
+                                                <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{currentCategory?.name}</p>
+                                                <Move className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
+                                            </button>
+                                        )}
                                         <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
                                     </div>
                                 </div>
