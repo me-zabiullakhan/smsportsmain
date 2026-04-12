@@ -1,3 +1,4 @@
+import firebase from 'firebase/compat/app';
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
@@ -72,7 +73,7 @@ const compressImage = async (file: File): Promise<string> => {
     });
 };
 
-const WarriorInput = ({ label, value, onChange, type = "text", required = false, placeholder = "" }: any) => (
+const WarriorInput = ({ label, value, onChange, type = "text", required = false, placeholder = "", options = [] }: any) => (
     <div className="relative group">
         {type === 'textarea' ? (
             <textarea 
@@ -83,6 +84,23 @@ const WarriorInput = ({ label, value, onChange, type = "text", required = false,
                 rows={4}
                 className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer min-h-[120px] resize-none"
             />
+        ) : type === 'select' ? (
+            <div className="relative">
+                <select 
+                    required={required}
+                    value={value}
+                    onChange={onChange}
+                    className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-8 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer appearance-none cursor-pointer"
+                >
+                    <option value="" className="bg-zinc-900 text-amber-900/50">{placeholder || 'SELECT OPTION'}</option>
+                    {options.map((opt: string) => (
+                        <option key={opt} value={opt} className="bg-zinc-900 text-amber-100">
+                            {opt.toUpperCase()}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500 pointer-events-none group-hover:scale-110 transition-transform" />
+            </div>
         ) : (
             <input 
                 type={type}
@@ -371,17 +389,20 @@ const PlayerRegistration: React.FC = () => {
             
             // Update Captain Code Usage if applicable
             if (isCaptain && validatedCode) {
+                console.log("Updating captain code usage for:", validatedCode.id);
                 try {
                     await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
-                        currentUsage: (validatedCode.currentUsage || 0) + 1
+                        currentUsage: firebase.firestore.FieldValue.increment(1)
                     });
+                    console.log("Captain code usage updated successfully");
                 } catch (e) {
-                    console.warn("Could not update captain code usage:", e);
+                    console.error("Could not update captain code usage:", e);
                 }
             }
 
             // Update Team Code Usage if applicable
             if (hasTeamCode && validatedTeamCode) {
+                console.log("Updating team code usage for:", validatedTeamCode.id);
                 try {
                     const updatedTeamCodes = validatedTeamCode.teamCodes?.map((tc: any) => {
                         if (tc.code === validatedTeamCode.usedSpecificCode) {
@@ -390,11 +411,12 @@ const PlayerRegistration: React.FC = () => {
                         return tc;
                     });
                     await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
-                        teamUsedCount: (validatedTeamCode.teamUsedCount || 0) + 1,
+                        teamUsedCount: firebase.firestore.FieldValue.increment(1),
                         teamCodes: updatedTeamCodes
                     });
+                    console.log("Team code usage updated successfully");
                 } catch (e) {
-                    console.warn("Could not update team code usage:", e);
+                    console.error("Could not update team code usage:", e);
                 }
             }
 
@@ -430,8 +452,12 @@ const PlayerRegistration: React.FC = () => {
         }
 
         // 2. Code Validation
-        if (isCaptain && !validatedCode) {
-            return alert("Please verify a valid captain code first.");
+        if (isCaptain && (!validatedCode || validatedCode.code !== captainCode.toUpperCase())) {
+            return alert("Please verify your captain code again.");
+        }
+
+        if (hasTeamCode && (!validatedTeamCode || validatedTeamCode.usedSpecificCode !== teamCode.toUpperCase())) {
+            return alert("Please verify your team code again.");
         }
         if (hasTeamCode && !validatedTeamCode) {
             return alert("Please verify a valid team code first.");
@@ -1230,23 +1256,15 @@ const PlayerRegistration: React.FC = () => {
                                         )}
                                         
                                         {(!config?.basicFields || config.basicFields.gender?.show !== false) && (
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
-                                                    Gender Identity {(config?.basicFields?.gender?.required !== false) && <span className="text-red-500">*</span>}
-                                                </label>
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    {['Male', 'Female', 'Other'].map(g => (
-                                                        <button 
-                                                            key={g}
-                                                            type="button"
-                                                            onClick={() => setFormData({...formData, gender: g})}
-                                                            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${formData.gender === g ? 'bg-amber-600 border-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'}`}
-                                                        >
-                                                            {g.toUpperCase()}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                            <WarriorInput 
+                                                label="Gender Identity" 
+                                                type="select"
+                                                value={formData.gender} 
+                                                onChange={(e: any) => setFormData({...formData, gender: e.target.value})} 
+                                                options={['Male', 'Female', 'Other']}
+                                                required={config?.basicFields?.gender?.required !== false} 
+                                                placeholder="SELECT GENDER"
+                                            />
                                         )}
 
                                         {(!config?.basicFields || config.basicFields.photo?.show !== false) && (
@@ -1324,34 +1342,15 @@ const PlayerRegistration: React.FC = () => {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.1 }}
                                             >
-                                                {field.type === 'select' ? (
-                                                    <div className="space-y-4">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-amber-500/50 ml-1">
-                                                            {field.label} {field.required && <span className="text-red-500">*</span>}
-                                                        </label>
-                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                            {field.options?.map(opt => (
-                                                                <button 
-                                                                    key={opt}
-                                                                    type="button"
-                                                                    onClick={() => setFormData({...formData, [field.id]: opt})}
-                                                                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${formData[field.id] === opt ? 'bg-amber-600 border-amber-600 text-black shadow-lg shadow-amber-600/20' : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'}`}
-                                                                >
-                                                                    {opt.toUpperCase()}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <WarriorInput 
-                                                        label={field.label} 
-                                                        type={field.type}
-                                                        value={formData[field.id]} 
-                                                        onChange={(e: any) => setFormData({...formData, [field.id]: e.target.value})} 
-                                                        required={field.required}
-                                                        placeholder={`ENTER ${field.label.toUpperCase()}`}
-                                                    />
-                                                )}
+                                                <WarriorInput 
+                                                    label={field.label} 
+                                                    type={field.type}
+                                                    value={formData[field.id]} 
+                                                    onChange={(e: any) => setFormData({...formData, [field.id]: e.target.value})} 
+                                                    required={field.required}
+                                                    placeholder={`ENTER ${field.label.toUpperCase()}`}
+                                                    options={field.options || []}
+                                                />
                                             </motion.div>
                                         ))}
                                         {(config?.customFields || []).length === 0 && (

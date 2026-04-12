@@ -667,21 +667,23 @@ const CategoryArrangement: React.FC = () => {
 
                     {/* Right Panel: Table */}
                     <main className="flex-1 space-y-8">
-                        {/* Category Tabs - Inline Options */}
-                        <div className="flex flex-wrap gap-2 bg-zinc-900/30 p-2 rounded-[2rem] border border-zinc-800/50">
-                            {categories.map(cat => (
-                                <button 
-                                    key={cat.id}
-                                    onClick={() => setActiveCategory(cat.id || '')}
-                                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                        activeCategory === cat.id 
-                                        ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 scale-105' 
-                                        : 'bg-zinc-900/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
-                                    }`}
+                        {/* Category Selection Dropdown */}
+                        <div className="relative group max-w-xs">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2 block ml-1">Select Category Board</label>
+                            <div className="relative">
+                                <select 
+                                    value={activeCategory}
+                                    onChange={(e) => setActiveCategory(e.target.value)}
+                                    className="w-full bg-zinc-900 border-2 border-zinc-800 rounded-2xl px-6 py-4 font-black text-amber-500 outline-none focus:border-amber-500 transition-all appearance-none cursor-pointer uppercase tracking-widest text-xs"
                                 >
-                                    {cat.name}
-                                </button>
-                            ))}
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id} className="bg-zinc-900 text-zinc-100">
+                                            {cat.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500 pointer-events-none group-hover:scale-110 transition-transform" />
+                            </div>
                         </div>
 
                         {/* Controls */}
