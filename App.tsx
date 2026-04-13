@@ -5,7 +5,7 @@ import AuthScreen from './screens/AuthScreen';
 import StaffLogin from './screens/StaffLogin';
 import StaffDashboard from './screens/StaffDashboard';
 import OBSOverlay from './screens/OBSOverlay';
-import OBSGreen from './screens/OBSGreen';
+import ProjectorScreen from './screens/ProjectorScreen';
 import LandingPage from './screens/LandingPage';
 import AdminDashboard from './screens/AdminDashboard';
 import SuperAdminDashboard from './screens/SuperAdminDashboard';
@@ -169,7 +169,7 @@ const AppContent: React.FC = () => {
           <Route path="/match-overlay/:matchId" element={<MatchOverlay />} />
 
           <Route path="/obs-overlay/:auctionId" element={<OBSOverlay />} />
-          <Route path="/obs-green/:auctionId" element={<OBSGreen />} />
+          <Route path="/obs-green/:auctionId" element={<ProjectorScreen />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

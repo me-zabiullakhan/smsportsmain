@@ -195,7 +195,7 @@ const OBSOverlay: React.FC = () => {
             <div className="min-h-screen w-full relative font-sans overflow-hidden">
                 <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between gap-6 animate-slide-up">
                     {/* Player Info */}
-                    <div className="flex-1 bg-black/95 backdrop-blur-xl rounded-[32px] border-2 border-yellow-500/50 p-6 flex items-center gap-8 shadow-[0_0_40px_rgba(234,179,8,0.3)] relative overflow-hidden group">
+                    <div className="flex-1 bg-black/95 backdrop-blur-xl rounded-[32px] border-2 border-yellow-500 p-6 flex items-center gap-8 shadow-[0_0_50px_rgba(234,179,8,0.4)] relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-2 h-full bg-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.6)]"></div>
                         <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-yellow-500/40 shadow-[0_0_25px_rgba(234,179,8,0.4)] shrink-0">
                             <img src={player?.photoUrl} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
@@ -237,7 +237,7 @@ const OBSOverlay: React.FC = () => {
                         </div>
 
                         {bidder && (
-                            <div className="bg-black/95 backdrop-blur-xl rounded-full p-4 pl-8 flex items-center justify-between border-2 border-yellow-500/50 shadow-[0_15px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(234,179,8,0.2)] animate-slide-up">
+                            <div className="bg-black/95 backdrop-blur-xl rounded-full p-4 pl-8 flex items-center justify-between border-2 border-yellow-500 shadow-[0_15px_40px_rgba(0,0,0,0.6),0_0_30px_rgba(234,179,8,0.3)] animate-slide-up">
                                 <div className="flex items-center gap-5">
                                     <div className="w-3 h-3 bg-yellow-500 rounded-full animate-ping shadow-[0_0_15px_rgba(234,179,8,1)]"></div>
                                     <span className="text-white/50 font-bold uppercase tracking-widest text-[11px]">Leading:</span>

@@ -936,7 +936,7 @@ const CategoryArrangement: React.FC = () => {
                                                 className="group flex items-center gap-3 px-4 py-1 rounded-full hover:bg-amber-500/10 transition-all"
                                             >
                                                 <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{currentCategory?.name}</p>
-                                                <Edit className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
+                                                <Pencil className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
                                             </button>
                                         )}
                                         <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>

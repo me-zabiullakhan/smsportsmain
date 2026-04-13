@@ -378,26 +378,19 @@ const ProjectorScreen: React.FC = () => {
                   <div className="absolute bottom-0 left-0 w-1/2 h-full bg-gradient-to-r from-yellow-900/10 to-transparent pointer-events-none"></div>
                   
                   {/* Header - Customized for ADVAYA */}
-                  <div className="h-28 flex items-center justify-between px-16 z-50 relative border-b border-yellow-500/10 backdrop-blur-sm">
-                      <div className="flex-1">
-                          {/* Left side empty or could have logo if needed, but user asked to remove it */}
-                      </div>
-                      
-                      <div className="flex-1 text-center">
+                  <div className="h-28 flex items-center justify-center px-16 z-50 relative border-b border-yellow-500/10 backdrop-blur-sm">
+                      <div className="text-center">
                           <div className="relative inline-block">
-                              <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-20 rounded-full"></div>
-                              <h1 className="text-5xl font-black uppercase tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-500">
+                              <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-30 rounded-full"></div>
+                              <h1 className="text-6xl font-black uppercase tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-500 drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]">
                                   {state.tournamentName || "AUCTION 2025"}
                               </h1>
                           </div>
                       </div>
 
-                      <div className="flex-1 flex items-center justify-end gap-6">
-                          <div className="flex flex-col items-end">
-                               <span className="text-yellow-500 font-black text-2xl tracking-widest italic drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">SM SPORTS</span>
-                               <span className="text-white/40 text-xs font-bold uppercase tracking-[0.2em]">Live Auction Protocol</span>
-                          </div>
-                          <div className="w-12 h-12 rounded-xl bg-yellow-500 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+                      {/* Floating Zap Icon for flair */}
+                      <div className="absolute right-16 top-1/2 -translate-y-1/2 flex items-center gap-6">
+                          <div className="w-12 h-12 rounded-xl bg-yellow-500 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.6)] animate-pulse">
                                <Zap className="text-black w-6 h-6" />
                           </div>
                       </div>
@@ -406,7 +399,7 @@ const ProjectorScreen: React.FC = () => {
                   <div className="flex-1 flex p-10 gap-10 min-h-0 relative z-10">
                       {/* Player Profile Card */}
                       <div className="w-[38%] flex flex-col gap-8 animate-slide-in-left">
-                          <div className="flex-1 bg-gradient-to-b from-zinc-900 to-black rounded-[48px] overflow-hidden relative border border-yellow-500/20 shadow-[0_40px_80px_rgba(0,0,0,0.8)]">
+                          <div className="flex-1 bg-gradient-to-b from-zinc-900 to-black rounded-[48px] overflow-hidden relative border-2 border-yellow-500 shadow-[0_0_50px_rgba(234,179,8,0.3)]">
                               <img src={player?.photoUrl} className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-110" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                               
@@ -435,7 +428,7 @@ const ProjectorScreen: React.FC = () => {
 
                       {/* Bidding Area */}
                       <div className="flex-1 flex flex-col gap-10">
-                          <div className="flex-1 bg-gradient-to-br from-zinc-900/50 to-black rounded-[48px] border border-yellow-500/10 relative overflow-hidden flex flex-col items-center justify-center shadow-2xl">
+                          <div className="flex-1 bg-gradient-to-br from-zinc-900/50 to-black rounded-[48px] border-2 border-yellow-500 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_50px_rgba(234,179,8,0.2)]">
                               {/* Animated Background Grid */}
                               <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
                               
