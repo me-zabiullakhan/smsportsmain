@@ -468,6 +468,10 @@ const CategoryArrangement: React.FC = () => {
     };
 
     const handleAutoFill = () => {
+        if (isAllCategories) {
+            showNotification("Auto-fill is not available for All Categories view.", "error");
+            return;
+        }
         const cat = categories.find(c => c.id === activeCategory);
         if (!cat) return;
 
@@ -510,13 +514,14 @@ const CategoryArrangement: React.FC = () => {
     });
 
     const currentCategory = categories.find(c => c.id === activeCategory);
-    const isAllrounderTable = currentCategory?.name.toLowerCase() === 'allrounder';
+    const isAllCategories = activeCategory === 'ALL_CATEGORIES';
+    const isAllrounderTable = currentCategory?.name.toLowerCase() === 'allrounder' || isAllCategories;
     
     const config = customConfig[activeCategory] || { rows: 0, cols: 0 };
     const totalRequired = currentCategory?.requiredPlayers || 6;
     const rowCount = config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6));
     const colCount = config.cols || 6;
-    const prefix = currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT';
+    const prefix = isAllCategories ? 'ALL' : (currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT');
 
     const maxCols = Math.max(6, ...categories.map(cat => {
         const config = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
@@ -818,6 +823,16 @@ const CategoryArrangement: React.FC = () => {
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Select Category Board</label>
                             <div className="flex flex-wrap gap-2">
+                                <button 
+                                    onClick={() => setActiveCategory('ALL_CATEGORIES')}
+                                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                        activeCategory === 'ALL_CATEGORIES' 
+                                        ? 'bg-amber-500 border-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20' 
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                                    }`}
+                                >
+                                    All Categories
+                                </button>
                                 {categories.map(cat => (
                                     <button 
                                         key={cat.id}
@@ -837,7 +852,7 @@ const CategoryArrangement: React.FC = () => {
                         {/* Controls */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <h3 className="text-lg font-black uppercase tracking-tight text-white">{currentCategory?.name} Board</h3>
+                                <h3 className="text-lg font-black uppercase tracking-tight text-white">{isAllCategories ? 'All Categories' : currentCategory?.name} Board</h3>
                                 <div className="h-4 w-[1px] bg-zinc-800"></div>
                                 <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                                     {Object.keys(slots).length} / {rowCount * colCount} Slots Available
@@ -935,7 +950,7 @@ const CategoryArrangement: React.FC = () => {
                                                 }}
                                                 className="group flex items-center gap-3 px-4 py-1 rounded-full hover:bg-amber-500/10 transition-all"
                                             >
-                                                <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{currentCategory?.name}</p>
+                                                <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{isAllCategories ? 'All Categories Master Board' : currentCategory?.name}</p>
                                                 <Pencil className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
                                             </button>
                                         )}
@@ -961,11 +976,28 @@ const CategoryArrangement: React.FC = () => {
                                         <tbody>
                                             {Array.from({ length: rowCount }).map((_, rIdx) => {
                                                 const rowNum = rIdx + 1;
-                                                const rowLabel = isAllrounderTable ? categories[rIdx].name : `${prefix}${rowNum}`;
+                                                const rowLabel = isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`;
                                                 return (
                                                     <tr key={rowLabel}>
                                                         <td className="p-5 bg-zinc-900/60 border border-amber-500/20 text-center text-[10px] font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
-                                                            {rowLabel}
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                {rowLabel}
+                                                                {isAllrounderTable && (
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            const cat = categories[rIdx];
+                                                                            if (cat) {
+                                                                                setActiveCategory(cat.id || '');
+                                                                                setTempCategoryName(cat.name);
+                                                                                setIsEditingName(true);
+                                                                            }
+                                                                        }}
+                                                                        className="p-1 hover:bg-amber-500/20 rounded transition-all group"
+                                                                    >
+                                                                        <Pencil className="w-2.5 h-2.5 text-amber-500/30 group-hover:text-amber-500" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                         {Array.from({ length: colCount }).map((_, cIdx) => {
                                                             const col = cIdx + 1;
