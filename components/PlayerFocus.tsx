@@ -3,6 +3,7 @@ import React from 'react';
 import { Player, AuctionStatus } from '../types';
 import { useAuction } from '../hooks/useAuction';
 import { Globe, User, Tag } from 'lucide-react';
+import { getEffectiveBasePrice } from '../utils';
 
 interface PlayerFocusProps {
   player: Player;
@@ -28,9 +29,12 @@ const Timer: React.FC = () => {
 
 const PlayerFocus: React.FC<PlayerFocusProps> = ({ player }) => {
   const { state } = useAuction();
-  const { currentBid, highestBidder, status } = state;
+  const { currentBid, highestBidder, status, categories } = state;
 
-  const displayPrice = (currentBid !== null && currentBid > 0) ? Math.max(currentBid, player.basePrice) : player.basePrice;
+  // Calculate effective base price
+  const effectiveBasePrice = getEffectiveBasePrice(player, categories);
+
+  const displayPrice = (currentBid !== null && currentBid > 0) ? Math.max(currentBid, effectiveBasePrice) : effectiveBasePrice;
   const isSold = status === AuctionStatus.Sold || player.status === 'SOLD';
   const isUnsold = status === AuctionStatus.Unsold || player.status === 'UNSOLD';
 
@@ -93,7 +97,7 @@ const PlayerFocus: React.FC<PlayerFocusProps> = ({ player }) => {
                 <div className="flex items-center space-x-4 md:space-x-6 mt-2">
                     <div className="text-center px-2 md:px-4 border-r border-gray-600">
                         <p className="text-[10px] md:text-xs text-gray-400 uppercase">Base Price</p>
-                        <p className="text-lg md:text-xl font-bold text-white">{player.basePrice}</p>
+                        <p className="text-lg md:text-xl font-bold text-white">{effectiveBasePrice}</p>
                     </div>
                     <div className="text-center px-2 md:px-4">
                         <p className="text-[10px] md:text-xs text-gray-400 uppercase">Highest Bidder</p>

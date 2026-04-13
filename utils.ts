@@ -29,13 +29,9 @@ export const calculateMaxBid = (
         return { maxBid: Infinity, reservedAmount: 0, playersNeeded: playersNeededAfterThis };
     }
 
-    // Calculate the absolute minimum base price across all categories and roles
-    // We use this as the "cheapest possible" cost for a flexible slot
-    const absoluteMinBasePrice = Math.max(1, Math.min(
-        globalBasePrice || 100,
-        ...(categories.length > 0 ? categories.map(c => Number(c.basePrice) || 100) : [100]),
-        ...(roles.length > 0 ? roles.map(r => Number(r.basePrice) || 100) : [100])
-    ));
+    // Calculate the price for flexible slots (non-mandatory slots)
+    // We use the global base price as the standard for these slots.
+    const flexibleSlotPrice = globalBasePrice || 100;
 
     let reservedAmount = 0;
     let mandatorySlotsUsed = 0;
@@ -52,20 +48,35 @@ export const calculateMaxBid = (
                 neededInCat = Math.max(0, neededInCat - 1);
             }
 
-            reservedAmount += (neededInCat * (Number(cat.basePrice) || absoluteMinBasePrice));
+            const catBase = Number(cat.basePrice) || flexibleSlotPrice;
+            reservedAmount += (neededInCat * catBase);
             mandatorySlotsUsed += neededInCat;
         });
     }
 
     // 2. Total Squad Requirement
-    // Any remaining slots to reach the total squad size must also be reserved at the minimum price.
-    // This part is CRITICAL: we ALWAYS respect the total squad size to ensure they can fill their team.
+    // Any remaining slots to reach the total squad size must also be reserved at the standard global base price.
+    // This ensures they can fill their team with "Standard" players.
     const flexibleSlots = Math.max(0, playersNeededAfterThis - mandatorySlotsUsed);
-    reservedAmount += (flexibleSlots * absoluteMinBasePrice);
+    reservedAmount += (flexibleSlots * flexibleSlotPrice);
 
     return {
         maxBid: team.budget - reservedAmount,
         reservedAmount,
         playersNeeded: playersNeededAfterThis
     };
+};
+
+/**
+ * Returns the effective base price of a player, considering their category.
+ */
+export const getEffectiveBasePrice = (player: Player, categories: any[]): number => {
+    let basePrice = Number(player.basePrice) || 0;
+    if (player.category) {
+        const cat = categories.find(c => c.name === player.category);
+        if (cat && Number(cat.basePrice) > basePrice) {
+            basePrice = Number(cat.basePrice);
+        }
+    }
+    return basePrice;
 };

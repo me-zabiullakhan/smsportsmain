@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext, useMemo } from '
 import { AuctionContextType, AuctionState, UserProfile, Team, Player, AuctionStatus, BiddingStatus, AdminViewOverride, BidIncrementSlab, UserRole, SponsorConfig } from '../types';
 import { db, auth } from '../firebase';
 import firebase from 'firebase/compat/app';
-import { calculateMaxBid } from '../utils';
+import { calculateMaxBid, getEffectiveBasePrice } from '../utils';
 
 // Initial State
 const initialState: AuctionState = {
@@ -223,7 +223,7 @@ export const AuctionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const currentPlayer = players.find(p => String(p.id) === String(currentPlayerId));
         if (!currentPlayer) return 0;
 
-        const basePrice = Number(currentPlayer.basePrice) || 0;
+        const basePrice = getEffectiveBasePrice(currentPlayer, categories);
         const currentPrice = Number(currentBid) || 0;
 
         // 1. Initial Bid (No bids yet)

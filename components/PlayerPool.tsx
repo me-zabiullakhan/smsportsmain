@@ -3,6 +3,7 @@ import { useAuction } from '../hooks/useAuction';
 import { Player } from '../types';
 import { Search, Filter, X, Clock, CheckCircle, Users, Ban } from 'lucide-react';
 import { db } from '../firebase';
+import { getEffectiveBasePrice } from '../utils';
 
 type PlayerStatus = 'upcoming' | 'sold' | 'unsold' | 'teams';
 
@@ -149,7 +150,7 @@ const PlayerPool: React.FC = () => {
                         </div>
                         <div className="text-right">
                             {player.status === 'upcoming' ? (
-                                <span className="inline-block px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 font-mono">{player.basePrice}</span>
+                                <span className="inline-block px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 font-mono">{getEffectiveBasePrice(player as any, state.categories)}</span>
                             ) : player.status === 'unsold' ? (
                                 <span className="inline-block px-2 py-1 bg-red-900/50 text-red-300 rounded text-[10px] font-bold uppercase border border-red-800">UNSOLD</span>
                             ) : (
