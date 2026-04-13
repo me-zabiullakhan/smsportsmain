@@ -14,22 +14,30 @@ interface OverlayState {
 
 const Marquee = React.memo(({ content, show, layout }: { content: string[], show: boolean, layout?: string }) => {
     if (!show || content.length === 0) return null;
-    const bgClass = "bg-gradient-to-r from-blue-950/90 via-indigo-950/90 to-blue-950/90";
-    const borderClass = "border-t-2 border-cyan-500/50";
+    let bgClass = "bg-gradient-to-r from-blue-950/90 via-indigo-950/90 to-blue-950/90";
+    let borderClass = "border-t-2 border-cyan-500/50";
+    let iconColor = "text-cyan-400";
+    
+    if (layout === 'ADVAYA') {
+        bgClass = "bg-black/95";
+        borderClass = "border-t-2 border-yellow-500/50 shadow-[0_-10px_20px_rgba(234,179,8,0.2)]";
+        iconColor = "text-yellow-500";
+    }
+    
     return (
           <div className={`fixed bottom-0 left-0 w-full ${bgClass} backdrop-blur-md text-white py-1.5 overflow-hidden whitespace-nowrap z-50 shadow-2xl ${borderClass}`}>
               <div className="flex animate-marquee w-max will-change-transform">
                   <div className="flex shrink-0 items-center">
                     {content.map((text, i) => (
                         <span key={i} className="mx-12 font-bold text-xl tracking-wider flex items-center uppercase">
-                            <span className="text-cyan-400 mr-4 text-base opacity-80">◆</span> {text}
+                            <span className={`${iconColor} mr-4 text-base opacity-80`}>◆</span> {text}
                         </span>
                     ))}
                   </div>
                   <div className="flex shrink-0 items-center">
                     {content.map((text, i) => (
                         <span key={`dup-${i}`} className="mx-12 font-bold text-xl tracking-wider flex items-center uppercase">
-                            <span className="text-cyan-400 mr-4 text-base opacity-80">◆</span> {text}
+                            <span className={`${iconColor} mr-4 text-base opacity-80`}>◆</span> {text}
                         </span>
                     ))}
                   </div>
