@@ -117,7 +117,7 @@ const AuctionManage: React.FC = () => {
     const [regConfig, setRegConfig] = useState<RegistrationConfig>(DEFAULT_REG_CONFIG);
 
     const [settingsForm, setSettingsForm] = useState({
-        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false, venue: '',
+        title: '', fullTournamentName: '', season: '', date: '', matchesDate: '', sport: '', purseValue: 0, basePrice: 0, bidIncrement: 0, playersPerTeam: 0, totalTeams: 0, logoUrl: '', dateTBD: false, venue: '', eventVenue: '',
         unlimitedPurse: false, autoReserveFunds: false
     });
     const [slabs, setSlabs] = useState<BidIncrementSlab[]>([]);
@@ -220,6 +220,7 @@ const AuctionManage: React.FC = () => {
                     matchesDate: data.matchesDate || '',
                     sport: data.sport || '', 
                     venue: data.venue || '',
+                    eventVenue: data.eventVenue || '',
                     purseValue: data.purseValue || 0,
                     basePrice: data.basePrice || 0, 
                     bidIncrement: data.bidIncrement || 0, 
@@ -905,7 +906,7 @@ const AuctionManage: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Event Venue</label>
-                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.venue || ''} onChange={e => setSettingsForm({...settingsForm, venue: e.target.value})} placeholder="Stadium, City" />
+                                            <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.eventVenue || ''} onChange={e => setSettingsForm({...settingsForm, eventVenue: e.target.value})} placeholder="Stadium, City" />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Purse Budget (₹)</label>

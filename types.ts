@@ -347,6 +347,7 @@ export interface AuctionSetup {
     razorpayAuthorized?: boolean; // SUPER ADMIN controlled authorization
     dateTBD?: boolean;
     matchesDate?: string;
+    eventVenue?: string;
     fullTournamentName?: string;
     unlimitedPurse?: boolean;
     autoReserveFunds?: boolean;
