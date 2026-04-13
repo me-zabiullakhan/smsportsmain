@@ -214,7 +214,7 @@ const CategoryArrangement: React.FC = () => {
 
                 if (auctionSnap.exists) {
                     const data = auctionSnap.data();
-                    setAuctionName(data?.name || data?.title || 'SM SPORTS');
+                    setAuctionName(data?.name || data?.title || 'Auction Board');
                     setAuctionLogo(data?.logoUrl || '');
                 }
 
@@ -896,7 +896,7 @@ const CategoryArrangement: React.FC = () => {
                                 {/* Board Branding */}
                                 <div className="text-center mb-10 space-y-2">
                                     <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase tracking-tighter italic drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                                        AUCTION BOARD
+                                        {auctionName}
                                     </h2>
                                     <div className="flex items-center justify-center gap-4">
                                         <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
@@ -1018,10 +1018,9 @@ const CategoryArrangement: React.FC = () => {
                                 {/* Footer Branding */}
                                 <div className="mt-12 flex items-center justify-between px-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-950 font-black text-sm shadow-lg shadow-amber-500/20">SM</div>
                                         <div>
-                                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-500">SM SPORTS</p>
-                                            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest">Premium Tournament Management</p>
+                                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-500">{auctionName}</p>
+                                            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest">Official Tournament Board</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -1068,38 +1067,25 @@ const CategoryArrangement: React.FC = () => {
                 }}
             >
                 {/* Header Branding */}
-                <div className="flex items-center justify-between mb-12 border-b-4 border-amber-500/30 pb-10">
-                    <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 rounded-[2rem] bg-amber-500 flex items-center justify-center text-zinc-950 font-black text-4xl shadow-[0_0_50px_rgba(245,158,11,0.4)]">
-                            SM
+                <div className="flex flex-col items-center mb-12 border-b-4 border-amber-500/30 pb-10">
+                    <div className="flex items-center gap-8">
+                        {auctionLogo && (
+                            <img src={auctionLogo} className="w-32 h-32 rounded-3xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-3 shadow-2xl shadow-amber-500/20" referrerPolicy="no-referrer" />
+                        )}
+                        <div className="text-center">
+                            <h2 className="text-8xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-4">{auctionName}</h2>
+                            <p className="text-amber-500 font-black tracking-[0.6em] text-2xl uppercase opacity-80">OFFICIAL AUCTION BOARD</p>
                         </div>
-                        <div>
-                            <h1 className="text-6xl font-black text-white uppercase tracking-tighter leading-none">SM SPORTS</h1>
-                            <p className="text-xl font-black text-amber-500 uppercase tracking-[0.5em] mt-2">PREMIUM TOURNAMENT MANAGEMENT</p>
-                        </div>
-                    </div>
-                    
-                    <div className="text-right flex flex-col items-end justify-center">
-                        <div className="flex items-center gap-6">
-                            <div className="text-right">
-                                <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-2">{auctionName}</h2>
-                                <p className="text-amber-500 font-black tracking-[0.4em] text-lg uppercase opacity-80">OFFICIAL AUCTION BOARD</p>
-                            </div>
-                            {auctionLogo ? (
-                                <img src={auctionLogo} className="w-28 h-28 rounded-3xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-3 shadow-2xl shadow-amber-500/20" referrerPolicy="no-referrer" />
-                            ) : (
-                                <div className="w-28 h-28 rounded-3xl bg-zinc-900 border-2 border-amber-500/30 flex items-center justify-center text-amber-500 font-black text-4xl shadow-2xl shadow-amber-500/20">
-                                    {auctionName.substring(0, 2).toUpperCase()}
-                                </div>
-                            )}
-                        </div>
+                        {auctionLogo && (
+                            <img src={auctionLogo} className="w-32 h-32 rounded-3xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-3 shadow-2xl shadow-amber-500/20 opacity-0" referrerPolicy="no-referrer" />
+                        )}
                     </div>
                 </div>
 
                 <div className="w-full space-y-8">
                     <div className="text-center">
                             <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase tracking-tighter italic drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                                AUCTION BOARD
+                                {auctionName}
                             </h2>
                         </div>
 
@@ -1175,10 +1161,9 @@ const CategoryArrangement: React.FC = () => {
                 {/* Footer Branding */}
                 <div className="mt-20 pt-10 border-t-4 border-amber-500/30 flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 rounded-2xl bg-amber-500 flex items-center justify-center text-zinc-950 font-black text-2xl">SM</div>
                         <div>
-                            <p className="text-2xl font-black text-white uppercase tracking-widest">SM SPORTS</p>
-                            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">PREMIUM TOURNAMENT MANAGEMENT</p>
+                            <p className="text-2xl font-black text-white uppercase tracking-widest">{auctionName}</p>
+                            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">OFFICIAL TOURNAMENT BOARD</p>
                         </div>
                     </div>
                     <div className="text-right">
