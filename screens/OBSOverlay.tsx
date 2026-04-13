@@ -187,34 +187,38 @@ const OBSOverlay: React.FC = () => {
             <div className="min-h-screen w-full relative font-sans overflow-hidden">
                 <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between gap-6 animate-slide-up">
                     {/* Player Info */}
-                    <div className="flex-1 bg-black/80 backdrop-blur-xl rounded-[32px] border border-white/10 p-6 flex items-center gap-8 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-teal-500"></div>
-                        <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-teal-500/30 shadow-lg shrink-0">
-                            <img src={player?.photoUrl} className="w-full h-full object-cover object-top" />
+                    <div className="flex-1 bg-black/90 backdrop-blur-xl rounded-[32px] border border-yellow-500/30 p-6 flex items-center gap-8 shadow-[0_0_30px_rgba(234,179,8,0.2)] relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]"></div>
+                        <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.3)] shrink-0">
+                            <img src={player?.photoUrl} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
                         </div>
                         <div className="min-w-0">
                             <div className="flex items-center gap-3 mb-2">
-                                <span className="bg-teal-500 text-black px-3 py-0.5 rounded-lg font-black text-[10px] uppercase tracking-widest">{player?.category}</span>
+                                <span className="bg-yellow-500 text-black px-3 py-0.5 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                                    {player?.category}
+                                </span>
                                 <span className="text-white/40 font-mono text-[10px]">#{player?.id.toString().slice(-4)}</span>
                             </div>
-                            <h1 className="text-4xl font-black uppercase tracking-tighter text-white truncate">{player?.name}</h1>
-                            <p className="text-teal-400 font-bold uppercase tracking-[0.2em] text-xs mt-1">{player?.speciality || player?.category}</p>
+                            <h1 className="text-4xl font-black uppercase tracking-tighter text-white truncate drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{player?.name}</h1>
+                            <p className="text-yellow-500 font-bold uppercase tracking-[0.2em] text-xs mt-1 drop-shadow-[0_0_5px_rgba(234,179,8,0.4)]">{player?.speciality || player?.category}</p>
                         </div>
+                        {/* Neon Border Effect */}
+                        <div className="absolute inset-0 border-2 border-yellow-500/0 group-hover:border-yellow-500/20 rounded-[32px] transition-all duration-500 pointer-events-none"></div>
                     </div>
 
                     {/* Bidding Info */}
                     <div className="w-[450px] flex flex-col gap-4">
-                        <div className="bg-teal-500 rounded-[32px] p-6 flex items-center justify-between shadow-[0_20px_40px_rgba(20,184,166,0.3)] relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-full bg-white/10 skew-x-[-20deg] translate-x-16"></div>
-                            <div>
+                        <div className="bg-yellow-500 rounded-[32px] p-6 flex items-center justify-between shadow-[0_20px_50px_rgba(234,179,8,0.4)] relative overflow-hidden border-2 border-yellow-400/50">
+                            <div className="absolute top-0 right-0 w-32 h-full bg-white/20 skew-x-[-20deg] translate-x-16"></div>
+                            <div className="relative z-10">
                                 <p className="text-black/60 text-[10px] font-black uppercase tracking-widest mb-1">Current Bid</p>
-                                <p className="text-6xl font-black text-black tabular-nums leading-none tracking-tighter italic">{bid.toLocaleString()}</p>
+                                <p className="text-6xl font-black text-black tabular-nums leading-none tracking-tighter italic drop-shadow-sm">{bid.toLocaleString()}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right relative z-10">
                                 {status === 'SOLD' ? (
-                                    <span className="bg-black text-teal-500 px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest animate-pulse">SOLD</span>
+                                    <span className="bg-black text-yellow-500 px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest animate-pulse shadow-[0_0_15px_rgba(234,179,8,0.5)]">SOLD</span>
                                 ) : status === 'UNSOLD' ? (
-                                    <span className="bg-red-600 text-white px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest">UNSOLD</span>
+                                    <span className="bg-red-600 text-white px-4 py-1 rounded-xl font-black text-xl italic uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)]">UNSOLD</span>
                                 ) : (
                                     <div className="flex flex-col items-end">
                                         <span className="text-black/40 text-[10px] font-bold uppercase tracking-widest">Base</span>
@@ -225,18 +229,18 @@ const OBSOverlay: React.FC = () => {
                         </div>
 
                         {bidder && (
-                            <div className="bg-black/80 backdrop-blur-xl rounded-full p-3 pl-6 flex items-center justify-between border border-white/10 shadow-2xl animate-slide-up">
+                            <div className="bg-black/90 backdrop-blur-xl rounded-full p-3 pl-6 flex items-center justify-between border border-yellow-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_15px_rgba(234,179,8,0.1)] animate-slide-up">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-2 h-2 bg-teal-500 rounded-full animate-ping"></div>
+                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping shadow-[0_0_10px_rgba(234,179,8,1)]"></div>
                                     <span className="text-white/40 font-bold uppercase tracking-widest text-[10px]">Leading:</span>
                                     <span className="text-white font-black uppercase italic tracking-tight">{bidder.name}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="text-right">
                                         <p className="text-white/40 text-[8px] font-bold uppercase leading-none">Purse</p>
-                                        <p className="text-teal-400 font-mono font-bold text-sm leading-none mt-1">{bidder.budget.toLocaleString()}</p>
+                                        <p className="text-yellow-500 font-mono font-bold text-sm leading-none mt-1">{bidder.budget.toLocaleString()}</p>
                                     </div>
-                                    {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-10 h-10 object-contain bg-white p-1 rounded-full" /> : <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-xs text-white">{bidder.name.charAt(0)}</div>}
+                                    {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-10 h-10 object-contain bg-white p-1 rounded-full border border-yellow-500/20" /> : <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-xs text-white border border-yellow-500/20">{bidder.name.charAt(0)}</div>}
                                 </div>
                             </div>
                         )}

@@ -362,7 +362,6 @@ const ProjectorScreen: React.FC = () => {
                   </div>
               </div>
           )}
-
           {layout === 'ADVAYA' && (
               <div className="h-screen w-full bg-[#050505] flex flex-col font-sans overflow-hidden relative text-white">
                   {/* Background Accents */}
@@ -381,11 +380,11 @@ const ProjectorScreen: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-6">
                           <div className="flex flex-col items-end">
-                              <span className="text-teal-400 font-mono text-sm tracking-widest">AUCTION_LIVE</span>
-                              <span className="text-white/40 text-xs font-bold uppercase">Session 01</span>
+                               <span className="text-teal-400 font-mono text-sm tracking-widest">AUCTION_LIVE</span>
+                               <span className="text-white/40 text-xs font-bold uppercase">Session 01</span>
                           </div>
                           <div className="w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.4)]">
-                              <Zap className="text-black w-6 h-6" />
+                               <Zap className="text-black w-6 h-6" />
                           </div>
                       </div>
                   </div>
@@ -488,6 +487,215 @@ const ProjectorScreen: React.FC = () => {
                                               <p className="text-white font-bold text-sm truncate">{team.name}</p>
                                               <p className="text-teal-400 font-mono font-black text-lg leading-none mt-1">{team.budget.toLocaleString()}</p>
                                           </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {layout === 'NEON' && (
+              <div className="h-screen w-full bg-black flex flex-col font-sans overflow-hidden relative text-white">
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-50 pointer-events-none" style={{ backgroundSize: '100% 2px, 3px 100%' }}></div>
+                  
+                  <div className="h-24 flex items-center justify-between px-12 z-40 relative border-b border-magenta-500/30">
+                      <h1 className="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-magenta-500 to-yellow-400 drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]">
+                          {state.tournamentName || "NEON AUCTION"}
+                      </h1>
+                      <div className="flex items-center gap-4">
+                          <div className="px-6 py-2 rounded-full border-2 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] bg-black/50">
+                              <span className="text-cyan-400 font-black tracking-widest animate-pulse">SYSTEM_ACTIVE</span>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="flex-1 flex p-8 gap-8 min-h-0 relative z-10">
+                      <div className="w-[40%] relative">
+                          <div className="absolute inset-0 bg-magenta-500 blur-[100px] opacity-20"></div>
+                          <div className="h-full bg-zinc-900 rounded-[2rem] border-2 border-magenta-500/50 overflow-hidden relative shadow-[0_0_40px_rgba(255,0,255,0.2)]">
+                              <img src={player?.photoUrl} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                              <div className="absolute bottom-8 left-8 right-8">
+                                  <div className="bg-cyan-500 text-black px-4 py-1 rounded-sm font-black text-sm uppercase tracking-widest inline-block mb-4 shadow-[0_0_15px_rgba(6,182,212,0.8)]">
+                                      {player?.category}
+                                  </div>
+                                  <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{player?.name}</h2>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col gap-8">
+                          <div className="flex-1 bg-black rounded-[2rem] border-2 border-cyan-500/50 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_40px_rgba(6,182,212,0.2)]">
+                              {status === 'SOLD' && (
+                                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+                                      <div className="text-magenta-500 font-black text-[12vw] italic tracking-tighter leading-none animate-bounce-in drop-shadow-[0_0_30px_rgba(255,0,255,0.8)]">SOLD</div>
+                                      {bidder && (
+                                          <div className="flex items-center gap-6 bg-zinc-900 p-6 rounded-2xl border-2 border-cyan-500 animate-slide-up shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                                              {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-20 h-20 object-contain bg-white p-1 rounded-full" /> : <div className="w-20 h-20 bg-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold">{bidder.name.charAt(0)}</div>}
+                                              <div>
+                                                  <p className="text-cyan-400 text-xs font-bold uppercase tracking-widest mb-1">Acquired By</p>
+                                                  <h3 className="text-4xl font-black uppercase italic text-white">{bidder.name}</h3>
+                                              </div>
+                                          </div>
+                                      )}
+                                  </div>
+                              )}
+
+                              {status === 'UNSOLD' && (
+                                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+                                      <div className="text-red-500 font-black text-[12vw] italic tracking-tighter leading-none animate-bounce-in drop-shadow-[0_0_30px_rgba(239,68,68,0.8)]">UNSOLD</div>
+                                  </div>
+                              )}
+
+                              <p className="text-cyan-400 font-mono text-xl tracking-[0.8em] mb-4 opacity-50">CURRENT_BID</p>
+                              <div className="text-[18vh] font-black text-white leading-none tabular-nums italic tracking-tighter drop-shadow-[0_0_40px_rgba(6,182,212,0.6)]">{bid.toLocaleString()}</div>
+                              
+                              {status === 'LIVE' && bidder && (
+                                  <div className="mt-10 flex items-center gap-6 bg-magenta-500/10 px-10 py-4 rounded-full border-2 border-magenta-500 animate-slide-up shadow-[0_0_20px_rgba(255,0,255,0.3)]">
+                                      <div className="w-4 h-4 bg-magenta-500 rounded-full animate-ping"></div>
+                                      <span className="text-magenta-500 font-black uppercase tracking-widest text-xl italic">{bidder.name}</span>
+                                  </div>
+                              )}
+                          </div>
+
+                          <div className="h-32 bg-zinc-900 rounded-[2rem] border-2 border-yellow-400/30 p-4 flex items-center gap-6 overflow-hidden shadow-[0_0_20px_rgba(250,204,21,0.1)]">
+                              <div className="shrink-0 bg-yellow-400 text-black p-3 rounded-xl font-black italic">PURSES</div>
+                              <div className="flex-1 overflow-x-auto flex items-center gap-6 custom-scrollbar">
+                                  {state.teams.map(team => (
+                                      <div key={team.id} className="min-w-[150px] flex flex-col shrink-0">
+                                          <p className="text-white/40 text-[10px] font-bold uppercase truncate">{team.name}</p>
+                                          <p className="text-yellow-400 font-mono font-black text-xl">₹{team.budget.toLocaleString()}</p>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {layout === 'FUTURISTIC' && (
+              <div className="h-screen w-screen bg-[#0a0a0f] flex flex-col font-mono overflow-hidden relative text-cyan-400">
+                  {/* HUD Elements */}
+                  <div className="absolute inset-0 border-[20px] border-cyan-500/5 pointer-events-none z-50"></div>
+                  <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+                  
+                  {/* Top Bar */}
+                  <div className="h-20 flex items-center justify-between px-16 z-40 relative border-b border-cyan-500/20 bg-black/40 backdrop-blur-md">
+                      <div className="flex items-center gap-10">
+                          <div className="flex flex-col">
+                              <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">System.Protocol</span>
+                              <h1 className="text-3xl font-black uppercase tracking-widest text-white">{state.tournamentName || "AUCTION_CORE"}</h1>
+                          </div>
+                          <div className="h-10 w-px bg-cyan-500/20"></div>
+                          <div className="flex flex-col">
+                              <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">Status</span>
+                              <span className="text-green-400 font-bold animate-pulse">ONLINE_ENCRYPTED</span>
+                          </div>
+                      </div>
+                      <div className="text-right">
+                          <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">Timestamp</span>
+                          <p className="text-white font-bold">{new Date().toLocaleTimeString()}</p>
+                      </div>
+                  </div>
+
+                  <div className="flex-1 flex p-10 gap-10 min-h-0 relative z-10">
+                      {/* Player Data Frame */}
+                      <div className="w-[42%] flex flex-col gap-6">
+                          <div className="flex-1 bg-black rounded-tl-[4rem] rounded-br-[4rem] border-2 border-cyan-500/30 overflow-hidden relative group">
+                              <div className="absolute top-0 left-0 w-full h-full bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              <img src={player?.photoUrl} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                              
+                              {/* Data Readout Overlay */}
+                              <div className="absolute top-6 right-6 text-right">
+                                  <div className="text-[8px] text-cyan-500/50 uppercase mb-1">ID_SCAN</div>
+                                  <div className="text-xs font-bold text-cyan-400">PX-{player?.id.toString().slice(-6)}</div>
+                              </div>
+
+                              <div className="absolute bottom-10 left-10 right-10">
+                                  <div className="h-px w-full bg-gradient-to-r from-cyan-500 to-transparent mb-4"></div>
+                                  <h2 className="text-6xl font-black uppercase tracking-tighter text-white mb-2">{player?.name}</h2>
+                                  <div className="flex gap-6">
+                                      <div className="bg-cyan-500/10 px-4 py-1 border border-cyan-500/30 rounded-sm">
+                                          <span className="text-[10px] uppercase font-bold text-cyan-400">{player?.category}</span>
+                                      </div>
+                                      <div className="bg-cyan-500/10 px-4 py-1 border border-cyan-500/30 rounded-sm">
+                                          <span className="text-[10px] uppercase font-bold text-cyan-400">{player?.speciality || "GENERAL"}</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-6 h-24">
+                              <div className="bg-black border border-cyan-500/20 p-4 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[8px] text-cyan-500/50 uppercase mb-1">Base_Valuation</span>
+                                  <p className="text-2xl font-black text-white">₹{player?.basePrice.toLocaleString()}</p>
+                              </div>
+                              <div className="bg-black border border-cyan-500/20 p-4 rounded-xl flex flex-col justify-center">
+                                  <span className="text-[8px] text-cyan-500/50 uppercase mb-1">Origin_Node</span>
+                                  <p className="text-2xl font-black text-white uppercase">{player?.nationality}</p>
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* Bidding Core */}
+                      <div className="flex-1 flex flex-col gap-6">
+                          <div className="flex-1 bg-black rounded-tr-[4rem] rounded-bl-[4rem] border-2 border-cyan-500/30 relative overflow-hidden flex flex-col items-center justify-center">
+                              {/* Scanline Effect */}
+                              <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] z-20 pointer-events-none" style={{ backgroundSize: '100% 4px' }}></div>
+                              
+                              {status === 'SOLD' && (
+                                  <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in">
+                                      <div className="text-cyan-400 font-black text-[10vw] tracking-widest animate-pulse mb-8 border-y-4 border-cyan-400 px-10 py-2">SOLD_CORE</div>
+                                      {bidder && (
+                                          <div className="flex items-center gap-8 bg-cyan-500/5 p-8 rounded-2xl border border-cyan-500/40 animate-slide-up">
+                                              {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-24 h-24 object-contain bg-white p-1 rounded-sm" /> : <div className="w-24 h-24 bg-cyan-900 flex items-center justify-center text-4xl font-bold">{bidder.name.charAt(0)}</div>}
+                                              <div>
+                                                  <p className="text-cyan-500/50 text-[10px] font-bold uppercase tracking-widest mb-2">Target_Entity</p>
+                                                  <h3 className="text-5xl font-black uppercase text-white">{bidder.name}</h3>
+                                                  <p className="text-2xl font-bold text-cyan-400 mt-2">VAL: {bid.toLocaleString()}</p>
+                                              </div>
+                                          </div>
+                                      )}
+                                  </div>
+                              )}
+
+                              {status === 'UNSOLD' && (
+                                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in">
+                                      <div className="text-red-500 font-black text-[10vw] tracking-widest animate-pulse border-y-4 border-red-500 px-10 py-2">UNSOLD_ERR</div>
+                                  </div>
+                              )}
+
+                              <div className="absolute top-10 left-10 flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-cyan-500 animate-ping"></div>
+                                  <span className="text-[10px] uppercase tracking-widest text-cyan-500/50">Bidding.Active</span>
+                              </div>
+
+                              <div className="text-[20vh] font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-[0_0_50px_rgba(6,182,212,0.4)]">{bid.toLocaleString()}</div>
+                              
+                              {status === 'LIVE' && bidder && (
+                                  <div className="mt-12 flex flex-col items-center animate-slide-up">
+                                      <div className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em] mb-4">Leading_Entity</div>
+                                      <div className="bg-cyan-500/10 px-12 py-4 border border-cyan-500/50 rounded-sm relative">
+                                          <div className="absolute -top-1 -left-1 w-2 h-2 bg-cyan-500"></div>
+                                          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-cyan-500"></div>
+                                          <span className="text-4xl font-black uppercase text-white tracking-widest">{bidder.name}</span>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+
+                          {/* Data Stream Ticker */}
+                          <div className="h-24 bg-black border border-cyan-500/20 p-4 flex items-center gap-8 overflow-hidden">
+                              <div className="shrink-0 text-cyan-500/50 text-[10px] font-bold uppercase tracking-[0.3em] rotate-180" style={{ writingMode: 'vertical-rl' }}>PURSE_DATA</div>
+                              <div className="flex-1 overflow-x-auto flex items-center gap-10 custom-scrollbar">
+                                  {state.teams.map(team => (
+                                      <div key={team.id} className="flex flex-col shrink-0 border-l border-cyan-500/20 pl-4">
+                                          <span className="text-[8px] text-cyan-500/30 uppercase mb-1">{team.name}</span>
+                                          <span className="text-xl font-black text-white">₹{team.budget.toLocaleString()}</span>
                                       </div>
                                   ))}
                               </div>

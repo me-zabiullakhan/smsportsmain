@@ -120,7 +120,7 @@ export interface SponsorConfig {
     loopInterval: number; // seconds
 }
 
-export type ProjectorLayout = 'STANDARD' | 'IPL' | 'MODERN' | 'ADVAYA';
+export type ProjectorLayout = 'STANDARD' | 'IPL' | 'MODERN' | 'ADVAYA' | 'NEON' | 'FUTURISTIC';
 export type OBSLayout = 'STANDARD' | 'MINIMAL' | 'VERTICAL' | 'ADVAYA';
 
 export type AdminViewType = 'SQUAD' | 'PURSES' | 'UNSOLD' | 'SOLD' | 'TOP_BUY' | 'TOP_5' | 'NONE';

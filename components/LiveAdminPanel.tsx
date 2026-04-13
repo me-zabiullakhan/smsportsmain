@@ -695,7 +695,7 @@ const LiveAdminPanel: React.FC = () => {
                       <div className="flex-1">
                           <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">Projector</label>
                           <div className="flex bg-gray-800 rounded p-0.5">
-                              {['STANDARD', 'IPL', 'MODERN', 'ADVAYA'].map(l => (
+                              {['STANDARD', 'IPL', 'MODERN', 'ADVAYA', 'NEON', 'FUTURISTIC'].map(l => (
                                   <button 
                                     key={l}
                                     onClick={() => updateTheme('PROJECTOR', l)}
