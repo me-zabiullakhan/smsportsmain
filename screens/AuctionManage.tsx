@@ -788,19 +788,20 @@ const AuctionManage: React.FC = () => {
                 <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
                         <button onClick={() => navigate('/admin')} className="text-gray-400 hover:text-gray-800 transition-colors p-2 hover:bg-gray-50 rounded-lg"><ArrowLeft className="w-5 h-5"/></button>
-                        <div className="relative">
-                            <select 
-                                value={id || ''} 
-                                onChange={(e) => navigate(`/manage/${e.target.value}`)}
-                                className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2 pr-10 text-xs font-black uppercase tracking-widest text-gray-700 outline-none focus:border-blue-500 shadow-sm cursor-pointer"
-                            >
-                                {allAuctions.map(a => (
-                                    <option key={a.id} value={a.id}>{a.title?.toUpperCase()}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                <ChevronDown className="w-4 h-4" />
-                            </div>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[300px] md:max-w-md py-1">
+                            {allAuctions.map(a => (
+                                <button
+                                    key={a.id}
+                                    onClick={() => navigate(`/manage/${a.id}`)}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${
+                                        id === a.id 
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                                        : 'bg-white border-gray-200 text-gray-400 hover:border-blue-200'
+                                    }`}
+                                >
+                                    {a.title?.toUpperCase()}
+                                </button>
+                            ))}
                         </div>
                     </div>
                     <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
@@ -2292,9 +2293,22 @@ const AuctionManage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Status</label>
-                                        <button type="button" onClick={() => setEditCode({...editCode, isActive: !editCode.isActive})} className={`w-full py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border-2 ${editCode.isActive ? 'bg-green-50 border-green-100 text-green-600' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
-                                            {editCode.isActive ? 'ACTIVE' : 'INACTIVE'}
-                                        </button>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setEditCode({...editCode, isActive: true})} 
+                                                className={`py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border-2 ${editCode.isActive ? 'bg-green-50 border-green-500 text-green-600 shadow-lg shadow-green-500/10' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                                            >
+                                                Active
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setEditCode({...editCode, isActive: false})} 
+                                                className={`py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border-2 ${!editCode.isActive ? 'bg-red-50 border-red-500 text-red-600 shadow-lg shadow-red-500/10' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                                            >
+                                                Inactive
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

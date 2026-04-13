@@ -86,21 +86,23 @@ const WarriorInput = ({ label, value, onChange, type = "text", required = false,
                 className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-10 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer min-h-[120px] resize-none"
             />
         ) : type === 'select' ? (
-            <div className="relative">
-                <select 
-                    required={required}
-                    value={value}
-                    onChange={onChange}
-                    className="w-full bg-black/40 border-2 border-amber-900/30 rounded-2xl px-6 py-4 pt-10 font-bold text-amber-100 outline-none transition-all focus:border-amber-500 focus:shadow-[0_0_15px_rgba(251,191,36,0.2)] peer appearance-none cursor-pointer"
-                >
-                    <option value="" className="bg-zinc-900 text-amber-900/50">{placeholder || 'SELECT OPTION'}</option>
+            <div className="pt-10 pb-2">
+                <div className="flex flex-wrap gap-2">
                     {options.map((opt: string) => (
-                        <option key={opt} value={opt} className="bg-zinc-900 text-amber-100">
-                            {opt.toUpperCase()}
-                        </option>
+                        <button
+                            key={opt}
+                            type="button"
+                            onClick={() => onChange({ target: { value: opt } })}
+                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
+                                value === opt 
+                                ? 'bg-amber-600 border-amber-600 text-black shadow-lg shadow-amber-600/20' 
+                                : 'bg-black/40 border-amber-900/30 text-amber-500/50 hover:border-amber-500/50'
+                            }`}
+                        >
+                            {opt}
+                        </button>
                     ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500 pointer-events-none group-hover:scale-110 transition-transform" />
+                </div>
             </div>
         ) : (
             <input 
@@ -388,36 +390,54 @@ const PlayerRegistration: React.FC = () => {
             const regRef = db.collection('auctions').doc(id).collection('registrations');
             await regRef.add(submissionData);
             
-            // Update Captain Code Usage if applicable
+            // 5. Update Code Usage if applicable
             if (isCaptain && validatedCode) {
-                console.log("Updating captain code usage for:", validatedCode.id);
                 try {
-                    await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id).update({
-                        currentUsage: firebase.firestore.FieldValue.increment(1)
+                    console.log("Attempting to update captain code usage for:", validatedCode.id);
+                    const codeRef = db.collection('auctions').doc(id).collection('captainCodes').doc(validatedCode.id);
+                    
+                    await db.runTransaction(async (transaction) => {
+                        const codeDoc = await transaction.get(codeRef);
+                        if (!codeDoc.exists) {
+                            throw new Error("Captain code document not found during update");
+                        }
+                        const currentVal = codeDoc.data()?.currentUsage || 0;
+                        transaction.update(codeRef, { 
+                            currentUsage: currentVal + 1 
+                        });
                     });
-                    console.log("Captain code usage updated successfully");
-                } catch (e) {
-                    console.error("Could not update captain code usage:", e);
+                    console.log("Captain code usage updated successfully via transaction");
+                } catch (codeErr) {
+                    console.error("Error updating captain code usage:", codeErr);
                 }
             }
 
-            // Update Team Code Usage if applicable
             if (hasTeamCode && validatedTeamCode) {
-                console.log("Updating team code usage for:", validatedTeamCode.id);
                 try {
-                    const updatedTeamCodes = validatedTeamCode.teamCodes?.map((tc: any) => {
-                        if (tc.code === validatedTeamCode.usedSpecificCode) {
-                            return { ...tc, isUsed: true, usedBy: formData.fullName };
+                    console.log("Attempting to update team code usage for:", validatedTeamCode.id);
+                    const codeRef = db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id);
+                    
+                    await db.runTransaction(async (transaction) => {
+                        const codeDoc = await transaction.get(codeRef);
+                        if (!codeDoc.exists) {
+                            throw new Error("Team code document not found during update");
                         }
-                        return tc;
+                        
+                        const data = codeDoc.data();
+                        const currentTeamCodes = data?.teamCodes || [];
+                        const updatedTeamCodes = currentTeamCodes.map((tc: any) => 
+                            tc.code === teamCode ? { ...tc, isUsed: true, usedBy: submissionData.fullName } : tc
+                        );
+                        const currentTeamUsed = data?.teamUsedCount || 0;
+                        
+                        transaction.update(codeRef, {
+                            teamUsedCount: currentTeamUsed + 1,
+                            teamCodes: updatedTeamCodes
+                        });
                     });
-                    await db.collection('auctions').doc(id).collection('captainCodes').doc(validatedTeamCode.id).update({
-                        teamUsedCount: firebase.firestore.FieldValue.increment(1),
-                        teamCodes: updatedTeamCodes
-                    });
-                    console.log("Team code usage updated successfully");
-                } catch (e) {
-                    console.error("Could not update team code usage:", e);
+                    console.log("Team code usage updated successfully via transaction");
+                } catch (teamErr) {
+                    console.error("Error updating team code usage:", teamErr);
                 }
             }
 

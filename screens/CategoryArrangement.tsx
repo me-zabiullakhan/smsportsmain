@@ -32,7 +32,8 @@ import {
     AlertTriangle,
     CheckCircle,
     XCircle,
-    X
+    X,
+    Pencil
 } from 'lucide-react';
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
@@ -88,12 +89,11 @@ interface DroppableSlotProps {
     id: string;
     player?: CategoryArrangementSlot;
     onAction: (action: 'REMOVE' | 'MOVE', slotId: string) => void;
-    isOver?: boolean;
     index: number;
 }
 
-const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, isOver, index }) => {
-    const { setNodeRef: setDropRef } = useDroppable({
+const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, index }) => {
+    const { setNodeRef: setDropRef, isOver } = useDroppable({
         id: id,
     });
 
@@ -814,22 +814,23 @@ const CategoryArrangement: React.FC = () => {
 
                     {/* Right Panel: Table */}
                     <main className="flex-1 space-y-8">
-                        {/* Category Selection Dropdown */}
-                        <div className="relative group max-w-xs">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2 block ml-1">Select Category Board</label>
-                            <div className="relative">
-                                <select 
-                                    value={activeCategory}
-                                    onChange={(e) => setActiveCategory(e.target.value)}
-                                    className="w-full bg-zinc-900 border-2 border-zinc-800 rounded-2xl px-6 py-4 font-black text-amber-500 outline-none focus:border-amber-500 transition-all appearance-none cursor-pointer uppercase tracking-widest text-xs"
-                                >
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id} className="bg-zinc-900 text-zinc-100">
-                                            {cat.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500 pointer-events-none group-hover:scale-110 transition-transform" />
+                        {/* Category Selection: Inline Options */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Select Category Board</label>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.map(cat => (
+                                    <button 
+                                        key={cat.id}
+                                        onClick={() => setActiveCategory(cat.id || '')}
+                                        className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                            activeCategory === cat.id 
+                                            ? 'bg-amber-500 border-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20' 
+                                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                                        }`}
+                                    >
+                                        {cat.name}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -935,7 +936,7 @@ const CategoryArrangement: React.FC = () => {
                                                 className="group flex items-center gap-3 px-4 py-1 rounded-full hover:bg-amber-500/10 transition-all"
                                             >
                                                 <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{currentCategory?.name}</p>
-                                                <Move className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
+                                                <Edit className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
                                             </button>
                                         )}
                                         <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
@@ -970,14 +971,13 @@ const CategoryArrangement: React.FC = () => {
                                                             const col = cIdx + 1;
                                                             const slotId = `${rowLabel}_${col}`;
                                                             const isTarget = pendingSwap?.slotId === slotId;
-                                                            const globalIndex = (rIdx * colCount) + col;
+                                                            const globalIndex = (rIdx * colCount) + cIdx;
                                                             return (
                                                                 <td key={slotId} className="p-0 border border-amber-500/20 min-w-[160px] relative">
                                                                     <DroppableSlot 
                                                                         id={slotId} 
                                                                         player={slots[slotId]}
                                                                         onAction={handleAction}
-                                                                        isOver={activeDragId !== null}
                                                                         index={globalIndex}
                                                                     />
                                                                     {isTarget && (
