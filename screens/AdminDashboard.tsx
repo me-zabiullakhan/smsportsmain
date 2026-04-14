@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuction } from '../hooks/useAuction';
+import { useTheme } from '../contexts/ThemeContext';
 // Standardized imports
-import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown, XCircle } from 'lucide-react';
+import { Plus, Search, Menu, AlertCircle, RefreshCw, Database, Trash2, Cast, Monitor, Activity, UserPlus, Link as LinkIcon, ShieldCheck, CreditCard, Scale, FileText, ChevronRight, CheckCircle, Info, Zap, Crown, Users, Gavel, Sparkles, Shield, Book, HelpCircle, UserPlus2, Layout, Youtube, MessageSquare, Star, Trophy, Tag, Check, ShieldAlert, LogOut, AlertTriangle, Clock, X, Megaphone, Infinity as InfinityIcon, CalendarDays, ChevronDown, XCircle, Sun, Moon, Settings } from 'lucide-react';
 import { db } from '../firebase';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { AuctionSetup, UserPlan, UserRole, PromoCode, SystemPopup } from '../types';
 
 const AdminDashboard: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
   // Added 'state' to destructuring from useAuction to resolve potential undefined errors
   const { userProfile, logout, state } = useAuction();
   const navigate = useNavigate();
@@ -265,368 +268,340 @@ const AdminDashboard: React.FC = () => {
   };
 
   const renderAuctions = () => (
-      <div className="space-y-6 animate-fade-in">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">My Auctions ({auctions.length})</h2>
-              <div className="flex gap-2">
-                  {!state.hideScoringSection && (
-                      <button onClick={() => navigate('/scoring')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow shadow-blue-900/10 transition-all flex items-center text-xs"><Activity className="w-4 h-4 mr-2" /> SCORING</button>
-                  )}
-                  <button onClick={() => navigate('/admin/new')} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl shadow shadow-green-900/10 transition-all flex items-center text-xs"><Plus className="w-4 h-4 mr-2" /> NEW AUCTION</button>
-              </div>
-          </div>
+    <div className="space-y-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h2 className={`text-3xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-900'}`}>My Auctions</h2>
+                <p className={`text-[10px] font-black uppercase tracking-[0.3em] mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Manage your tournament ecosystem</p>
+            </div>
+            <button 
+                onClick={() => navigate('/admin/create-auction')}
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl ${isDark ? 'bg-white text-zinc-950 hover:bg-zinc-200 shadow-white/5' : 'bg-gray-900 text-white hover:bg-black shadow-black/10'}`}
+            >
+                <Plus className="w-5 h-5" /> Start New Auction
+            </button>
+        </div>
 
-          {/* System Deletion Warnings */}
-          <div className="space-y-2">
-            {auctions.filter(a => (a.autoDeleteAt || (a.createdAt + 86400000 * 30)) && !a.isLifetime).map(auction => {
-                const targetPurge = auction.autoDeleteAt || (auction.createdAt + 86400000 * 30);
-                const diffDays = Math.ceil((targetPurge - Date.now()) / (1000 * 60 * 60 * 24));
-                if (diffDays <= 7 && diffDays > 0) {
-                    return (
-                        <div key={`warn-${auction.id}`} className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl flex items-center justify-between gap-4 animate-pulse shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle className="text-red-500 w-5 h-5 shrink-0" />
-                                <div>
-                                    <p className="text-xs font-black text-red-800 uppercase">System Notice: Deletion Scheduled</p>
-                                    <p className="text-[10px] text-red-600 font-bold uppercase">Auction <b className="text-red-800">"{auction.title}"</b> will be purged in {diffDays} days ({new Date(targetPurge).toLocaleDateString()}).</p>
+        {/* Upgrade Section */}
+        {auctions.length > 0 && (
+            <div className={`p-8 rounded-[2.5rem] border transition-all ${isDark ? 'bg-secondary/50 border-accent/20 shadow-accent/5' : 'bg-blue-600 border-blue-500 shadow-blue-600/20 shadow-xl'}`}>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+                    <div className="flex items-center gap-6">
+                        <div className={`p-4 rounded-[1.5rem] shadow-2xl ${isDark ? 'bg-accent text-zinc-950' : 'bg-white text-blue-600'}`}>
+                            <Crown className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <h3 className={`text-2xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-white'}`}>Upgrade Your Experience</h3>
+                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${isDark ? 'text-accent' : 'text-blue-100'}`}>Select an auction to unlock premium features</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        {auctions.map(a => (
+                            <button 
+                                key={a.id} 
+                                onClick={() => setSelectedAuctionForUpgrade(a.id)}
+                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                    selectedAuctionForUpgrade === a.id 
+                                    ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-white border-white text-blue-600 shadow-lg shadow-white/20')
+                                    : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700' : 'bg-blue-500 border-blue-400 text-white hover:bg-blue-400')
+                                }`}
+                            >
+                                {a.title?.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                
+                {selectedAuctionForUpgrade && (
+                    <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 animate-slide-up">
+                        {dbPlans.map((plan) => {
+                            const currentAuction = auctions.find(a => a.id === selectedAuctionForUpgrade);
+                            const isCurrentPlan = currentAuction?.planId === plan.id;
+                            const canUpgrade = !isCurrentPlan;
+
+                            return (
+                                <div key={plan.id} className={`p-6 rounded-3xl border transition-all relative group ${isDark ? 'bg-primary border-zinc-800 hover:border-accent/50' : 'bg-white/10 border-white/10 hover:bg-white/20'}`}>
+                                    {isCurrentPlan && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Active Plan</div>
+                                    )}
+                                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-zinc-500' : 'text-blue-100'}`}>{plan.name}</p>
+                                    <div className="flex items-baseline gap-1 mb-4">
+                                        <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-white'}`}>₹{plan.price}</span>
+                                        <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-500' : 'text-blue-200'}`}>/one-time</span>
+                                    </div>
+                                    <div className="space-y-2 mb-6">
+                                        <div className={`flex items-center gap-2 text-[9px] font-black uppercase ${isDark ? 'text-zinc-400' : 'text-white'}`}>
+                                            <Users className="w-3 h-3" /> {plan.teams} Teams Max
+                                        </div>
+                                        <div className={`flex items-center gap-2 text-[9px] font-black uppercase ${isDark ? 'text-zinc-400' : 'text-white'}`}>
+                                            <CheckCircle className="w-3 h-3 text-green-400" /> All Features
+                                        </div>
+                                    </div>
+                                    <button 
+                                        disabled={!canUpgrade}
+                                        onClick={() => handleAuctionSubscription(selectedAuctionForUpgrade!, plan)}
+                                        className={`w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                                            isCurrentPlan 
+                                            ? 'bg-transparent border border-white/20 text-white/40 cursor-default' 
+                                            : (isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-white text-blue-600 hover:bg-blue-50')
+                                        }`}
+                                    >
+                                        {isCurrentPlan ? 'Current' : 'Upgrade'}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {auctions.map((auction) => (
+                <div key={auction.id} className={`group rounded-[2.5rem] border transition-all duration-500 overflow-hidden relative ${isDark ? 'bg-secondary/40 border-zinc-800 hover:border-accent/30' : 'bg-white border-gray-100 shadow-xl hover:shadow-2xl hover:-translate-y-1'}`}>
+                    {/* Card Header */}
+                    <div className={`p-8 border-b flex justify-between items-start relative overflow-hidden ${isDark ? 'border-zinc-800 bg-zinc-900/30' : 'border-gray-50 bg-gray-50/30'}`}>
+                        <div className="flex items-center gap-6 relative z-10">
+                            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden border-2 shadow-2xl transition-transform group-hover:scale-105 ${isDark ? 'bg-primary border-zinc-800' : 'bg-white border-white'}`}>
+                                {auction.logoUrl ? (
+                                    <img src={auction.logoUrl} alt={auction.title} className="w-full h-full object-contain p-2" referrerPolicy="no-referrer" />
+                                ) : (
+                                    <Gavel className={`w-8 h-8 ${isDark ? 'text-zinc-800' : 'text-gray-200'}`} />
+                                )}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h3 className={`text-2xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-900'}`}>{auction.title}</h3>
+                                    <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                                        auction.status === 'LIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20 animate-pulse' : 
+                                        auction.status === 'COMPLETED' ? 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20' : 
+                                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                    }`}>
+                                        {auction.status}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-4">
+                                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                        <CalendarDays className="w-3.5 h-3.5" /> {auction.date || 'TBD'}
+                                    </div>
+                                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
+                                        <Users className="w-3.5 h-3.5" /> {auction.currentTeamCount || 0} / {auction.totalTeams} Teams
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={() => { setSelectedAuctionForUpgrade(auction.id!); document.getElementById(`auction-${auction.id}`)?.scrollIntoView({behavior:'smooth'}); }} className="bg-red-600 hover:bg-red-700 text-white text-[9px] font-black px-4 py-2 rounded-lg uppercase tracking-widest transition-all">Extend Retention</button>
                         </div>
-                    );
-                }
-                return null;
-            })}
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                {loading ? (
-                    <div className="p-12 text-center text-gray-500 flex flex-col items-center">
-                        <RefreshCw className="animate-spin h-8 w-8 text-green-600 mb-2"/>
-                        Loading auctions...
-                    </div>
-                ) : (
-                    <div className="divide-y divide-gray-100">
-                        {auctions.length > 0 ? (
-                            <div className="divide-y divide-gray-100">
-                                {auctions.map((auction) => {
-                                    // Use autoDeleteAt if exists, otherwise default to 30 days from creation
-                                    const targetPurgeDate = auction.autoDeleteAt || (auction.createdAt + (1000 * 60 * 60 * 24 * 30));
-                                    const diffDays = Math.ceil((targetPurgeDate - Date.now()) / (1000 * 60 * 60 * 24));
-                                    const isNearExpiry = diffDays <= 7 && !auction.isLifetime;
-
-                                    return (
-                                        <div key={auction.id} id={`auction-${auction.id}`} className={`p-0 transition-colors group ${selectedAuctionForUpgrade === auction.id ? 'bg-blue-50/20' : 'hover:bg-gray-50/50'}`}>
-                                            <div className="p-6 flex flex-col md:flex-row justify-between md:items-center gap-4">
-                                                <div className="flex-1 flex items-center gap-4">
-                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white shadow-lg ${auction.isPaid ? 'bg-gradient-to-br from-green-500 to-green-700' : 'bg-gradient-to-br from-gray-400 to-gray-500'}`}>
-                                                        {auction.isPaid ? <ShieldCheck className="w-6 h-6"/> : <Gavel className="w-6 h-6"/>}
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <h4 className="font-bold text-gray-800 text-lg truncate">{auction.title}</h4>
-                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            <p className="text-xs text-gray-400 font-semibold">{auction.sport} • {auction.date === 'TBD' ? 'TBA' : (auction.date || 'TBA')}</p>
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${auction.isPaid ? 'bg-green-50 border-green-200 text-green-600' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
-                                                                {auction.isPaid ? 'Paid Version' : 'Free Version'}
-                                                            </span>
-                                                            
-                                                            {/* DATA RETENTION INDICATORS */}
-                                                            {auction.isLifetime ? (
-                                                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center gap-1.5 shadow-sm">
-                                                                    <InfinityIcon className="w-3 h-3"/> PERMANENT RECORD
-                                                                </span>
-                                                            ) : (
-                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1.5 shadow-sm transition-all ${isNearExpiry ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' : 'bg-orange-50 border-orange-200 text-orange-600'}`}>
-                                                                    <Clock className="w-3 h-3"/> 
-                                                                    {diffDays <= 0 ? 'PURGE SCHEDULED' : `${diffDays} DAYS UNTIL WIPE`}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    {!auction.isPaid && userProfile?.role !== UserRole.SUPER_ADMIN && (
-                                                        <button 
-                                                            onClick={() => { setSelectedAuctionForUpgrade(selectedAuctionForUpgrade === auction.id ? null : auction.id!); setPromoInput(''); setAppliedPromo(null); setPromoError(''); }}
-                                                            className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 ${selectedAuctionForUpgrade === auction.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100'}`}
-                                                        >
-                                                            <CreditCard className="w-3 h-3" /> Upgrade
-                                                        </button>
-                                                    )}
-                                                    <button onClick={() => copyRegLink(auction.id!)} className="text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-100 flex items-center transition-all"><LinkIcon className="w-3 h-3 mr-1" /> Reg Link</button>
-                                                    <button onClick={() => navigate(`/auction/${auction.id}`)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all">Live Room</button>
-                                                    <button onClick={() => navigate(`/admin/auction/${auction.id}/manage`)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all">Manage</button>
-                                                    <button onClick={() => handleDeleteAuction(auction.id!, auction.title)} className="text-red-400 hover:text-red-600 p-2 rounded transition-colors"><Trash2 className="w-4 h-4" /></button>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Inline Plan Selector */}
-                                            {selectedAuctionForUpgrade === auction.id && (
-                                                <div className="bg-blue-50/50 p-6 border-t border-blue-100 animate-slide-up">
-                                                    <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
-                                                        <div className="flex items-start gap-3">
-                                                            <div className="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-900/20 mt-1"><Sparkles className="w-4 h-4"/></div>
-                                                            <div>
-                                                                <h5 className="font-bold text-blue-900 text-sm">Select Your Tournament Scale</h5>
-                                                                <p className="text-xs text-blue-400 font-medium">Unlock pro overlays, WhatsApp updates, and extended retention.</p>
-                                                                {auction.currentTeamCount! > 2 && (
-                                                                    <p className="text-[10px] text-orange-600 font-black uppercase mt-1">Supporting {auction.currentTeamCount} teams or more.</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* PROMO CODE BOX */}
-                                                        <div className="w-full md:w-64 bg-white p-3 rounded-2xl shadow-sm border border-blue-100">
-                                                            <div className="flex justify-between items-center mb-1">
-                                                                <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1"><Tag className="w-2.5 h-2.5"/> Promo Code</label>
-                                                                {appliedPromo && <span className="text-[8px] font-black text-green-500 uppercase flex items-center gap-0.5"><Check className="w-2 h-2"/> APPLIED</span>}
-                                                            </div>
-                                                            <div className="flex gap-1.5">
-                                                                <input 
-                                                                    placeholder="ENTER CODE" 
-                                                                    className="flex-1 bg-gray-50 border border-gray-100 rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-400"
-                                                                    value={promoInput}
-                                                                    onChange={e => setPromoInput(e.target.value.toUpperCase())}
-                                                                />
-                                                                <button 
-                                                                    onClick={handleValidatePromo}
-                                                                    disabled={isValidatingPromo || !promoInput}
-                                                                    className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-lg transition-all active:scale-90 disabled:opacity-50"
-                                                                >
-                                                                    {isValidatingPromo ? <RefreshCw className="w-3 h-3 animate-spin"/> : <ChevronRight className="w-3 h-3"/>}
-                                                                </button>
-                                                            </div>
-                                                            {promoError && <p className="text-[8px] text-red-500 font-bold mt-1 uppercase tracking-tight">{promoError}</p>}
-                                                            {appliedPromo && (
-                                                                <p className="text-[9px] text-green-600 font-black mt-1 uppercase tracking-widest">
-                                                                    DISCOUNT: {appliedPromo.discountType === 'PERCENT' ? `${appliedPromo.discountValue}% OFF` : `₹${appliedPromo.discountValue} OFF`}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                                                        {dbPlans
-                                                            .filter(p => p.price > 0 && p.teams >= (auction.currentTeamCount || 0))
-                                                            .map(plan => {
-                                                                const discPrice = calculateDiscountedPrice(plan.price);
-                                                                return (
-                                                                    <div key={plan.id} className="bg-white p-4 rounded-2xl border-2 border-white hover:border-blue-300 transition-all shadow-sm flex flex-col group relative">
-                                                                        {plan.price === 5000 && <div className="absolute top-2 right-2"><Star className="w-3 h-3 text-yellow-400 fill-current"/></div>}
-                                                                        <h6 className="font-black text-gray-800 text-[10px] uppercase mb-1">{plan.name}</h6>
-                                                                        <div className="flex flex-col mb-3">
-                                                                            <div className="flex items-baseline">
-                                                                                <span className="text-blue-600 font-black text-xl">₹{discPrice}</span>
-                                                                                <span className="text-[8px] text-gray-400 font-bold ml-1">/Auction</span>
-                                                                            </div>
-                                                                            {appliedPromo && (
-                                                                                <span className="text-[9px] text-gray-300 line-through font-bold decoration-red-400">WAS ₹{plan.price}</span>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="text-[10px] text-gray-500 font-bold mb-4 flex items-center gap-1">
-                                                                            <Users className="w-3 h-3 text-blue-400"/> Upto {plan.teams} Teams
-                                                                        </div>
-                                                                        <button 
-                                                                            onClick={() => handleAuctionSubscription(auction.id!, plan)}
-                                                                            className="w-full bg-blue-900 hover:bg-black text-white font-black py-2 rounded-lg text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-md"
-                                                                        >
-                                                                            {discPrice === 0 ? 'CLAIM FREE' : 'Upgrade'}
-                                                                        </button>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-4 rounded-2xl flex flex-col justify-center items-center text-center group cursor-pointer hover:scale-105 transition-all" onClick={() => window.location.href='mailto:send.smsports@gmail.com'}>
-                                                            <p className="text-white font-black text-[10px] uppercase tracking-widest mb-1">Large Scale</p>
-                                                            <p className="text-gray-400 text-[8px] font-bold">Contact Sales</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="p-12 text-center text-gray-400 font-bold uppercase tracking-widest italic opacity-40">
-                                No auction records found
-                            </div>
-                        )}
-                        
-                        {/* SYSTEM DATA RETENTION POLICY BOX */}
-                        <div className="p-8 bg-zinc-50 border-t border-gray-100 flex flex-col md:flex-row items-center gap-8 animate-fade-in">
-                            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center shrink-0">
-                                <Shield className="w-8 h-8 text-blue-600" />
-                            </div>
-                            <div className="flex-1 text-center md:text-left">
-                                <h5 className="font-black text-sm text-gray-800 uppercase tracking-widest mb-2 flex items-center justify-center md:justify-start gap-2">
-                                    <Clock className="w-4 h-4 text-orange-500" /> Data Retention Policy
-                                </h5>
-                                <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-2xl">
-                                    To maintain optimal system performance, auction data is automatically purged after 30 days of inactivity on Free accounts. 
-                                    Paid upgrades extend this retention period indefinitely. Auctions marked as <b>Permanent Records</b> by Support are exempt from auto-deletion.
-                                </p>
-                            </div>
-                            <button onClick={() => navigate('/guide')} className="bg-white border border-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center gap-2">
-                                <Book className="w-4 h-4"/> Retention Guide
+                        <div className="flex gap-2 relative z-10">
+                            <button 
+                                onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
+                                className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700' : 'bg-white text-gray-400 hover:text-blue-600 shadow-sm'}`}
+                            >
+                                <Settings className="w-5 h-5" />
+                            </button>
+                            <button 
+                                onClick={() => handleDeleteAuction(auction.id, auction.title)}
+                                className={`p-4 rounded-2xl transition-all ${isDark ? 'bg-zinc-800 text-zinc-400 hover:text-red-400 hover:bg-red-400/10' : 'bg-white text-gray-400 hover:text-red-500 shadow-sm'}`}
+                            >
+                                <Trash2 className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
-                )}
-          </div>
-      </div>
+
+                    {/* Card Body */}
+                    <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <button 
+                            onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                        >
+                            <Activity className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Control</span>
+                        </button>
+                        <button 
+                            onClick={() => window.open(`/auction/${auction.id}`, '_blank')}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                        >
+                            <Monitor className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Public</span>
+                        </button>
+                        <button 
+                            onClick={() => navigate(`/admin/auction/${auction.id}/arrangement`)}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                        >
+                            <Layout className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Board</span>
+                        </button>
+                        <button 
+                            onClick={() => navigate(`/auction/${auction.id}/register`)}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                        >
+                            <UserPlus className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Signup</span>
+                        </button>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className={`px-8 py-4 flex justify-between items-center ${isDark ? 'bg-zinc-900/50 border-t border-zinc-800' : 'bg-gray-50/50 border-t border-gray-50'}`}>
+                        <div className="flex items-center gap-2">
+                            <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-accent' : 'text-blue-500'}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                Plan: {dbPlans.find(p => p.id === auction.planId)?.name || 'Starter Free'}
+                            </span>
+                        </div>
+                        <div className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>
+                            ID: {auction.id}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
   );
 
   const renderPlans = () => (
-      <div className="animate-fade-in">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-              <h2 className="text-3xl font-black text-gray-800 tracking-tighter mb-2 uppercase">Subscription Plans</h2>
-              <p className="text-gray-500 text-sm font-medium">Standardized tiers for small and mid-scale tournaments (Max 15 Teams).</p>
-          </div>
+    <div className="space-y-12 animate-fade-in">
+        <div className="text-center max-w-2xl mx-auto">
+            <h2 className={`text-4xl font-black uppercase tracking-tighter mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Choose Your Arsenal</h2>
+            <p className={`text-xs font-black uppercase tracking-[0.3em] ${isDark ? 'text-accent' : 'text-blue-600'}`}>Scale your tournament with professional tools</p>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
-              {/* Premium Features Highlight */}
-              <div className="lg:col-span-1 space-y-4">
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white shadow-2xl h-full flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-xl font-black uppercase tracking-tight mb-6 border-b border-white/20 pb-4">Standard Features</h3>
-                        <ul className="space-y-4">
-                            {COMMON_FEATURES.map((f, idx) => (
-                                <li key={idx} className="flex items-center gap-3 text-xs font-bold opacity-90 group">
-                                    <div className="bg-white/20 p-1.5 rounded-lg group-hover:bg-white group-hover:text-blue-600 transition-all">{f.icon}</div>
-                                    {f.name}
-                                </li>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {dbPlans.map((plan) => (
+                <div key={plan.id} className={`flex flex-col rounded-[2.5rem] border transition-all duration-500 relative group overflow-hidden ${isDark ? 'bg-secondary/40 border-zinc-800 hover:border-accent/50' : 'bg-white border-gray-100 shadow-xl hover:shadow-2xl hover:-translate-y-2'}`}>
+                    <div className={`p-8 border-b ${isDark ? 'border-zinc-800 bg-zinc-900/30' : 'border-gray-50 bg-gray-50/30'}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-accent' : 'text-blue-600'}`}>{plan.name}</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className={`text-4xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{plan.price}</span>
+                            <span className={`text-[10px] font-bold ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>/one-time</span>
+                        </div>
+                    </div>
+                    
+                    <div className="p-8 flex-1 space-y-4">
+                        <div className={`flex items-center gap-3 p-4 rounded-2xl ${isDark ? 'bg-primary/50 text-white' : 'bg-blue-50 text-blue-700'}`}>
+                            <Users className="w-5 h-5" />
+                            <span className="text-xs font-black uppercase tracking-widest">{plan.teams} Teams Max</span>
+                        </div>
+                        <div className="space-y-3 pt-4">
+                            {COMMON_FEATURES.map((feat, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className={`p-1 rounded-full ${isDark ? 'bg-accent/10 text-accent' : 'bg-blue-100 text-blue-600'}`}>
+                                        <Check className="w-3 h-3" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-wide ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>{feat.name}</span>
+                                </div>
                             ))}
-                        </ul>
-                      </div>
-                      <div className="mt-8 text-[10px] font-black uppercase tracking-widest opacity-50 text-center">Verified Tournament Suite</div>
-                  </div>
-              </div>
+                        </div>
+                    </div>
 
-              {/* Tiers Grid */}
-              <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {dbPlans.map(plan => (
-                      <div key={plan.id} className={`bg-white rounded-3xl p-6 border-2 transition-all relative flex flex-col ${plan.price === 5000 ? 'border-blue-500 shadow-xl scale-105 z-10' : 'border-gray-100 hover:shadow-lg'}`}>
-                          {plan.price === 5000 && <div className="absolute top-4 right-4 bg-blue-500 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase">Optimal</div>}
-                          <h3 className="text-lg font-black text-gray-800 mb-1 uppercase">{plan.name}</h3>
-                          <div className="flex items-baseline mb-6">
-                              <span className="text-3xl font-black text-gray-900">₹{plan.price}</span>
-                              <span className="text-gray-400 text-[10px] font-bold ml-1">/Auction</span>
-                          </div>
-                          <div className="space-y-4 mb-10 flex-grow">
-                              <div className="flex items-center gap-3 text-xs text-gray-800 font-bold">
-                                  <Users className="w-4 h-4 text-blue-500" /> Upto {plan.teams} Teams
-                              </div>
-                              <div className="flex items-center gap-3 text-[10px] text-gray-400 font-medium">
-                                  <CheckCircle className="w-3 h-3 text-green-400" /> {plan.price === 0 ? 'Basic Views' : 'Full Pro Overlays'}
-                              </div>
-                          </div>
-                          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-center">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select in "Auctions" Tab</p>
-                          </div>
-                      </div>
-                  ))}
-
-                  {/* Contact Card for Large Tournaments */}
-                  <div className="bg-zinc-900 rounded-3xl p-6 border-2 border-zinc-800 flex flex-col justify-center items-center text-center">
-                      <Trophy className="w-8 h-8 text-highlight mb-4" />
-                      <h3 className="text-white font-black text-lg uppercase mb-2">Mega Leagues</h3>
-                      <p className="text-gray-500 text-[10px] font-bold mb-6">For 16+ teams, custom branding, and onsite support.</p>
-                      <button onClick={() => window.location.href='mailto:send.smsports@gmail.com'} className="bg-white text-black font-black px-6 py-2 rounded-xl text-[10px] uppercase tracking-widest hover:bg-highlight hover:text-primary transition-all">Inquire Now</button>
-                  </div>
-              </div>
-          </div>
-      </div>
+                    <div className="p-8 pt-0">
+                        <button 
+                            onClick={() => {
+                                setActiveTab('AUCTIONS');
+                                showNotification("Select an auction from the upgrade panel above", "success");
+                            }}
+                            className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl ${isDark ? 'bg-white text-zinc-950 hover:bg-accent shadow-white/5' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
+                        >
+                            Select Plan
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
   );
 
   const renderLegal = () => (
-      <div className="space-y-8 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-8 text-white relative">
-                  <div className="relative z-10">
-                      <h2 className="text-3xl font-black tracking-tighter mb-2 uppercase">Platform Legal Policy</h2>
-                      <p className="text-slate-400 text-sm font-medium">Terms of Service, Privacy & Organizer Guidelines</p>
-                  </div>
-                  <Book className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 text-white/5" />
-              </div>
-              <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-12">
-                  {[
-                      { icon: <ShieldCheck className="text-emerald-500"/>, title: "Data Protection", desc: "We utilize enterprise-grade encryption for all player data and payment records. We do not sell user data to third-party advertisers." },
-                      { icon: <Scale className="text-blue-500"/>, title: "Organizer Liability", desc: "SM SPORTS provides the software environment. Organizers are solely responsible for match scheduling, team disputes, and real-world logistics." },
-                      { icon: <CreditCard className="text-purple-500"/>, title: "Refund Policy", desc: "Upgrades are non-refundable once activated. System credits may be issued in event of verified server downtime exceeding 4 hours." },
-                      { icon: <Info className="text-amber-500"/>, title: "Fair Play", desc: "Any attempt to manipulate the auction logic via automated bots or API vulnerabilities will result in permanent identity termination." }
-                  ].map((item, idx) => (
-                      <div key={idx} className="flex gap-6">
-                          <div className="bg-gray-50 p-4 rounded-2xl h-fit border border-gray-100">{item.icon}</div>
-                          <div>
-                              <h4 className="font-black text-gray-800 uppercase text-xs tracking-widest mb-2">{item.title}</h4>
-                              <p className="text-xs text-gray-500 leading-relaxed font-medium">{item.desc}</p>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-          </div>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
+        {[
+            { title: 'Terms of Service', icon: <Scale />, desc: 'Rules and regulations for using SM Sports Platform', color: 'blue' },
+            { title: 'Privacy Policy', icon: <Shield />, desc: 'How we protect and manage your tournament data', color: 'indigo' },
+            { title: 'Refund Policy', icon: <CreditCard />, desc: 'Details regarding subscription and payment reversals', color: 'amber' },
+            { title: 'Contact Support', icon: <HelpCircle />, desc: 'Need help? Our technical team is available 24/7', color: 'emerald' }
+        ].map((item, i) => (
+            <div key={i} className={`p-8 rounded-[2.5rem] border transition-all duration-500 group cursor-pointer ${isDark ? 'bg-secondary/40 border-zinc-800 hover:border-accent/30' : 'bg-white border-gray-100 shadow-xl hover:shadow-2xl'}`}>
+                <div className="flex items-center gap-6">
+                    <div className={`p-5 rounded-[1.5rem] shadow-2xl transition-transform group-hover:scale-110 ${
+                        isDark ? 'bg-zinc-900 text-accent' : 
+                        item.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                        item.color === 'indigo' ? 'bg-indigo-50 text-indigo-600' :
+                        item.color === 'amber' ? 'bg-amber-50 text-amber-600' :
+                        'bg-emerald-50 text-emerald-600'
+                    }`}>
+                        {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-8 h-8' })}
+                    </div>
+                    <div>
+                        <h3 className={`text-2xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</h3>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{item.desc}</p>
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] font-sans pb-20 selection:bg-blue-100 selection:text-blue-900">
+    <div className={`min-h-screen font-sans pb-20 transition-colors duration-300 ${isDark ? 'bg-black text-white' : 'bg-[#f8f9fa] text-gray-900'} selection:bg-accent/30 selection:text-accent`}>
       
       {/* System Popup Broadcaster */}
       {currentPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-              <div className="bg-white rounded-[3rem] shadow-2xl max-w-lg w-full overflow-hidden border border-gray-200 animate-slide-up">
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-white relative">
+              <div className={`rounded-[3rem] shadow-2xl max-w-lg w-full overflow-hidden border animate-slide-up ${isDark ? 'bg-[#151515] border-amber-500/30' : 'bg-white border-gray-200'}`}>
+                  <div className={`p-8 text-white relative ${isDark ? 'bg-gradient-to-br from-amber-600 to-amber-900' : 'bg-gradient-to-br from-blue-600 to-blue-800'}`}>
                       <button onClick={() => closeSystemPopup(currentPopup.id!)} className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors"><X className="w-6 h-6"/></button>
                       <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">{currentPopup.title}</h3>
                       <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">System Broadcaster Active</p>
                   </div>
                   <div className="p-10 space-y-8">
                       {currentPopup.showImage && currentPopup.imageUrl && (
-                          <div className="rounded-3xl overflow-hidden border border-gray-100 shadow-lg"><img src={currentPopup.imageUrl} className="w-full h-auto" /></div>
+                          <div className={`rounded-3xl overflow-hidden border shadow-lg ${isDark ? 'border-amber-500/20' : 'border-gray-100'}`}><img src={currentPopup.imageUrl} className="w-full h-auto" /></div>
                       )}
                       {currentPopup.showText && (
-                          <p className="text-gray-600 font-medium leading-relaxed">{currentPopup.message}</p>
+                          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} font-medium leading-relaxed`}>{currentPopup.message}</p>
                       )}
                       <div className="flex gap-3">
-                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className="flex-1 bg-black hover:bg-gray-800 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95">{currentPopup.okButtonText}</button>
-                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className="px-8 bg-gray-100 hover:bg-gray-200 text-gray-400 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all">{currentPopup.closeButtonText}</button>
+                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`flex-1 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 ${isDark ? 'bg-amber-600 hover:bg-amber-500 text-black' : 'bg-black hover:bg-gray-800 text-white'}`}>{currentPopup.okButtonText}</button>
+                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`px-8 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all ${isDark ? 'bg-white/10 hover:bg-white/20 text-amber-500' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}>{currentPopup.closeButtonText}</button>
                       </div>
                   </div>
               </div>
           </div>
       )}
 
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <nav className={`border-b sticky top-0 z-40 transition-colors duration-300 ${isDark ? 'bg-black/80 border-amber-500/20 backdrop-blur-md' : 'bg-white border-gray-200'}`}>
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-black rounded-xl border-2 border-highlight p-1.5 shadow flex items-center justify-center overflow-hidden">
-                    {state.systemLogoUrl ? <img src={state.systemLogoUrl} className="max-w-full max-h-full object-contain" alt="SM Sports" /> : <Trophy className="w-full h-full text-highlight" />}
+                <div className={`w-10 h-10 rounded-xl border-2 p-1.5 shadow flex items-center justify-center overflow-hidden ${isDark ? 'bg-black border-amber-500' : 'bg-black border-blue-500'}`}>
+                    {state.systemLogoUrl ? <img src={state.systemLogoUrl} className="max-w-full max-h-full object-contain" alt="SM Sports" /> : <Trophy className={`w-full h-full ${isDark ? 'text-amber-500' : 'text-blue-500'}`} />}
                 </div>
                 <div>
-                    <h1 className="text-lg font-black text-gray-800 tracking-tighter uppercase leading-none">Control Center</h1>
-                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest mt-1">Registry Operator ID: {userProfile?.uid.slice(0, 8)}</p>
+                    <h1 className={`text-lg font-black tracking-tighter uppercase leading-none ${isDark ? 'advaya-text' : 'text-gray-800'}`}>Control Center</h1>
+                    <p className={`text-[8px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-amber-500/50' : 'text-gray-400'}`}>Registry Operator ID: {userProfile?.uid.slice(0, 8)}</p>
                 </div>
             </div>
             
             <div className="flex items-center gap-3">
-                <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 gap-1 overflow-x-auto no-scrollbar">
-                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'AUCTIONS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Auctions</button>
-                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'PLANS' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Plans</button>
-                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'LEGAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Legal</button>
+                <button 
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-xl transition-all active:scale-90 ${isDark ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                >
+                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+                <div className={`flex p-1 rounded-xl border gap-1 overflow-x-auto no-scrollbar ${isDark ? 'bg-white/5 border-amber-500/20' : 'bg-gray-100 border-gray-200'}`}>
+                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'AUCTIONS' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Auctions</button>
+                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'PLANS' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Plans</button>
+                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'LEGAL' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Legal</button>
                 </div>
-                <div className="w-px h-6 bg-gray-200 mx-2 hidden md:block"></div>
-                <button onClick={logout} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><LogOut className="w-5 h-5"/></button>
+                <div className={`w-px h-6 mx-2 hidden md:block ${isDark ? 'bg-amber-500/20' : 'bg-gray-200'}`}></div>
+                <button onClick={logout} className={`p-2 transition-colors ${isDark ? 'text-amber-500/50 hover:text-red-500' : 'text-gray-400 hover:text-red-500'}`}><LogOut className="w-5 h-5"/></button>
             </div>
         </div>
       </nav>
 
       <main className="container mx-auto px-6 py-10 max-w-6xl">
           {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-2xl flex items-start gap-4 mb-8 shadow-sm">
+              <div className={`border-l-4 p-6 rounded-2xl flex items-start gap-4 mb-8 shadow-sm ${isDark ? 'bg-red-900/20 border-red-500' : 'bg-red-50 border-red-500'}`}>
                   <ShieldAlert className="text-red-500 w-6 h-6 shrink-0 mt-0.5" />
                   <div>
-                      <h4 className="font-black text-red-800 uppercase text-xs tracking-widest mb-1">System Error Encountered</h4>
-                      <p className="text-sm text-red-600 font-medium">{error}</p>
+                      <h4 className={`font-black uppercase text-xs tracking-widest mb-1 ${isDark ? 'text-red-400' : 'text-red-800'}`}>System Error Encountered</h4>
+                      <p className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-600'}`}>{error}</p>
                   </div>
               </div>
           )}
@@ -637,13 +612,13 @@ const AdminDashboard: React.FC = () => {
       </main>
 
       <footer className="mt-auto py-10 text-center opacity-40">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em]">&copy; 2025 SM SPORTS CORE SYSTEM</p>
+          <p className={`text-[10px] font-black uppercase tracking-[0.5em] ${isDark ? 'text-amber-500/30' : 'text-gray-400'}`}>&copy; 2025 SM SPORTS CORE SYSTEM</p>
       </footer>
 
       {/* NOTIFICATION BANNER */}
       {notification && (
-          <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
-              {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
+          <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : (isDark ? 'bg-amber-900/90 border-amber-500 text-amber-100' : 'bg-green-900 border-green-500 text-white')}`}>
+              {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className={`w-5 h-5 ${isDark ? 'text-amber-500' : 'text-green-400'}`} />}
               <span className="text-sm font-bold">{notification.message}</span>
               <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
           </div>
@@ -652,24 +627,24 @@ const AdminDashboard: React.FC = () => {
       {/* CUSTOM CONFIRMATION MODAL */}
       {confirmAction && (
           <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100">
-                  <div className="flex items-center gap-4 mb-6 text-amber-500">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+              <div className={`rounded-3xl p-8 max-w-sm w-full shadow-2xl border ${isDark ? 'bg-[#151515] border-amber-500/20' : 'bg-white border-gray-100'}`}>
+                  <div className={`flex items-center gap-4 mb-6 ${isDark ? 'text-amber-500' : 'text-amber-500'}`}>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
                           <AlertTriangle className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black uppercase tracking-tighter text-gray-800">{confirmAction.title}</h3>
+                      <h3 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-amber-100' : 'text-gray-800'}`}>{confirmAction.title}</h3>
                   </div>
-                  <p className="text-gray-500 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                  <p className={`text-sm font-bold mb-8 leading-relaxed ${isDark ? 'text-amber-500/50' : 'text-gray-500'}`}>{confirmAction.message}</p>
                   <div className="flex gap-3">
                       <button 
                           onClick={() => setConfirmAction(null)}
-                          className="flex-1 py-4 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-400 text-xs font-black uppercase tracking-widest transition-all"
+                          className={`flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-amber-500/50' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}
                       >
                           Cancel
                       </button>
                       <button 
                           onClick={confirmAction.onConfirm}
-                          className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-200"
+                          className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg ${isDark ? 'bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/40' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200'}`}
                       >
                           Confirm
                       </button>

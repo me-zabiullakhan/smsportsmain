@@ -38,6 +38,7 @@ import {
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
 import html2canvas from 'html2canvas';
+import { useTheme } from '../contexts/ThemeContext';
 
 // --- Components ---
 
@@ -47,6 +48,8 @@ interface DraggablePlayerProps {
 }
 
 const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, disabled }) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `player-${player.id}`,
         data: player,
@@ -66,20 +69,20 @@ const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, disabled }) =
             {...attributes}
             className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing group ${
                 disabled 
-                ? 'bg-zinc-900/50 border-zinc-800/50 opacity-40 grayscale pointer-events-none' 
-                : 'bg-zinc-900 border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-800 shadow-sm'
+                ? (isDark ? 'bg-zinc-900/50 border-zinc-800/50 opacity-40 grayscale pointer-events-none' : 'bg-gray-100 border-gray-200 opacity-40 grayscale pointer-events-none')
+                : (isDark ? 'bg-zinc-900 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800 shadow-sm' : 'bg-white border-gray-200 hover:border-blue-500/50 hover:bg-gray-50 shadow-sm')
             }`}
         >
-            <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 border ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
                 {player.photoUrl ? (
                     <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                    <User className="w-5 h-5 text-zinc-500" />
+                    <User className={`w-5 h-5 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`} />
                 )}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-zinc-100 truncate group-hover:text-amber-400 transition-colors">{player.name}</p>
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{player.category} • {player.role}</p>
+                <p className={`text-sm font-bold truncate transition-colors ${isDark ? 'text-zinc-100 group-hover:text-accent' : 'text-gray-900 group-hover:text-blue-600'}`}>{player.name}</p>
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.category} • {player.role}</p>
             </div>
         </div>
     );
@@ -93,6 +96,8 @@ interface DroppableSlotProps {
 }
 
 const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, index }) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { setNodeRef: setDropRef, isOver } = useDroppable({
         id: id,
     });
@@ -112,11 +117,13 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
         <div 
             ref={setDropRef}
             className={`relative h-16 w-full border transition-all flex items-center justify-center group overflow-hidden ${
-                isOver ? 'bg-amber-500/30 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] z-10 scale-[1.02]' : 'bg-zinc-900/40 border-zinc-800/50'
-            } ${player ? 'border-amber-500/40 bg-zinc-900/60' : 'border-dashed'}`}
+                isOver 
+                ? (isDark ? 'bg-accent/30 border-accent shadow-[0_0_15px_rgba(245,158,11,0.3)] z-10 scale-[1.02]' : 'bg-blue-500/30 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10 scale-[1.02]')
+                : (isDark ? 'bg-zinc-900/40 border-zinc-800/50' : 'bg-gray-50 border-gray-200')
+            } ${player ? (isDark ? 'border-accent/40 bg-zinc-900/60' : 'border-blue-500/40 bg-white') : 'border-dashed'}`}
         >
             {/* Slot Number */}
-            <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest pointer-events-none z-0">
+            <div className={`absolute top-1 left-1 text-[8px] font-black uppercase tracking-widest pointer-events-none z-0 ${isDark ? 'text-zinc-800' : 'text-gray-300'}`}>
                 #{index + 1}
             </div>
 
@@ -128,16 +135,16 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
                     {...attributes}
                     className="w-full h-full p-1.5 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
                 >
-                    <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                        <span className="text-[10px] font-black text-zinc-500">{index + 1}</span>
+                    <div className={`w-8 h-8 rounded-lg border flex-shrink-0 overflow-hidden flex items-center justify-center ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
+                        <span className={`text-[10px] font-black ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{index + 1}</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black text-amber-100 leading-tight uppercase tracking-tight truncate">{player.playerName}</p>
-                        <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest truncate">{player.category}</p>
+                        <p className={`text-[10px] font-black leading-tight uppercase tracking-tight truncate ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
+                        <p className={`text-[8px] font-bold uppercase tracking-widest truncate ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.category}</p>
                     </div>
                     
                     {/* Hover Actions */}
-                    <div className="absolute inset-0 bg-zinc-950/95 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm pointer-events-none group-hover:pointer-events-auto">
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center gap-3 backdrop-blur-sm pointer-events-none group-hover:pointer-events-auto ${isDark ? 'bg-zinc-950/95' : 'bg-white/95'}`}>
                         <button 
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -152,11 +159,9 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
                 </div>
             ) : (
                 <div className="flex flex-col items-center gap-1 opacity-20 group-hover:opacity-40 transition-opacity">
-                    <span className="text-[14px] font-black text-zinc-600">{index + 1}</span>
+                    <span className={`text-[14px] font-black ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>{index + 1}</span>
                 </div>
             )}
-            
-            {/* Slot ID Indicator removed for cleaner UI as requested */}
         </div>
     );
 };
@@ -164,6 +169,8 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
 // --- Main Screen ---
 
 const CategoryArrangement: React.FC = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -698,26 +705,26 @@ const CategoryArrangement: React.FC = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+        <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}>
+            <Loader2 className={`w-10 h-10 animate-spin ${isDark ? 'text-accent' : 'text-blue-600'}`} />
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-amber-500/30 selection:text-amber-200">
+        <div className={`min-h-screen font-sans selection:bg-accent/30 selection:text-accent ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-gray-900'}`}>
             {/* Header */}
-            <header className="bg-zinc-900/50 border-b border-zinc-800 sticky top-0 z-50 backdrop-blur-xl">
+            <header className={`border-b sticky top-0 z-50 backdrop-blur-xl ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white/80 border-gray-200'}`}>
                 <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => navigate(`/admin/auction/${id}/manage`)}
-                            className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all active:scale-95"
+                            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all active:scale-95 ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-900 hover:bg-gray-50'}`}
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-xl font-black uppercase tracking-tight text-white">Category Arrangement</h1>
-                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Visual Player Board Builder</p>
+                            <h1 className={`text-xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Category Arrangement</h1>
+                            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-accent' : 'text-blue-600'}`}>Visual Player Board Builder</p>
                         </div>
                     </div>
 
@@ -725,27 +732,27 @@ const CategoryArrangement: React.FC = () => {
                         <button 
                             onClick={handleUndo}
                             disabled={history.length === 0}
-                            className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-white disabled:opacity-30 transition-all"
+                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest disabled:opacity-30 transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-900'}`}
                         >
                             <Undo className="w-4 h-4" /> Undo
                         </button>
                         <button 
                             onClick={handleReset}
-                            className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-red-400 transition-all"
+                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-red-400' : 'bg-white border-gray-200 text-gray-400 hover:text-red-600'}`}
                         >
                             <RotateCcw className="w-4 h-4" /> Reset
                         </button>
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 text-xs font-black uppercase tracking-widest hover:bg-white transition-all active:scale-95 shadow-lg shadow-white/5"
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg ${isDark ? 'bg-zinc-100 text-zinc-900 hover:bg-white shadow-white/5' : 'bg-gray-900 text-white hover:bg-black shadow-black/10'}`}
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Draft
                         </button>
                         <button 
                             onClick={handleExport}
                             disabled={isExporting}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 text-zinc-950 text-xs font-black uppercase tracking-widest hover:bg-amber-400 transition-all active:scale-95 shadow-lg shadow-amber-500/20"
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
                         >
                             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Export PNG
                         </button>
@@ -761,29 +768,33 @@ const CategoryArrangement: React.FC = () => {
                 <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
                     {/* Left Panel: Player Pool */}
                     <aside className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-[2rem] p-6 space-y-6 sticky top-28">
+                        <div className={`border rounded-[2rem] p-6 space-y-6 sticky top-28 ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200 shadow-xl'}`}>
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400">Player Pool</h2>
-                                <span className="px-2 py-1 bg-zinc-800 rounded-lg text-[10px] font-black text-zinc-500">{filteredPlayers.length}</span>
+                                <h2 className={`text-sm font-black uppercase tracking-widest ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Player Pool</h2>
+                                <span className={`px-2 py-1 rounded-lg text-[10px] font-black ${isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-gray-100 text-gray-400'}`}>{filteredPlayers.length}</span>
                             </div>
 
                             <div className="space-y-3">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`} />
                                     <input 
                                         type="text" 
                                         placeholder="Search Players..."
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-zinc-100 focus:border-amber-500/50 outline-none transition-all"
+                                        className={`w-full border rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-accent/50' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-blue-500/50'}`}
                                     />
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Filter Category</label>
+                                    <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Filter Category</label>
                                     <div className="flex flex-wrap gap-2">
                                         <button 
                                             onClick={() => setFilterCategory('ALL')}
-                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filterCategory === 'ALL' ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                                filterCategory === 'ALL' 
+                                                ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white') 
+                                                : (isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                                            }`}
                                         >
                                             All
                                         </button>
@@ -791,7 +802,11 @@ const CategoryArrangement: React.FC = () => {
                                             <button 
                                                 key={c.id}
                                                 onClick={() => setFilterCategory(c.name)}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filterCategory === c.name ? 'bg-amber-500 text-zinc-950' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                                    filterCategory === c.name 
+                                                    ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white') 
+                                                    : (isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                                                }`}
                                             >
                                                 {c.name}
                                             </button>
@@ -810,7 +825,7 @@ const CategoryArrangement: React.FC = () => {
                                 ))}
                                 {filteredPlayers.length === 0 && (
                                     <div className="py-12 text-center">
-                                        <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest">No players found</p>
+                                        <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>No players found</p>
                                     </div>
                                 )}
                             </div>
@@ -821,14 +836,14 @@ const CategoryArrangement: React.FC = () => {
                     <main className="flex-1 space-y-8">
                         {/* Category Selection: Inline Options */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Select Category Board</label>
+                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Select Category Board</label>
                             <div className="flex flex-wrap gap-2">
                                 <button 
                                     onClick={() => setActiveCategory('ALL_CATEGORIES')}
                                     className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                         activeCategory === 'ALL_CATEGORIES' 
-                                        ? 'bg-amber-500 border-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20' 
-                                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                                        ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
+                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-900')
                                     }`}
                                 >
                                     All Categories
@@ -839,8 +854,8 @@ const CategoryArrangement: React.FC = () => {
                                         onClick={() => setActiveCategory(cat.id || '')}
                                         className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                             activeCategory === cat.id 
-                                            ? 'bg-amber-500 border-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20' 
-                                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                                            ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
+                                            : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-900')
                                         }`}
                                     >
                                         {cat.name}
@@ -852,40 +867,40 @@ const CategoryArrangement: React.FC = () => {
                         {/* Controls */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <h3 className="text-lg font-black uppercase tracking-tight text-white">{isAllCategories ? 'All Categories' : currentCategory?.name} Board</h3>
-                                <div className="h-4 w-[1px] bg-zinc-800"></div>
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                                <h3 className={`text-lg font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{isAllCategories ? 'All Categories' : currentCategory?.name} Board</h3>
+                                <div className={`h-4 w-[1px] ${isDark ? 'bg-zinc-800' : 'bg-gray-200'}`}></div>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
                                     {Object.keys(slots).length} / {rowCount * colCount} Slots Available
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <button 
                                         onClick={addRow}
-                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 transition-all border-r border-zinc-800"
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
                                         title="Add Row"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                     </button>
                                     <button 
                                         onClick={removeRow}
-                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-red-500 hover:bg-zinc-800 transition-all"
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'text-zinc-400 hover:text-red-500 hover:bg-zinc-800' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50'}`}
                                         title="Remove Row"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
-                                <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                                <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <button 
                                         onClick={addCol}
-                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:bg-zinc-800 transition-all border-r border-zinc-800"
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
                                         title="Add Column"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                     </button>
                                     <button 
                                         onClick={removeCol}
-                                        className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-red-500 hover:bg-zinc-800 transition-all"
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'text-zinc-400 hover:text-red-500 hover:bg-zinc-800' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50'}`}
                                         title="Remove Column"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -893,7 +908,7 @@ const CategoryArrangement: React.FC = () => {
                                 </div>
                                 <button 
                                     onClick={handleAutoFill}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all"
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-accent hover:border-accent/30' : 'bg-white border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-500/30'}`}
                                 >
                                     <Shuffle className="w-3.5 h-3.5" /> Auto Fill
                                 </button>
@@ -904,25 +919,27 @@ const CategoryArrangement: React.FC = () => {
                         <div className="relative">
                             <div 
                                 ref={boardRef}
-                                className="bg-zinc-950 border-4 border-amber-500/20 rounded-[2.5rem] p-10 shadow-2xl overflow-hidden"
+                                className={`border-4 rounded-[2.5rem] p-10 shadow-2xl overflow-hidden ${isDark ? 'bg-zinc-950 border-accent/20' : 'bg-white border-blue-500/20'}`}
                                 style={{
-                                    backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 70%)'
+                                    backgroundImage: isDark 
+                                        ? 'radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 70%)'
+                                        : 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)'
                                 }}
                             >
                                 {/* Board Branding */}
                                 <div className="text-center mb-10 space-y-2">
-                                    <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase tracking-tighter italic drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                                    <h2 className={`text-5xl font-black uppercase tracking-tighter italic drop-shadow-[0_0_15px_rgba(245,158,11,0.3)] ${isDark ? 'text-transparent bg-clip-text bg-gradient-to-b from-accent/50 via-accent to-accent/70' : 'text-blue-600'}`}>
                                         {auctionName}
                                     </h2>
                                     <div className="flex items-center justify-center gap-4">
-                                        <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                                        <div className={`h-[1px] w-20 bg-gradient-to-r from-transparent via-accent/50 to-transparent`}></div>
                                         {isEditingName ? (
                                             <div className="flex items-center gap-2 animate-fade-in">
                                                 <input 
                                                     type="text"
                                                     value={tempCategoryName}
                                                     onChange={(e) => setTempCategoryName(e.target.value)}
-                                                    className="bg-zinc-900 border border-amber-500/50 rounded-lg px-3 py-1 text-sm font-black text-amber-500 uppercase tracking-widest outline-none focus:ring-2 ring-amber-500/20"
+                                                    className={`border rounded-lg px-3 py-1 text-sm font-black uppercase tracking-widest outline-none focus:ring-2 ${isDark ? 'bg-zinc-900 border-accent/50 text-accent ring-accent/20' : 'bg-white border-blue-500/50 text-blue-600 ring-blue-500/20'}`}
                                                     autoFocus
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Enter') handleUpdateCategoryName();
@@ -931,13 +948,13 @@ const CategoryArrangement: React.FC = () => {
                                                 />
                                                 <button 
                                                     onClick={handleUpdateCategoryName}
-                                                    className="p-1.5 bg-amber-500 text-zinc-950 rounded-lg hover:bg-amber-400 transition-all"
+                                                    className={`p-1.5 rounded-lg transition-all ${isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                                                 >
                                                     <CheckCircle className="w-4 h-4" />
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsEditingName(false)}
-                                                    className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 transition-all"
+                                                    className={`p-1.5 rounded-lg transition-all ${isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
@@ -948,26 +965,26 @@ const CategoryArrangement: React.FC = () => {
                                                     setTempCategoryName(currentCategory?.name || '');
                                                     setIsEditingName(true);
                                                 }}
-                                                className="group flex items-center gap-3 px-4 py-1 rounded-full hover:bg-amber-500/10 transition-all"
+                                                className={`group flex items-center gap-3 px-4 py-1 rounded-full transition-all ${isDark ? 'hover:bg-accent/10' : 'hover:bg-blue-50'}`}
                                             >
-                                                <p className="text-[14px] font-black text-amber-500 uppercase tracking-[0.5em]">{isAllCategories ? 'All Categories Master Board' : currentCategory?.name}</p>
-                                                <Pencil className="w-3 h-3 text-amber-500/30 group-hover:text-amber-500 transition-all" />
+                                                <p className={`text-[14px] font-black uppercase tracking-[0.5em] ${isDark ? 'text-accent' : 'text-blue-600'}`}>{isAllCategories ? 'All Categories Master Board' : currentCategory?.name}</p>
+                                                <Pencil className={`w-3 h-3 transition-all ${isDark ? 'text-accent/30 group-hover:text-accent' : 'text-blue-300 group-hover:text-blue-600'}`} />
                                             </button>
                                         )}
-                                        <div className="h-[1px] w-20 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                                        <div className={`h-[1px] w-20 bg-gradient-to-r from-transparent via-accent/50 to-transparent`}></div>
                                     </div>
                                 </div>
 
                                 {/* Table */}
-                                <div className="overflow-x-auto rounded-3xl border-2 border-amber-500/30 bg-zinc-950/50 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                                <div className={`overflow-x-auto rounded-3xl border-2 backdrop-blur-sm shadow-[0_0_50px_rgba(0,0,0,0.5)] ${isDark ? 'border-accent/30 bg-zinc-950/50' : 'border-blue-100 bg-white/50'}`}>
                                     <table className="w-full border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className="w-24 p-5 bg-zinc-900/90 border border-amber-500/20 text-[12px] font-black text-amber-500 uppercase tracking-widest">
+                                                <th className={`w-24 p-5 border text-[12px] font-black uppercase tracking-widest ${isDark ? 'bg-zinc-900/90 border-accent/20 text-accent' : 'bg-gray-50 border-blue-100 text-blue-600'}`}>
                                                     {isAllrounderTable ? 'CATEGORY' : '#'}
                                                 </th>
                                                 {Array.from({ length: colCount }).map((_, cIdx) => (
-                                                    <th key={cIdx + 1} className="p-5 bg-zinc-900/90 border border-amber-500/20 text-[12px] font-black text-amber-500 uppercase tracking-widest">
+                                                    <th key={cIdx + 1} className={`p-5 border text-[12px] font-black uppercase tracking-widest ${isDark ? 'bg-zinc-900/90 border-accent/20 text-accent' : 'bg-gray-50 border-blue-100 text-blue-600'}`}>
                                                         {cIdx + 1}
                                                     </th>
                                                 ))}
@@ -979,7 +996,7 @@ const CategoryArrangement: React.FC = () => {
                                                 const rowLabel = isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`;
                                                 return (
                                                     <tr key={rowLabel}>
-                                                        <td className="p-5 bg-zinc-900/60 border border-amber-500/20 text-center text-[10px] font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
+                                                        <td className={`p-5 border text-center text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${isDark ? 'bg-zinc-900/60 border-accent/20 text-accent/70' : 'bg-gray-50/50 border-blue-50 text-blue-400'}`}>
                                                             <div className="flex items-center justify-center gap-2">
                                                                 {rowLabel}
                                                                 {isAllrounderTable && (
@@ -992,9 +1009,9 @@ const CategoryArrangement: React.FC = () => {
                                                                                 setIsEditingName(true);
                                                                             }
                                                                         }}
-                                                                        className="p-1 hover:bg-amber-500/20 rounded transition-all group"
+                                                                        className={`p-1 rounded transition-all group ${isDark ? 'hover:bg-accent/20' : 'hover:bg-blue-100'}`}
                                                                     >
-                                                                        <Pencil className="w-2.5 h-2.5 text-amber-500/30 group-hover:text-amber-500" />
+                                                                        <Pencil className={`w-2.5 h-2.5 transition-all ${isDark ? 'text-accent/30 group-hover:text-accent' : 'text-blue-300 group-hover:text-blue-600'}`} />
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -1005,7 +1022,7 @@ const CategoryArrangement: React.FC = () => {
                                                             const isTarget = pendingSwap?.slotId === slotId;
                                                             const globalIndex = (rIdx * colCount) + cIdx;
                                                             return (
-                                                                <td key={slotId} className="p-0 border border-amber-500/20 min-w-[160px] relative">
+                                                                <td key={slotId} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
                                                                     <DroppableSlot 
                                                                         id={slotId} 
                                                                         player={slots[slotId]}
@@ -1013,25 +1030,25 @@ const CategoryArrangement: React.FC = () => {
                                                                         index={globalIndex}
                                                                     />
                                                                     {isTarget && (
-                                                                        <div className="absolute inset-0 z-20 bg-zinc-950/95 flex flex-col items-center justify-center gap-2 p-2 animate-fade-in">
-                                                                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-1">Slot Occupied</p>
+                                                                        <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 p-2 animate-fade-in ${isDark ? 'bg-zinc-950/95' : 'bg-white/95'}`}>
+                                                                            <p className={`text-[8px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-accent' : 'text-blue-600'}`}>Slot Occupied</p>
                                                                             <div className="flex gap-2 w-full">
                                                                                 <button 
                                                                                     onClick={handleSwap}
-                                                                                    className="flex-1 bg-amber-500 text-zinc-950 text-[8px] font-black uppercase py-1.5 rounded-lg hover:bg-amber-400 transition-colors"
+                                                                                    className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                                                                                 >
                                                                                     Swap
                                                                                 </button>
                                                                                 <button 
                                                                                     onClick={handleReplace}
-                                                                                    className="flex-1 bg-zinc-800 text-white text-[8px] font-black uppercase py-1.5 rounded-lg hover:bg-zinc-700 transition-colors"
+                                                                                    className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
                                                                                 >
                                                                                     Replace
                                                                                 </button>
                                                                             </div>
                                                                             <button 
                                                                                 onClick={() => setPendingSwap(null)}
-                                                                                className="text-[7px] font-bold text-zinc-500 uppercase hover:text-zinc-300"
+                                                                                className={`text-[7px] font-bold uppercase ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600'}`}
                                                                             >
                                                                                 Cancel
                                                                             </button>
@@ -1051,13 +1068,13 @@ const CategoryArrangement: React.FC = () => {
                                 <div className="mt-12 flex items-center justify-between px-4">
                                     <div className="flex items-center gap-3">
                                         <div>
-                                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-500">{auctionName}</p>
-                                            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest">Official Tournament Board</p>
+                                            <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-accent' : 'text-blue-600'}`}>{auctionName}</p>
+                                            <p className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Official Tournament Board</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Official Category Board</p>
-                                        <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest mt-1">Generated: {new Date().toLocaleDateString()}</p>
+                                        <p className={`text-[10px] font-black uppercase tracking-widest italic ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>Official Category Board</p>
+                                        <p className={`text-[8px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>Generated: {new Date().toLocaleDateString()}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1076,8 +1093,8 @@ const CategoryArrangement: React.FC = () => {
                     }),
                 }}>
                     {activeDragId ? (
-                        <div className="flex items-center gap-3 p-3 rounded-xl border bg-amber-500 border-amber-400 text-zinc-950 shadow-2xl scale-105 rotate-2">
-                             <div className="w-8 h-8 rounded-lg bg-zinc-950/20 flex items-center justify-center">
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border shadow-2xl scale-105 rotate-2 ${isDark ? 'bg-accent border-accent/50 text-zinc-950' : 'bg-blue-600 border-blue-500 text-white'}`}>
+                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-zinc-950/20' : 'bg-white/20'}`}>
                                 <User className="w-4 h-4" />
                             </div>
                             <div className="min-w-0">
@@ -1240,34 +1257,38 @@ const CategoryArrangement: React.FC = () => {
 
             {/* NOTIFICATION BANNER */}
             {notification && (
-                <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}>
+                <div className={`fixed top-4 right-4 z-[300] p-4 rounded-lg shadow-2xl border flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    notification.type === 'error' 
+                    ? (isDark ? 'bg-red-900/90 border-red-500 text-white' : 'bg-red-50 border-red-200 text-red-900') 
+                    : (isDark ? 'bg-green-900/90 border-green-500 text-white' : 'bg-green-50 border-green-200 text-green-900')
+                }`}>
                     {notification.type === 'error' ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-green-400" />}
                     <span className="text-sm font-bold">{notification.message}</span>
-                    <button onClick={() => setNotification(null)} className="ml-auto hover:text-gray-300"><X className="w-4 h-4"/></button>
+                    <button onClick={() => setNotification(null)} className="ml-auto hover:opacity-70"><X className="w-4 h-4"/></button>
                 </div>
             )}
 
             {/* CUSTOM CONFIRMATION MODAL */}
             {confirmAction && (
                 <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-zinc-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-zinc-800">
-                        <div className="flex items-center gap-4 mb-6 text-amber-500">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                    <div className={`rounded-3xl p-8 max-w-sm w-full shadow-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                        <div className={`flex items-center gap-4 mb-6 ${isDark ? 'text-accent' : 'text-blue-600'}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-accent/10' : 'bg-blue-50'}`}>
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-black uppercase tracking-tighter text-zinc-100">{confirmAction.title}</h3>
+                            <h3 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-zinc-100' : 'text-gray-900'}`}>{confirmAction.title}</h3>
                         </div>
-                        <p className="text-zinc-400 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                        <p className={`text-sm font-bold mb-8 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>{confirmAction.message}</p>
                         <div className="flex gap-3">
                             <button 
                                 onClick={() => setConfirmAction(null)}
-                                className="flex-1 py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-black uppercase tracking-widest transition-all"
+                                className={`flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'}`}
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={confirmAction.onConfirm}
-                                className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-900/20"
+                                className={`flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${isDark ? 'bg-accent hover:bg-white text-zinc-950 shadow-accent/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'}`}
                             >
                                 Confirm
                             </button>

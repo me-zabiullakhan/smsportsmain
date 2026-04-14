@@ -128,7 +128,7 @@ const StaffLogin: React.FC = () => {
                         <button 
                             type="submit" 
                             disabled={isLoading}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/20 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase text-sm tracking-widest"
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/40 border-2 border-blue-400/50 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase text-sm tracking-widest shadow-[0_0_25px_rgba(37,99,235,0.3)]"
                         >
                             {isLoading ? <RefreshCw className="w-5 h-5 animate-spin"/> : 'INITIALIZE SESSION'}
                         </button>

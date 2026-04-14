@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Team, UserRole } from '../types';
 import { useAuction } from '../hooks/useAuction';
+import { useTheme } from '../contexts/ThemeContext';
 import { Wallet, Users, Gavel } from 'lucide-react';
 import { calculateMaxBid } from '../utils';
 
@@ -10,6 +11,8 @@ interface Props {
 
 const TeamStatusCard: React.FC<Props> = ({ team }) => {
     const { state, placeBid, userProfile, nextBid } = useAuction();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { currentPlayerId, players, maxPlayersPerTeam, categories, roles, basePrice: globalBasePrice } = state;
     const isAdmin = userProfile?.role === UserRole.ADMIN || userProfile?.role === UserRole.SUPER_ADMIN;
     const isAuctionLive = state.status === 'IN_PROGRESS';
@@ -56,63 +59,75 @@ const TeamStatusCard: React.FC<Props> = ({ team }) => {
             try {
                 await placeBid(team.id, nextBid);
             } catch (e) {
-                alert((e as Error).message);
+                console.error(e);
             }
         }
     };
 
     return (
-        <div className={`bg-accent p-3 rounded-lg shadow-md transition-all duration-300 ${isHighest ? 'ring-2 ring-green-500 bg-green-900/30' : ''}`}>
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                    {team.logoUrl ? (
-                        <img src={team.logoUrl} alt={team.name} className="w-8 h-8 rounded-full mr-3 bg-white p-0.5" />
-                    ) : (
-                        <div className="w-8 h-8 rounded-full mr-3 bg-gray-700 flex items-center justify-center font-bold text-white text-xs">
-                            {team.name.charAt(0)}
-                        </div>
-                    )}
-                    <div>
-                        <h4 className="font-bold text-white text-md truncate max-w-[120px] leading-none">{team.name}</h4>
-                        <p className="text-[10px] text-gray-400 font-mono mt-0.5 select-all">ID: {team.id}</p>
+        <div className={`p-3 rounded-2xl border-2 transition-all duration-500 shadow-xl ${
+            isHighest 
+                ? (isDark ? 'bg-green-900/20 border-green-500 shadow-green-500/10' : 'bg-green-50 border-green-500 shadow-green-600/10') 
+                : (isDark ? 'bg-black/40 border-accent/10 hover:border-accent/30' : 'bg-white border-blue-500/10 hover:border-blue-500/30')
+        }`}>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center min-w-0">
+                    <div className={`w-10 h-10 rounded-xl border p-1 shadow-inner flex items-center justify-center shrink-0 mr-3 ${isDark ? 'bg-zinc-900 border-accent/20' : 'bg-gray-50 border-blue-500/20'}`}>
+                        {team.logoUrl ? (
+                            <img src={team.logoUrl} alt={team.name} className="max-w-full max-h-full object-contain" />
+                        ) : (
+                            <span className={`text-xs font-black ${isDark ? 'text-accent' : 'text-blue-600'}`}>{team.name.charAt(0)}</span>
+                        )}
+                    </div>
+                    <div className="min-w-0">
+                        <h4 className={`font-black uppercase tracking-tighter text-sm truncate leading-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{team.name}</h4>
+                        <p className={`text-[8px] font-black uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>ID: {team.id}</p>
                     </div>
                 </div>
             </div>
             
-            <div className="text-sm space-y-1">
-                <p className="flex items-center text-text-secondary">
-                    <Wallet className="w-4 h-4 mr-2 text-green-400" /> 
-                    Budget: <span className="font-semibold text-white ml-1">{team.budget}</span>
-                </p>
-                <p className="flex items-center text-text-secondary">
-                    <Users className="w-4 h-4 mr-2 text-blue-400" />
-                    Players: <span className={`font-semibold ml-1 ${maxPlayersPerTeam && (maxPlayersPerTeam - (team.players || []).length <= 0) ? 'text-red-400' : 'text-white'}`}>{(team.players || []).length} / {maxPlayersPerTeam || '-'}</span>
-                </p>
+            <div className="space-y-2">
+                <div className={`flex items-center justify-between p-2 rounded-xl transition-colors ${isDark ? 'bg-zinc-900/50' : 'bg-gray-50'}`}>
+                    <div className="flex items-center">
+                        <Wallet className={`w-3.5 h-3.5 mr-2 ${isDark ? 'text-accent' : 'text-blue-600'}`} /> 
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Purse</span>
+                    </div>
+                    <span className={`text-xs font-black tabular-nums ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{team.budget}</span>
+                </div>
+                <div className={`flex items-center justify-between p-2 rounded-xl transition-colors ${isDark ? 'bg-zinc-900/50' : 'bg-gray-50'}`}>
+                    <div className="flex items-center">
+                        <Users className={`w-3.5 h-3.5 mr-2 ${isDark ? 'text-accent' : 'text-blue-600'}`} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Squad</span>
+                    </div>
+                    <span className={`text-xs font-black tabular-nums ${maxPlayersPerTeam && (maxPlayersPerTeam - (team.players || []).length <= 0) ? 'text-red-500' : (isDark ? 'text-white' : 'text-gray-900')}`}>
+                        {(team.players || []).length} / {maxPlayersPerTeam || '-'}
+                    </span>
+                </div>
             </div>
 
             {isAdmin && isAuctionLive && (
-                <div className="mt-3 pt-2 border-t border-white/10">
+                <div className="mt-3 pt-3 border-t border-dashed border-accent/20">
                     <button 
                         onClick={handleAdminBid}
                         disabled={!canAfford || isHighest || isLimitReached}
-                        className={`w-full py-1.5 px-3 rounded text-xs font-bold flex items-center justify-center uppercase tracking-wide transition-colors ${
+                        className={`w-full py-2 px-3 rounded-xl text-[10px] font-black flex items-center justify-center uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-lg ${
                             isHighest 
-                                ? 'bg-green-600 text-white cursor-default' 
+                                ? (isDark ? 'bg-green-500 text-black' : 'bg-green-600 text-white') 
                                 : isLimitReached
-                                    ? 'bg-red-900/50 text-red-200 border border-red-500/30 cursor-not-allowed'
+                                    ? (isDark ? 'bg-zinc-800 text-red-400 border border-red-500/20 cursor-not-allowed' : 'bg-gray-100 text-red-600 border border-red-200 cursor-not-allowed')
                                 : !canAfford 
-                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                                    : 'bg-highlight hover:bg-teal-400 text-primary'
+                                    ? (isDark ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed') 
+                                    : (isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20')
                         }`}
                     >
                         {isHighest ? (
-                            <>Leading</>
+                            <>LEADING</>
                         ) : isLimitReached ? (
-                            <span className="text-[8px] truncate">{limitReason}</span>
+                            <span className="truncate">{limitReason}</span>
                         ) : !canAfford ? (
-                            <>No Funds</>
+                            <>NO FUNDS</>
                         ) : (
-                            <><Gavel className="w-3 h-3 mr-1"/> Bid {nextBid}</>
+                            <><Gavel className="w-3.5 h-3.5 mr-2"/> BID ₹{nextBid}</>
                         )}
                     </button>
                 </div>

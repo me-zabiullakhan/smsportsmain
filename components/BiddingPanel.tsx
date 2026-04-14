@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useAuction } from '../hooks/useAuction';
+import { useTheme } from '../contexts/ThemeContext';
 import { Gavel, Lock, AlertCircle, Users, AlertTriangle, Info } from 'lucide-react';
 import { calculateMaxBid } from '../utils';
 
 const BiddingPanel: React.FC = () => {
     const { state, userProfile, placeBid, nextBid } = useAuction();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { teams, highestBidder, biddingStatus, currentBid, currentPlayerId, players, status, categories, roles, maxPlayersPerTeam, basePrice: globalBasePrice, unlimitedPurse, autoReserveFunds } = state;
     const [isBidding, setIsBidding] = useState(false);
 
@@ -15,8 +18,8 @@ const BiddingPanel: React.FC = () => {
 
     if (status !== 'IN_PROGRESS') {
         return (
-            <div className="bg-secondary rounded-xl shadow-xl p-4 border border-gray-700 text-center">
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">
+            <div className={`rounded-[2rem] shadow-2xl p-6 border-4 text-center transition-all duration-500 ${isDark ? 'bg-secondary border-accent/20 text-zinc-500' : 'bg-white border-blue-500/20 text-gray-400'}`}>
+                <p className="font-black uppercase tracking-[0.3em] text-xs md:text-sm">
                     {status === 'SOLD' ? 'LOT SOLD' : status === 'UNSOLD' ? 'LOT UNSOLD' : 'BIDDING CLOSED'}
                 </p>
             </div>
@@ -70,7 +73,6 @@ const BiddingPanel: React.FC = () => {
                 await placeBid(userTeam.id, nextBid);
             } catch (e) {
                 console.error(e);
-                alert((e as Error).message);
             } finally {
                 setIsBidding(false);
             }
@@ -78,27 +80,27 @@ const BiddingPanel: React.FC = () => {
     };
 
     return (
-        <div className="bg-secondary rounded-xl shadow-xl p-3 md:p-6 border border-highlight/30 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-highlight"></div>
+        <div className={`rounded-[2.5rem] shadow-2xl p-4 md:p-8 border-4 relative overflow-hidden transition-all duration-500 ${isDark ? 'bg-secondary border-accent/20 shadow-accent/5' : 'bg-white border-blue-500/20 shadow-blue-600/10'}`}>
+            <div className={`absolute top-0 left-0 w-1.5 h-full ${isDark ? 'bg-accent' : 'bg-blue-600'}`}></div>
             
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="w-full sm:w-auto text-center sm:text-left flex flex-row sm:flex-col justify-between sm:justify-start items-center sm:items-start px-2 sm:px-0">
                     <div>
-                        <p className="text-text-secondary text-[10px] md:text-sm uppercase tracking-widest font-bold">Your Purse</p>
-                        <p className="text-xl md:text-3xl font-bold text-white tabular-nums leading-none mt-1">{userTeam.budget}</p>
+                        <p className={`text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Your Purse</p>
+                        <p className={`text-2xl md:text-4xl font-black tabular-nums leading-none ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{userTeam.budget}</p>
                     </div>
                     {isPaused && (
-                        <div className="sm:hidden bg-red-900/50 px-2 py-1 rounded border border-red-500/50">
-                            <span className="text-[10px] text-red-200 font-bold uppercase flex items-center"><Lock className="w-3 h-3 mr-1"/> Paused</span>
+                        <div className={`sm:hidden px-3 py-1.5 rounded-xl border-2 flex items-center ${isDark ? 'bg-red-900/20 border-red-500/30 text-red-400' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                            <span className="text-[9px] font-black uppercase tracking-widest flex items-center"><Lock className="w-3 h-3 mr-1.5"/> Paused</span>
                         </div>
                     )}
                     {!isSquadFull && !unlimitedPurse && (
-                        <div className="mt-2 text-left hidden sm:block">
-                            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
-                                Max Allowed Bid: {Math.max(0, maxBidAllowed)}
+                        <div className="mt-3 text-left hidden sm:block">
+                            <p className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-accent/80' : 'text-blue-600/80'}`}>
+                                Max Allowed Bid: ₹{Math.max(0, maxBidAllowed)}
                             </p>
-                            <p className="text-[8px] text-gray-500 uppercase font-medium mt-0.5 flex items-center">
-                                <Info className="w-2 h-2 mr-1"/> Includes reserved funds based on remaining category requirements
+                            <p className={`text-[8px] font-black uppercase tracking-tight mt-1 flex items-center ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>
+                                <Info className="w-2.5 h-2.5 mr-1.5 shrink-0"/> Includes reserved funds for remaining squad
                             </p>
                         </div>
                     )}
@@ -109,55 +111,55 @@ const BiddingPanel: React.FC = () => {
                         onClick={handleBid}
                         disabled={!canAfford || isLeading || isBidding || !isActive || isLoadingBid || isCategoryMaxReached || isSquadFull || isBidLimitExceeded}
                         className={`
-                            w-full sm:w-auto flex-grow md:flex-grow-0 flex items-center justify-center py-3 md:py-4 px-6 md:px-8 rounded-lg font-black text-base md:text-xl tracking-wider transition-all transform
+                            w-full sm:w-auto flex items-center justify-center py-4 md:py-5 px-8 md:px-12 rounded-2xl font-black text-sm md:text-lg tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-2xl
                             ${isLeading 
-                                ? 'bg-green-600 text-white cursor-default' 
+                                ? (isDark ? 'bg-green-500 text-black shadow-green-500/20' : 'bg-green-600 text-white shadow-green-600/20')
                                 : isSquadFull || isCategoryMaxReached || isBidLimitExceeded
-                                    ? 'bg-gray-700 text-red-300 border border-red-500/30 cursor-not-allowed'
+                                    ? (isDark ? 'bg-zinc-800 text-red-400 border-2 border-red-500/20 cursor-not-allowed' : 'bg-gray-100 text-red-600 border-2 border-red-200 cursor-not-allowed')
                                 : (!isActive)
-                                    ? 'bg-red-900/50 border border-red-700 text-red-200 cursor-not-allowed opacity-75'
+                                    ? (isDark ? 'bg-red-900/20 border-2 border-red-500/30 text-red-400 cursor-not-allowed' : 'bg-red-50 border-2 border-red-200 text-red-600 cursor-not-allowed')
                                     : (!canAfford || isLoadingBid)
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : 'bg-highlight hover:bg-teal-400 text-primary hover:scale-105 shadow-[0_0_20px_rgba(56,178,172,0.4)]'
+                                        ? (isDark ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
+                                        : (isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20')
                             }
                         `}
                     >
                         {isLeading ? (
-                            <>LEADING <span className="ml-2 text-sm font-normal hidden sm:inline">({currentBid})</span></>
+                            <>LEADING <span className={`ml-3 text-xs font-black ${isDark ? 'text-black/60' : 'text-white/80'}`}>₹{currentBid}</span></>
                         ) : isSquadFull ? (
-                            <><Users className="mr-2 h-4 w-4"/> SQUAD FULL</>
+                            <><Users className="mr-2.5 h-5 w-5"/> SQUAD FULL</>
                         ) : isCategoryMaxReached ? (
-                            <><Lock className="mr-2 h-4 w-4"/> LIMIT REACHED</>
+                            <><Lock className="mr-2.5 h-5 w-5"/> LIMIT REACHED</>
                         ) : isBidLimitExceeded ? (
-                            <><AlertTriangle className="mr-2 h-4 w-4"/> RESERVE REQUIRED</>
+                            <><AlertTriangle className="mr-2.5 h-5 w-5"/> RESERVE REQUIRED</>
                         ) : !isActive ? (
-                            <><Lock className="mr-2 h-4 w-4 md:h-5 md:w-5"/> PAUSED</>
+                            <><Lock className="mr-2.5 h-5 w-5"/> PAUSED</>
                         ) : isLoadingBid ? (
                             <span className="animate-pulse">LOADING...</span>
                         ) : (
-                            <><Gavel className="mr-2 h-5 w-5 md:h-6 md:w-6"/> BID {nextBid}</>
+                            <><Gavel className="mr-2.5 h-6 w-6"/> BID ₹{nextBid}</>
                         )}
                     </button>
                     {isBidLimitExceeded && (
-                        <span className="text-[10px] text-red-400 font-bold mt-1 uppercase tracking-wide">
-                            Max Allowed Bid: {Math.max(0, maxBidAllowed)}
+                        <span className={`text-[9px] font-black mt-2 uppercase tracking-widest ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                            Max Allowed Bid: ₹{Math.max(0, maxBidAllowed)}
                         </span>
                     )}
                 </div>
             </div>
             
-            {isSquadFull && <p className="text-red-400 text-xs mt-2 flex items-center justify-center sm:justify-start font-bold uppercase"><AlertCircle className="w-3 h-3 mr-1"/> Max Players ({targetSquadSize}) Reached</p>}
-            {isCategoryMaxReached && !isSquadFull && <p className="text-red-400 text-xs mt-2 flex items-center justify-center sm:justify-start font-bold uppercase"><AlertCircle className="w-3 h-3 mr-1"/> {categoryLimitMsg}</p>}
+            {isSquadFull && <p className={`text-[9px] font-black uppercase tracking-widest mt-3 flex items-center justify-center sm:justify-start ${isDark ? 'text-red-400' : 'text-red-600'}`}><AlertCircle className="w-3 h-3 mr-2"/> Max Players ({targetSquadSize}) Reached</p>}
+            {isCategoryMaxReached && !isSquadFull && <p className={`text-[9px] font-black uppercase tracking-widest mt-3 flex items-center justify-center sm:justify-start ${isDark ? 'text-red-400' : 'text-red-600'}`}><AlertCircle className="w-3 h-3 mr-2"/> {categoryLimitMsg}</p>}
             {isBidLimitExceeded && (
-                <div className="bg-red-950/20 border border-red-900/30 p-2 rounded mt-3">
-                    <p className="text-red-400 text-[10px] flex items-start font-bold uppercase tracking-tight">
-                        <AlertCircle className="w-3 h-3 mr-1.5 shrink-0 mt-0.5"/> 
-                        Insufficient purse to complete squad based on category requirements. You must reserve ₹{totalMandatoryReserve} for the remaining {playersStillNeededAfterThis} players.
+                <div className={`p-3 rounded-2xl mt-4 border-2 ${isDark ? 'bg-red-900/10 border-red-500/20' : 'bg-red-50 border-red-200'}`}>
+                    <p className={`text-[9px] flex items-start font-black uppercase tracking-tight leading-relaxed ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                        <AlertCircle className="w-3.5 h-3.5 mr-2 shrink-0 mt-0.5"/> 
+                        Insufficient purse to complete squad. You must reserve ₹{totalMandatoryReserve} for the remaining {playersStillNeededAfterThis} players.
                     </p>
                 </div>
             )}
-            {!canAfford && isActive && !isCategoryMaxReached && !isSquadFull && !isBidLimitExceeded && <p className="text-red-400 text-xs mt-2 flex items-center justify-center sm:justify-start font-bold"><AlertCircle className="w-3 h-3 mr-1"/> Insufficient Budget</p>}
-            {!isActive && <p className="hidden sm:flex text-red-300 text-xs mt-2 items-center justify-center sm:justify-start font-bold uppercase tracking-wide"><Lock className="w-3 h-3 mr-1"/> Bidding Paused by Admin</p>}
+            {!canAfford && isActive && !isCategoryMaxReached && !isSquadFull && !isBidLimitExceeded && <p className={`text-[9px] font-black uppercase tracking-widest mt-3 flex items-center justify-center sm:justify-start ${isDark ? 'text-red-400' : 'text-red-600'}`}><AlertCircle className="w-3 h-3 mr-2"/> Insufficient Budget</p>}
+            {!isActive && <p className={`hidden sm:flex text-[9px] font-black uppercase tracking-widest mt-3 items-center justify-center sm:justify-start ${isDark ? 'text-red-400' : 'text-red-600'}`}><Lock className="w-3 h-3 mr-2"/> Bidding Paused by Admin</p>}
         </div>
     );
 };

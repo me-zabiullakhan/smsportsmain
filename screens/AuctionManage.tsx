@@ -20,6 +20,7 @@ import html2canvas from "html2canvas";
 import { useAuction } from '../hooks/useAuction';
 
 import heic2any from 'heic2any';
+import { useTheme } from '../contexts/ThemeContext';
 
 const compressImage = async (file: File, isBanner: boolean = false): Promise<string> => {
     let processedFile: File | Blob = file;
@@ -98,6 +99,8 @@ const DEFAULT_REG_CONFIG: RegistrationConfig = {
 };
 
 const AuctionManage: React.FC = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { userProfile } = useAuction();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -780,14 +783,14 @@ const AuctionManage: React.FC = () => {
         });
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]"><Loader2 className="animate-spin text-blue-600"/></div>;
+    if (loading) return <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-zinc-950' : 'bg-gray-50'}`}><Loader2 className={`animate-spin ${isDark ? 'text-accent' : 'text-blue-600'}`}/></div>;
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] font-sans pb-20 text-gray-900 selection:bg-blue-100 selection:text-blue-900">
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+        <div className={`min-h-screen font-sans pb-20 selection:bg-accent/30 selection:text-accent ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-gray-900'}`}>
+            <header className={`border-b sticky top-0 z-30 shadow-sm backdrop-blur-xl ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}>
                 <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/admin')} className="text-gray-400 hover:text-gray-800 transition-colors p-2 hover:bg-gray-50 rounded-lg"><ArrowLeft className="w-5 h-5"/></button>
+                        <button onClick={() => navigate('/admin')} className={`transition-colors p-2 rounded-lg ${isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-800' : 'text-gray-400 hover:text-gray-800 hover:bg-gray-50'}`}><ArrowLeft className="w-5 h-5"/></button>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[300px] md:max-w-md py-1">
                             {allAuctions.map(a => (
                                 <button
@@ -795,8 +798,8 @@ const AuctionManage: React.FC = () => {
                                     onClick={() => navigate(`/manage/${a.id}`)}
                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${
                                         id === a.id 
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                                        : 'bg-white border-gray-200 text-gray-400 hover:border-blue-200'
+                                        ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
+                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-accent/20' : 'bg-white border-gray-200 text-gray-400 hover:border-blue-200')
                                     }`}
                                 >
                                     {a.title?.toUpperCase()}
@@ -804,10 +807,14 @@ const AuctionManage: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                    <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200 overflow-x-auto no-scrollbar">
+                    <div className={`flex p-0.5 rounded-xl border overflow-x-auto no-scrollbar ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-100 border-gray-200'}`}>
                         {['SETTINGS', 'TEAMS', 'PLAYERS', 'REQUESTS', 'CATEGORIES', 'ROLES', 'SPONSORS', 'REGISTRATION', 'WAITLIST', 'CAPTAIN_CODES'].map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
-                                className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+                                className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${
+                                    activeTab === tab 
+                                    ? (isDark ? 'bg-accent text-zinc-950 shadow-sm' : 'bg-white text-blue-600 shadow-sm') 
+                                    : (isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600')
+                                }`}>
                                 {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab === 'CAPTAIN_CODES' ? 'CAPTAIN CODES' : tab}
                             </button>
                         ))}
@@ -818,16 +825,16 @@ const AuctionManage: React.FC = () => {
             <main className="container mx-auto px-4 py-8 max-w-6xl">
                 {activeTab === 'SETTINGS' && (
                     <div className="space-y-8 animate-fade-in">
-                        <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-blue-50/50 to-transparent flex justify-between items-center">
+                        <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                            <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-gradient-to-r from-blue-50/50 to-transparent border-gray-100'}`}>
                                 <div className="flex items-center gap-4">
-                                    <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-600/20 text-white"><Settings className="w-6 h-6"/></div>
+                                    <div className={`p-3 rounded-2xl shadow-lg ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20' : 'bg-blue-600 text-white shadow-blue-600/20'}`}><Settings className="w-6 h-6"/></div>
                                     <div>
-                                        <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Auction Identity</h2>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Configure core tournament logic</p>
+                                        <h2 className={`text-2xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>Auction Identity</h2>
+                                        <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Configure core tournament logic</p>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveSettings} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95">
+                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'}`}>
                                     <Save className="w-4 h-4"/> Sync Identity
                                 </button>
                             </div>
@@ -835,14 +842,14 @@ const AuctionManage: React.FC = () => {
                             <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div className="md:col-span-1 space-y-6">
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tournament Logo</label>
-                                        <div onClick={() => logoInputRef.current?.click()} className="w-full aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-blue-400 transition-all overflow-hidden relative group">
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-3 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Tournament Logo</label>
+                                        <div onClick={() => logoInputRef.current?.click()} className={`w-full aspect-square border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group ${isDark ? 'bg-zinc-950 border-zinc-800 hover:bg-zinc-900 hover:border-accent/50' : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-blue-400'}`}>
                                             {settingsForm.logoUrl ? (
                                                 <img src={settingsForm.logoUrl} className="w-full h-full object-contain p-4" referrerPolicy="no-referrer" />
                                             ) : (
                                                 <div className="text-center">
-                                                    <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                                    <p className="text-[9px] font-black text-gray-400 uppercase">Select Source</p>
+                                                    <ImageIcon className={`w-8 h-8 mx-auto mb-2 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`} />
+                                                    <p className={`text-[9px] font-black uppercase ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>Select Source</p>
                                                 </div>
                                             )}
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -1007,73 +1014,73 @@ const AuctionManage: React.FC = () => {
                 {activeTab === 'PLAYERS' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Player Pool ({players.length})</h2>
+                            <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Player Pool ({players.length})</h2>
                             <div className="flex flex-wrap gap-2">
-                                <button onClick={exportPlayersToCSV} className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
+                                <button onClick={exportPlayersToCSV} className={`border px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 transition-all shadow-sm ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                     <Download className="w-4 h-4"/> Export CSV
                                 </button>
-                                <label className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                                <label className={`border px-4 py-2 rounded-xl text-[10px] font-black uppercase cursor-pointer transition-all flex items-center gap-2 shadow-sm ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
-                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
+                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'}`}>
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
                             </div>
                         </div>
-                        <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden">
+                        <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className="overflow-x-auto custom-scrollbar">
                                 <table className="w-full text-left">
-                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                    <thead className={`border-b ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}>
                                         <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Identity</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Set/Category</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Role</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Value (₹)</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Status</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Identity</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Set/Category</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Role</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Value (₹)</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Status</th>
                                             <th className="px-6 py-4 text-right"></th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-gray-100'}`}>
                                         {players.map(p => (
-                                            <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
+                                            <tr key={p.id} className={`transition-colors group ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'}`}>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div 
-                                                            className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shadow-sm cursor-pointer hover:border-blue-400 transition-all"
+                                                            className={`w-10 h-10 rounded-xl overflow-hidden shadow-sm cursor-pointer transition-all border ${isDark ? 'bg-zinc-950 border-zinc-800 hover:border-accent' : 'bg-gray-100 border-gray-200 hover:border-blue-400'}`}
                                                             onClick={() => p.photoUrl && setOverlayImage({ url: p.photoUrl, title: p.name, type: 'PLAYER', id: String(p.id), field: 'photoUrl' })}
                                                         >
-                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <User className="w-5 h-5 m-2.5 text-gray-300"/>}
+                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <User className={`w-5 h-5 m-2.5 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}/>}
                                                         </div>
                                                         <div>
-                                                            <span className="font-black text-gray-800 text-sm uppercase leading-none">{p.name}</span>
-                                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">{p.nationality}</p>
+                                                            <span className={`font-black text-sm uppercase leading-none ${isDark ? 'text-white' : 'text-gray-800'}`}>{p.name}</span>
+                                                            <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{p.nationality}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-200">{p.category}</span>
+                                                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${isDark ? 'bg-zinc-950 text-accent border-accent/20' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>{p.category}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{p.role}</span>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-accent' : 'text-blue-500'}`}>{p.role}</span>
                                                 </td>
-                                                <td className="px-6 py-4 font-mono font-black text-gray-700 text-sm">₹{p.basePrice}</td>
+                                                <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>₹{p.basePrice}</td>
                                                 <td className="px-6 py-4">
                                                     {p.status === 'SOLD' ? (
                                                         <div className="flex flex-col">
                                                             <span className="text-green-600 font-black text-[9px] uppercase tracking-[0.2em]">SOLD</span>
-                                                            <span className="text-[8px] text-gray-400 font-bold uppercase truncate max-w-[80px]">{p.soldTo} (₹{p.soldPrice})</span>
+                                                            <span className={`text-[8px] font-bold uppercase truncate max-w-[80px] ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{p.soldTo} (₹{p.soldPrice})</span>
                                                         </div>
                                                     ) : p.status === 'UNSOLD' ? (
                                                         <span className="text-red-500 font-black text-[9px] uppercase tracking-[0.2em]">UNSOLD</span>
                                                     ) : (
-                                                        <span className="text-gray-300 font-black text-[9px] uppercase tracking-[0.2em]">POOL</span>
+                                                        <span className={`font-black text-[9px] uppercase tracking-[0.2em] ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}>POOL</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => { setModalType('PLAYER'); setEditItem(p); setPreviewImage(p.photoUrl); setShowModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
-                                                        <button onClick={() => handleDelete('PLAYER', String(p.id))} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
+                                                        <button onClick={() => { setModalType('PLAYER'); setEditItem(p); setPreviewImage(p.photoUrl); setShowModal(true); }} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-accent hover:bg-accent/10' : 'text-blue-500 hover:bg-blue-50'}`}><Edit className="w-4 h-4"/></button>
+                                                        <button onClick={() => handleDelete('PLAYER', String(p.id))} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-red-400 hover:bg-red-400/10' : 'text-red-400 hover:bg-red-50'}`}><Trash2 className="w-4 h-4"/></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1910,10 +1917,10 @@ const AuctionManage: React.FC = () => {
                 {(activeTab === 'CATEGORIES' || activeTab === 'ROLES' || activeTab === 'SPONSORS') && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Manage {activeTab}</h2>
+                            <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Manage {activeTab}</h2>
                             <div className="flex gap-2">
                                 {activeTab === 'CATEGORIES' && (
-                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="bg-amber-500 text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition-all">
+                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-amber-500 text-zinc-950 shadow-amber-500/20 hover:bg-amber-400'}`}>
                                         <LayoutGrid className="w-4 h-4"/> Category Room
                                     </button>
                                 )}
@@ -1921,95 +1928,67 @@ const AuctionManage: React.FC = () => {
                                     setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
                                     setEditItem({});
                                     setShowModal(true);
-                                }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg"><Plus className="w-4 h-4"/> Add New</button>
+                                }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'}`}><Plus className="w-4 h-4"/> Add New</button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {(activeTab === 'CATEGORIES' ? categories : activeTab === 'ROLES' ? roles : sponsors).map((item: any) => (
-                                <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm flex flex-col group">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden">
-                                                {item.imageUrl || item.photoUrl || item.logoUrl ? (
-                                                    <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                                                ) : (
-                                                    <Layers className="text-gray-300 w-6 h-6"/>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-gray-800 uppercase text-sm">{item.name}</p>
-                                                {activeTab === 'CATEGORIES' && (
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                    ₹{item.basePrice} • {item.minPerTeam}-{item.maxPerTeam} Per Team • {item.requiredPlayers || 0} Required
-                                                </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => {
-                                                setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
-                                                setEditItem(item);
-                                                setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
-                                                setShowModal(true);
-                                            }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4"/></button>
-                                            <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
-                                        </div>
-                                    </div>
-
-                                    {activeTab === 'CATEGORIES' && (
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between px-1">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Warriors</span>
-                                                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase">{players.filter(p => p.category === item.name).length}</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1">
-                                                {players.filter(p => p.category === item.name).map(p => (
-                                                    <div key={p.id} className="flex items-center gap-2 bg-gray-50 pl-1 pr-2 py-1 rounded-full border border-gray-100">
-                                                        <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden border border-white">
-                                                            {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <User className="w-3 h-3 text-gray-400 m-auto" />}
+                        <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                            <div className="overflow-x-auto custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className={`border-b ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}>
+                                        <tr>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Category Name</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Base Price</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Per Team</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Required</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Assigned</th>
+                                            <th className="px-6 py-4 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-gray-100'}`}>
+                                        {(activeTab === 'CATEGORIES' ? categories : activeTab === 'ROLES' ? roles : sponsors).map((item: any) => (
+                                            <tr key={item.id} className={`transition-colors group ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'}`}>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border overflow-hidden ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-100 border-gray-100'}`}>
+                                                            {item.imageUrl || item.photoUrl || item.logoUrl ? (
+                                                                <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                                                            ) : (
+                                                                <Layers className={`w-5 h-5 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}/>
+                                                            )}
                                                         </div>
-                                                        <span className="text-[9px] font-bold text-gray-600 truncate max-w-[80px]">{p.name}</span>
-                                                        <button onClick={async () => {
-                                                            setConfirmAction({
-                                                                title: "Remove Player",
-                                                                message: `Remove ${p.name} from ${item.name}?`,
-                                                                onConfirm: async () => {
-                                                                    await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: 'Standard' });
-                                                                    setConfirmAction(null);
-                                                                }
-                                                            });
-                                                        }} className="text-gray-300 hover:text-red-500 transition-colors">
-                                                            <X className="w-3 h-3" />
-                                                        </button>
+                                                        <span className={`font-black uppercase text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>
                                                     </div>
-                                                ))}
-                                                {players.filter(p => p.category === item.name).length === 0 && (
-                                                    <p className="text-[9px] font-bold text-gray-300 uppercase italic py-2">No warriors assigned</p>
-                                                )}
-                                            </div>
-                                            <div className="pt-4 border-t border-gray-50">
-                                                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">+ Assign Warrior</label>
-                                                <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto p-1 bg-gray-50 rounded-lg border border-gray-100 custom-scrollbar">
-                                                    {players.filter(p => p.category !== item.name).map(p => (
-                                                        <button
-                                                            key={p.id}
-                                                            onClick={async () => {
-                                                                await db.collection('auctions').doc(id!).collection('players').doc(p.id.toString()).update({ category: item.name });
-                                                            }}
-                                                            className="text-[8px] font-black uppercase py-1.5 px-2 bg-white border border-gray-100 rounded-md hover:border-blue-400 hover:text-blue-600 transition-all text-left truncate"
-                                                        >
-                                                            {p.name}
-                                                        </button>
-                                                    ))}
-                                                    {players.filter(p => p.category !== item.name).length === 0 && (
-                                                        <p className="col-span-2 text-[8px] font-bold text-gray-300 uppercase italic text-center py-2">All warriors assigned</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                                </td>
+                                                <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
+                                                    {activeTab === 'CATEGORIES' ? `₹${item.basePrice}` : '-'}
+                                                </td>
+                                                <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                    {activeTab === 'CATEGORIES' ? `${item.minPerTeam}-${item.maxPerTeam}` : '-'}
+                                                </td>
+                                                <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                    {activeTab === 'CATEGORIES' ? item.requiredPlayers || 0 : '-'}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${isDark ? 'bg-accent/10 text-accent' : 'bg-blue-50 text-blue-600'}`}>
+                                                        {activeTab === 'CATEGORIES' ? players.filter(p => p.category === item.name).length : '-'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => {
+                                                            setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
+                                                            setEditItem(item);
+                                                            setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
+                                                            setShowModal(true);
+                                                        }} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-accent hover:bg-accent/10' : 'text-blue-500 hover:bg-blue-50'}`}><Edit className="w-4 h-4"/></button>
+                                                        <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-red-400 hover:bg-red-400/10' : 'text-red-400 hover:bg-red-50'}`}><Trash2 className="w-4 h-4"/></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -2845,24 +2824,24 @@ const AuctionManage: React.FC = () => {
             {/* CUSTOM CONFIRMATION MODAL */}
             {confirmAction && (
                 <div className="fixed inset-0 z-[310] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100">
-                        <div className="flex items-center gap-4 mb-6 text-amber-500">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                    <div className={`rounded-3xl p-8 max-w-sm w-full shadow-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100'}`}>
+                        <div className={`flex items-center gap-4 mb-6 ${isDark ? 'text-accent' : 'text-amber-500'}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-accent/10' : 'bg-amber-50'}`}>
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-black uppercase tracking-tighter text-gray-800">{confirmAction.title}</h3>
+                            <h3 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>{confirmAction.title}</h3>
                         </div>
-                        <p className="text-gray-500 text-sm font-bold mb-8 leading-relaxed">{confirmAction.message}</p>
+                        <p className={`text-sm font-bold mb-8 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>{confirmAction.message}</p>
                         <div className="flex gap-3">
                             <button 
                                 onClick={() => setConfirmAction(null)}
-                                className="flex-1 py-4 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-400 text-xs font-black uppercase tracking-widest transition-all"
+                                className={`flex-1 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isDark ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-500' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={confirmAction.onConfirm}
-                                className="flex-1 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-200"
+                                className={`flex-1 py-4 rounded-2xl text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'}`}
                             >
                                 Confirm
                             </button>

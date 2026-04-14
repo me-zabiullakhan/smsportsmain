@@ -1,20 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Bebas+Neue&family=Inter:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-cinzel: "Cinzel", serif;
   --font-bebas: "Bebas Neue", sans-serif;
   --font-inter: "Inter", sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
+  
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-highlight: var(--highlight);
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+}
+
+:root {
+  /* Dark Theme (Advaya) - Default */
+  --primary: #000000;
+  --secondary: #121212;
+  --accent: #fbbf24; /* Golden */
+  --highlight: #ffffff;
+  --surface: #1a1a1a;
+  --on-surface: #ffffff;
+  --neon-glow: 0 0 15px rgba(251, 191, 36, 0.6), 0 0 30px rgba(251, 191, 36, 0.3);
+}
+
+.light {
+  /* Light Theme */
+  --primary: #ffffff;
+  --secondary: #f8fafc;
+  --accent: #2563eb; /* Blue */
+  --highlight: #000000;
+  --surface: #f1f5f9;
+  --on-surface: #0f172a;
+  --neon-glow: 0 0 15px rgba(37, 99, 235, 0.3), 0 0 30px rgba(37, 99, 235, 0.1);
 }
 
 @layer components {
+  .advaya-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-b;
+    background-image: linear-gradient(to bottom, var(--highlight), var(--accent), var(--accent));
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+    animation: text-pulse 3s infinite ease-in-out;
+  }
+
+  .light .advaya-text {
+    background-image: linear-gradient(to bottom, #000, var(--accent), var(--accent));
+    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2));
+  }
+
+  @keyframes text-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
+    50% { filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+  }
+
+  .light @keyframes text-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2)); }
+    50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.4)); }
+  }
+
+  .neon-border {
+    @apply border-2;
+    border-color: var(--accent);
+    box-shadow: var(--neon-glow);
+  }
+
   .golden-text {
     @apply text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700;
     filter: drop-shadow(0 2px 10px rgba(251, 191, 36, 0.5));
   }
 
+  .light .golden-text {
+    @apply from-blue-400 via-blue-600 to-blue-800;
+    filter: drop-shadow(0 2px 10px rgba(37, 99, 235, 0.3));
+  }
+
   .golden-glow {
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.2);
+  }
+
+  .light .golden-glow {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.2), inset 0 0 20px rgba(37, 99, 235, 0.1);
   }
 
   .golden-border {
@@ -22,10 +89,22 @@
     box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
   }
 
+  .light .golden-border {
+    @apply border-blue-500/30;
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.1);
+  }
+
   .cinematic-frame {
-    @apply relative overflow-hidden rounded-[3rem] border-4 border-amber-500/40;
+    @apply relative overflow-hidden rounded-[3rem] border-4;
+    border-color: rgba(251, 191, 36, 0.4);
     background: radial-gradient(circle at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(251, 191, 36, 0.1);
+  }
+
+  .light .cinematic-frame {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: radial-gradient(circle at center, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.1), inset 0 0 15px rgba(37, 99, 235, 0.05);
   }
 
   .shine-effect {
@@ -50,17 +129,21 @@
 
   .border-beam-container::before {
     content: "";
-    @apply absolute -inset-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_120deg,#fbbf24_180deg,transparent_240deg,transparent_360deg)] animate-[spin_4s_linear_infinite] pointer-events-none opacity-60;
+    @apply absolute -inset-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_120deg,var(--accent)_180deg,transparent_240deg,transparent_360deg)] animate-[spin_4s_linear_infinite] pointer-events-none opacity-60;
   }
 
   .particle-bg {
     background-image: radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.15) 1px, transparent 0);
     background-size: 40px 40px;
   }
+
+  .light .particle-bg {
+    background-image: radial-gradient(circle at 2px 2px, rgba(37, 99, 235, 0.1) 1px, transparent 0);
+  }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0a0a0a; }
-::-webkit-scrollbar-thumb { background: #f59e0b55; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #f59e0b88; }
+::-webkit-scrollbar-track { background: var(--primary); }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent) 50%, transparent); }

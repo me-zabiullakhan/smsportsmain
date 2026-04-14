@@ -19,6 +19,7 @@ import MatchOverlay from './screens/MatchOverlay';
 import PlatformGuide from './screens/PlatformGuide';
 import SupportWidget from './components/SupportWidget';
 import { useAuction } from './hooks/useAuction';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { auth } from './firebase';
 import firebase from 'firebase/compat/app';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
@@ -181,7 +182,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
+    <ThemeProvider>
       <AppContent />
+    </ThemeProvider>
   );
 };
 
