@@ -276,7 +276,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <button 
                 onClick={() => navigate('/admin/create-auction')}
-                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl ${isDark ? 'bg-white text-zinc-950 hover:bg-zinc-200 shadow-white/5' : 'bg-gray-900 text-white hover:bg-black shadow-black/10'}`}
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl ${isDark ? 'bg-accent text-primary shadow-accent/20' : 'bg-accent text-white shadow-accent/20'}`}
             >
                 <Plus className="w-5 h-5" /> Start New Auction
             </button>
@@ -343,7 +343,7 @@ const AdminDashboard: React.FC = () => {
                                         className={`w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                                             isCurrentPlan 
                                             ? 'bg-transparent border border-white/20 text-white/40 cursor-default' 
-                                            : (isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-white text-blue-600 hover:bg-blue-50')
+                                            : (isDark ? 'bg-accent text-zinc-950' : 'bg-accent text-white')
                                         }`}
                                     >
                                         {isCurrentPlan ? 'Current' : 'Upgrade'}
@@ -410,31 +410,31 @@ const AdminDashboard: React.FC = () => {
                     <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
                         >
-                            <Activity className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Control</span>
+                            <Activity className={`w-6 h-6 text-primary`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Control</span>
                         </button>
                         <button 
                             onClick={() => window.open(`/auction/${auction.id}`, '_blank')}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
                         >
-                            <Monitor className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Public</span>
+                            <Monitor className={`w-6 h-6 text-primary`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Public</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/arrangement`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
                         >
-                            <Layout className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Board</span>
+                            <Layout className={`w-6 h-6 text-primary`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Board</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/auction/${auction.id}/register`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all group/btn ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:border-accent/50 hover:bg-zinc-800' : 'bg-gray-50 border-gray-100 hover:border-blue-200 hover:bg-white'}`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
                         >
-                            <UserPlus className={`w-6 h-6 ${isDark ? 'text-zinc-600 group-hover/btn:text-accent' : 'text-gray-400 group-hover/btn:text-blue-600'}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500 group-hover/btn:text-white' : 'text-gray-400 group-hover/btn:text-gray-900'}`}>Signup</span>
+                            <UserPlus className={`w-6 h-6 text-primary`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Signup</span>
                         </button>
                     </div>
 
@@ -497,7 +497,7 @@ const AdminDashboard: React.FC = () => {
                                 setActiveTab('AUCTIONS');
                                 showNotification("Select an auction from the upgrade panel above", "success");
                             }}
-                            className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl ${isDark ? 'bg-white text-zinc-950 hover:bg-accent shadow-white/5' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
+                            className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl bg-accent text-zinc-950 shadow-accent/20`}
                         >
                             Select Plan
                         </button>
@@ -557,7 +557,7 @@ const AdminDashboard: React.FC = () => {
                           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} font-medium leading-relaxed`}>{currentPopup.message}</p>
                       )}
                       <div className="flex gap-3">
-                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`flex-1 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 ${isDark ? 'bg-amber-600 hover:bg-amber-500 text-black' : 'bg-black hover:bg-gray-800 text-white'}`}>{currentPopup.okButtonText}</button>
+                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`flex-1 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 bg-accent text-zinc-950 shadow-accent/20`}>{currentPopup.okButtonText}</button>
                         <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`px-8 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all ${isDark ? 'bg-white/10 hover:bg-white/20 text-amber-500' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}>{currentPopup.closeButtonText}</button>
                       </div>
                   </div>
@@ -585,9 +585,9 @@ const AdminDashboard: React.FC = () => {
                   {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
                 <div className={`flex p-1 rounded-xl border gap-1 overflow-x-auto no-scrollbar ${isDark ? 'bg-white/5 border-amber-500/20' : 'bg-gray-100 border-gray-200'}`}>
-                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'AUCTIONS' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Auctions</button>
-                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'PLANS' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Plans</button>
-                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'LEGAL' ? (isDark ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-white text-blue-600 shadow-sm') : (isDark ? 'text-amber-500/50 hover:text-amber-500' : 'text-gray-400 hover:text-gray-600')}`}>Legal</button>
+                    <button onClick={() => setActiveTab('AUCTIONS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'AUCTIONS' ? 'bg-accent text-black shadow-lg shadow-accent/20' : (isDark ? 'text-accent/50 hover:text-accent' : 'text-gray-400 hover:text-gray-600')}`}>Auctions</button>
+                    <button onClick={() => setActiveTab('PLANS')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'PLANS' ? 'bg-accent text-black shadow-lg shadow-accent/20' : (isDark ? 'text-accent/50 hover:text-accent' : 'text-gray-400 hover:text-gray-600')}`}>Plans</button>
+                    <button onClick={() => setActiveTab('LEGAL')} className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'LEGAL' ? 'bg-accent text-black shadow-lg shadow-accent/20' : (isDark ? 'text-accent/50 hover:text-accent' : 'text-gray-400 hover:text-gray-600')}`}>Legal</button>
                 </div>
                 <div className={`w-px h-6 mx-2 hidden md:block ${isDark ? 'bg-amber-500/20' : 'bg-gray-200'}`}></div>
                 <button onClick={logout} className={`p-2 transition-colors ${isDark ? 'text-amber-500/50 hover:text-red-500' : 'text-gray-400 hover:text-red-500'}`}><LogOut className="w-5 h-5"/></button>
@@ -644,7 +644,7 @@ const AdminDashboard: React.FC = () => {
                       </button>
                       <button 
                           onClick={confirmAction.onConfirm}
-                          className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg ${isDark ? 'bg-amber-600 hover:bg-amber-500 text-black shadow-amber-900/40' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200'}`}
+                          className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
                       >
                           Confirm
                       </button>

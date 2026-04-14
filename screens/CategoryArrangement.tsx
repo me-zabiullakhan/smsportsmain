@@ -738,21 +738,21 @@ const CategoryArrangement: React.FC = () => {
                         </button>
                         <button 
                             onClick={handleReset}
-                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-red-400' : 'bg-white border-gray-200 text-gray-400 hover:text-red-600'}`}
+                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20`}
                         >
                             <RotateCcw className="w-4 h-4" /> Reset
                         </button>
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg ${isDark ? 'bg-zinc-100 text-zinc-900 hover:bg-white shadow-white/5' : 'bg-gray-900 text-white hover:bg-black shadow-black/10'}`}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Draft
                         </button>
                         <button 
                             onClick={handleExport}
                             disabled={isExporting}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
                         >
                             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Export PNG
                         </button>
@@ -792,8 +792,8 @@ const CategoryArrangement: React.FC = () => {
                                             onClick={() => setFilterCategory('ALL')}
                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                                 filterCategory === 'ALL' 
-                                                ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white') 
-                                                : (isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                                                ? 'bg-accent text-zinc-950' 
+                                                : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
                                             }`}
                                         >
                                             All
@@ -804,8 +804,8 @@ const CategoryArrangement: React.FC = () => {
                                                 onClick={() => setFilterCategory(c.name)}
                                                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                                     filterCategory === c.name 
-                                                    ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white') 
-                                                    : (isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                                                    ? 'bg-accent text-zinc-950' 
+                                                    : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
                                                 }`}
                                             >
                                                 {c.name}
@@ -842,8 +842,8 @@ const CategoryArrangement: React.FC = () => {
                                     onClick={() => setActiveCategory('ALL_CATEGORIES')}
                                     className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                         activeCategory === 'ALL_CATEGORIES' 
-                                        ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
-                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-900')
+                                        ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' 
+                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
                                     }`}
                                 >
                                     All Categories
@@ -854,8 +854,8 @@ const CategoryArrangement: React.FC = () => {
                                         onClick={() => setActiveCategory(cat.id || '')}
                                         className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                             activeCategory === cat.id 
-                                            ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
-                                            : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-900')
+                                            ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' 
+                                            : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
                                         }`}
                                     >
                                         {cat.name}
@@ -980,12 +980,12 @@ const CategoryArrangement: React.FC = () => {
                                     <table className="w-full border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className={`w-24 p-5 border text-[12px] font-black uppercase tracking-widest ${isDark ? 'bg-zinc-900/90 border-accent/20 text-accent' : 'bg-gray-50 border-blue-100 text-blue-600'}`}>
-                                                    {isAllrounderTable ? 'CATEGORY' : '#'}
+                                                <th className={`w-24 p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
+                                                    <span className="golden-text">{isAllrounderTable ? 'CATEGORY' : '#'}</span>
                                                 </th>
                                                 {Array.from({ length: colCount }).map((_, cIdx) => (
-                                                    <th key={cIdx + 1} className={`p-5 border text-[12px] font-black uppercase tracking-widest ${isDark ? 'bg-zinc-900/90 border-accent/20 text-accent' : 'bg-gray-50 border-blue-100 text-blue-600'}`}>
-                                                        {cIdx + 1}
+                                                    <th key={cIdx + 1} className={`p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
+                                                        <span className="golden-text">{cIdx + 1}</span>
                                                     </th>
                                                 ))}
                                             </tr>
@@ -996,8 +996,8 @@ const CategoryArrangement: React.FC = () => {
                                                 const rowLabel = isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`;
                                                 return (
                                                     <tr key={rowLabel}>
-                                                        <td className={`p-5 border text-center text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${isDark ? 'bg-zinc-900/60 border-accent/20 text-accent/70' : 'bg-gray-50/50 border-blue-50 text-blue-400'}`}>
-                                                            <div className="flex items-center justify-center gap-2">
+                                                        <td className={`p-5 border text-center text-[12px] font-black uppercase tracking-widest whitespace-nowrap shine-effect ${isDark ? 'bg-zinc-900/60 border-accent/20' : 'bg-gray-50/50 border-blue-50'}`}>
+                                                            <div className="flex items-center justify-center gap-2 golden-text">
                                                                 {rowLabel}
                                                                 {isAllrounderTable && (
                                                                     <button 
@@ -1009,9 +1009,9 @@ const CategoryArrangement: React.FC = () => {
                                                                                 setIsEditingName(true);
                                                                             }
                                                                         }}
-                                                                        className={`p-1 rounded transition-all group ${isDark ? 'hover:bg-accent/20' : 'hover:bg-blue-100'}`}
+                                                                        className={`p-1 rounded transition-all group ${isDark ? 'bg-accent/20' : 'bg-blue-100'}`}
                                                                     >
-                                                                        <Pencil className={`w-2.5 h-2.5 transition-all ${isDark ? 'text-accent/30 group-hover:text-accent' : 'text-blue-300 group-hover:text-blue-600'}`} />
+                                                                        <Pencil className={`w-2.5 h-2.5 transition-all ${isDark ? 'text-accent' : 'text-blue-600'}`} />
                                                                     </button>
                                                                 )}
                                                             </div>

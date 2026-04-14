@@ -834,7 +834,7 @@ const AuctionManage: React.FC = () => {
                                         <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Configure core tournament logic</p>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'}`}>
+                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 bg-accent text-zinc-950 shadow-accent/20`}>
                                     <Save className="w-4 h-4"/> Sync Identity
                                 </button>
                             </div>
@@ -986,7 +986,7 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'TEAM')}/>
                                 </label>
-                                <button onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-blue-600/20"><Plus className="w-4 h-4"/> Add Team</button>
+                                <button onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} className="bg-accent text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-accent/20"><Plus className="w-4 h-4"/> Add Team</button>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1023,7 +1023,7 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
-                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'}`}>
+                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-zinc-950 shadow-accent/20`}>
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
                             </div>

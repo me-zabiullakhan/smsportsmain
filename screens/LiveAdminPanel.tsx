@@ -256,7 +256,7 @@ const LiveAdminPanel: React.FC = () => {
                                 }
                             }}
                             disabled={isProcessing}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center"
+                            className="w-full bg-accent text-primary font-bold py-3 rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center"
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4"/>}
                             BRING BACK UNSOLD ({unsoldCount})
@@ -277,7 +277,7 @@ const LiveAdminPanel: React.FC = () => {
                             }
                         }}
                         disabled={isProcessing}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-lg shadow-green-900/20 transition-all active:scale-95 flex items-center justify-center tracking-wide"
+                        className="w-full bg-accent text-primary font-bold py-4 rounded-lg shadow-lg shadow-accent/20 transition-all active:scale-95 flex items-center justify-center tracking-wide"
                     >
                         {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : "GENERATE SUMMARY & FINISH"}
                     </button>
@@ -304,7 +304,7 @@ const LiveAdminPanel: React.FC = () => {
                                     key={t.id}
                                     type="button"
                                     onClick={() => setSelectedTeamId(String(t.id))}
-                                    className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all truncate ${selectedTeamId === String(t.id) ? 'bg-green-600 text-white border-green-400' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'}`}
+                                    className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all truncate ${selectedTeamId === String(t.id) ? 'bg-accent text-primary border-accent' : 'bg-gray-800 text-gray-400 border-gray-700'}`}
                                   >
                                       {t.name} ({t.budget})
                                   </button>
@@ -335,7 +335,7 @@ const LiveAdminPanel: React.FC = () => {
                           <button 
                             onClick={confirmSell}
                             disabled={isProcessing}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm font-bold shadow-lg flex items-center justify-center transition-colors"
+                            className="flex-1 bg-accent text-primary py-2 rounded text-sm font-bold shadow-lg flex items-center justify-center transition-colors"
                           >
                               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Confirm'}
                           </button>
@@ -350,7 +350,7 @@ const LiveAdminPanel: React.FC = () => {
                       <button 
                         onClick={handleSellClick}
                         disabled={isProcessing}
-                        className="flex flex-col items-center justify-center bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
+                        className="flex flex-col items-center justify-center bg-accent text-primary disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
                       >
                           {isProcessing ? <Loader2 className="mb-1 h-6 w-6 animate-spin"/> : <Check className="mb-1 h-6 w-6"/>}
                           {isProcessing ? 'SELLING...' : 'SOLD'}
@@ -358,7 +358,7 @@ const LiveAdminPanel: React.FC = () => {
                       <button 
                         onClick={handlePass}
                         disabled={isProcessing}
-                        className="flex flex-col items-center justify-center bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
+                        className="flex flex-col items-center justify-center bg-accent text-primary disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
                       >
                           {isProcessing ? <Loader2 className="mb-1 h-6 w-6 animate-spin"/> : <X className="mb-1 h-6 w-6"/>}
                           UNSOLD
@@ -420,7 +420,7 @@ const LiveAdminPanel: React.FC = () => {
                                 <div 
                                     key={p.id}
                                     onClick={() => setManualPlayerId(String(p.id))}
-                                    className={`p-2 text-[10px] cursor-pointer border-b border-gray-800 last:border-0 hover:bg-highlight/10 transition-colors ${manualPlayerId === String(p.id) ? 'bg-highlight/20 text-highlight font-bold' : 'text-gray-300'}`}
+                                    className={`p-2 text-[10px] cursor-pointer border-b border-gray-800 last:border-0 transition-colors ${manualPlayerId === String(p.id) ? 'bg-accent/20 text-accent font-bold' : 'text-gray-300'}`}
                                 >
                                     <div className="flex justify-between items-center">
                                         <span>{p.name} <span className="opacity-60">({p.category})</span></span>
@@ -437,10 +437,10 @@ const LiveAdminPanel: React.FC = () => {
                    <button 
                      onClick={() => handleStart(manualPlayerId)} 
                      disabled={isStartDisabled || !manualPlayerId}
-                     className={`w-full flex items-center justify-center font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-highlight/20 active:scale-95
+                     className={`w-full flex items-center justify-center font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-accent/20 active:scale-95
                          ${isStartDisabled || !manualPlayerId
                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                             : 'bg-highlight hover:bg-teal-500 text-primary'}`
+                             : 'bg-accent text-primary'}`
                      }
                    >
                        {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Play className="mr-2 h-5 w-5"/>} 
@@ -455,10 +455,10 @@ const LiveAdminPanel: React.FC = () => {
           <button 
             onClick={() => handleStart()} 
             disabled={isStartDisabled}
-            className={`w-full flex items-center justify-center font-bold py-4 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-highlight/20 active:scale-95
+            className={`w-full flex items-center justify-center font-bold py-4 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-accent/20 active:scale-95
                 ${isStartDisabled 
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                    : 'bg-highlight hover:bg-teal-500 text-primary'}`
+                    : 'bg-accent text-primary'}`
             }
           >
               {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Shuffle className="mr-2 h-5 w-5"/>} 

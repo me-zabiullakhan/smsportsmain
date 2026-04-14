@@ -44,7 +44,7 @@ const AuctionCard: React.FC<{ auction: AuctionSetup, navigate: (path: string) =>
             {getStatusBadge(auction.status)}
             <div className="flex justify-between items-start mb-2 mt-2">
                 <h3 className={`text-xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{auction.title}</h3>
-                <button onClick={() => navigate(`/auction/${auction.id}`)} className={`${isDark ? 'bg-accent/10 hover:bg-accent text-accent hover:text-primary' : 'bg-accent/10 hover:bg-accent text-accent hover:text-white'} text-[10px] font-black uppercase px-4 py-2 rounded-xl transition-all active:scale-95`}>Enter Room</button>
+                <button onClick={() => navigate(`/auction/${auction.id}`)} className={`bg-accent text-primary text-[10px] font-black uppercase px-4 py-2 rounded-xl transition-all active:scale-95 shadow-lg shadow-accent/20`}>Enter Room</button>
             </div>
             <div className={`text-sm mb-4 flex items-center gap-2 font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
                 {(isRegOpen && isPublicReg) ? <span className="text-green-500 font-black text-[9px] uppercase border border-green-500/30 bg-green-500/10 px-2 py-0.5 rounded tracking-widest">Reg Open</span> : (isRegOpen && !isPublicReg) ? <span className="text-accent font-black text-[9px] uppercase border border-accent/30 bg-accent/10 px-2 py-0.5 rounded tracking-widest">Private</span> : <span className="text-gray-500 font-black text-[9px] uppercase border border-gray-500/30 bg-gray-500/10 px-2 py-0.5 rounded tracking-widest">Closed</span>}
@@ -158,7 +158,7 @@ const LandingPage: React.FC = () => {
             
             <ThemeToggle />
 
-            <Link to="/auth" className="bg-accent hover:bg-amber-400 text-primary font-black py-2.5 px-8 rounded-2xl transition-all shadow-lg shadow-accent/20 text-[11px] uppercase tracking-[0.2em] active:scale-95">Login</Link>
+            <Link to="/auth" className="bg-accent text-primary font-black py-2.5 px-8 rounded-2xl transition-all shadow-lg shadow-accent/20 text-[11px] uppercase tracking-[0.2em] active:scale-95">Login</Link>
           </div>
         </div>
       </nav>
@@ -182,10 +182,10 @@ const LandingPage: React.FC = () => {
           </p>
           
           <div className="reveal-element flex flex-col sm:flex-row justify-center gap-5" style={{ transitionDelay: '600ms' }}>
-            <Link to="/auth?tab=admin&mode=register" className={`flex items-center justify-center font-black py-6 px-12 rounded-[2rem] transition-all shadow-2xl group text-xs uppercase tracking-widest active:scale-95 ${isDark ? 'bg-white text-primary hover:bg-accent hover:text-primary' : 'bg-accent text-white hover:bg-amber-600 shadow-accent/20'}`}>
+            <Link to="/auth?tab=admin&mode=register" className={`flex items-center justify-center font-black py-6 px-12 rounded-[2rem] transition-all shadow-2xl group text-xs uppercase tracking-widest active:scale-95 bg-accent text-primary shadow-accent/20`}>
                 <Play className="w-4 h-4 mr-3 fill-current group-hover:scale-125 transition-transform" /> Create Auction
             </Link>
-            <button onClick={() => scrollToSection('pricing')} className={`flex items-center justify-center border-2 font-black py-6 px-12 rounded-[2rem] transition-all shadow-xl text-xs uppercase tracking-widest active:scale-95 ${isDark ? 'bg-secondary border-accent/30 text-white hover:border-accent hover:bg-accent/5' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+            <button onClick={() => scrollToSection('pricing')} className={`flex items-center justify-center border-2 font-black py-6 px-12 rounded-[2rem] transition-all shadow-xl text-xs uppercase tracking-widest active:scale-95 bg-accent border-accent text-primary shadow-accent/20`}>
                 View Plans
             </button>
           </div>
@@ -278,7 +278,7 @@ const LandingPage: React.FC = () => {
                                   {plan.price === 0 ? 'Standard Features' : 'All Pro Features'}
                               </div>
                           </div>
-                          <Link to="/auth?tab=admin&mode=register" className={`w-full py-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 ${plan.price === 5000 ? 'bg-accent text-primary hover:bg-amber-400 shadow-xl shadow-accent/20' : isDark ? 'bg-accent/10 text-accent hover:bg-accent hover:text-primary' : 'bg-gray-100 text-gray-600 hover:bg-accent hover:text-white'}`}>
+                          <Link to="/auth?tab=admin&mode=register" className={`w-full py-5 rounded-2xl text-center text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 ${plan.price === 5000 ? 'bg-accent text-primary shadow-xl shadow-accent/20' : isDark ? 'bg-accent text-primary' : 'bg-accent text-white'}`}>
                               Get Started
                           </Link>
                       </div>
@@ -292,7 +292,7 @@ const LandingPage: React.FC = () => {
                       <h3 className={`text-3xl font-black mb-10 text-left uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Custom Plan</h3>
                       <div className={`text-2xl font-black mb-12 h-[61px] flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>Contact Us</div>
                       <p className="text-[11px] text-gray-500 font-black mb-12 flex-grow leading-relaxed uppercase tracking-widest text-left">For very large leagues, custom branding, and onsite support from our team.</p>
-                      <button onClick={() => window.location.href='mailto:send.smsports@gmail.com'} className={`w-full font-black py-5 rounded-2xl text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 ${isDark ? 'bg-white text-primary hover:bg-accent hover:text-primary' : 'bg-accent text-white hover:bg-amber-600'}`}>
+                      <button onClick={() => window.location.href='mailto:send.smsports@gmail.com'} className={`w-full font-black py-5 rounded-2xl text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 ${isDark ? 'bg-accent text-primary' : 'bg-accent text-white'}`}>
                           Email Support
                       </button>
                   </div>
@@ -328,7 +328,7 @@ const LandingPage: React.FC = () => {
 
               <div className="mt-24 text-center">
                   <p className="text-zinc-500 font-black text-[10px] uppercase tracking-[0.5em] mb-10 reveal-element">Conduct your auction professionally</p>
-                  <button onClick={() => window.location.href='mailto:send.smsports@gmail.com'} className={`font-black px-16 py-6 rounded-[2rem] shadow-2xl transition-all active:scale-95 uppercase tracking-[0.2em] text-xs reveal-element ${isDark ? 'bg-white text-primary hover:bg-accent hover:text-primary' : 'bg-accent text-white hover:bg-amber-600 shadow-accent/20'}`}>
+                  <button onClick={() => window.location.href='mailto:send.smsports@gmail.com'} className={`font-black px-16 py-6 rounded-[2rem] shadow-2xl transition-all active:scale-95 uppercase tracking-[0.2em] text-xs reveal-element ${isDark ? 'bg-accent text-primary' : 'bg-accent text-white shadow-accent/20'}`}>
                       Talk to Our Team
                   </button>
               </div>

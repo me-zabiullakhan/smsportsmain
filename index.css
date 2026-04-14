@@ -19,45 +19,45 @@
   /* Dark Theme (Advaya) - Default */
   --primary: #000000;
   --secondary: #121212;
-  --accent: #fbbf24; /* Golden */
+  --accent: #facc15; /* Vibrant Yellow */
   --highlight: #ffffff;
   --surface: #1a1a1a;
   --on-surface: #ffffff;
-  --neon-glow: 0 0 15px rgba(251, 191, 36, 0.6), 0 0 30px rgba(251, 191, 36, 0.3);
+  --neon-glow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.3);
 }
 
 .light {
   /* Light Theme */
   --primary: #ffffff;
   --secondary: #f8fafc;
-  --accent: #2563eb; /* Blue */
+  --accent: #facc15; /* Vibrant Yellow */
   --highlight: #000000;
   --surface: #f1f5f9;
   --on-surface: #0f172a;
-  --neon-glow: 0 0 15px rgba(37, 99, 235, 0.3), 0 0 30px rgba(37, 99, 235, 0.1);
+  --neon-glow: 0 0 15px rgba(250, 204, 21, 0.3), 0 0 30px rgba(250, 204, 21, 0.1);
 }
 
 @layer components {
   .advaya-text {
     @apply text-transparent bg-clip-text bg-gradient-to-b;
     background-image: linear-gradient(to bottom, var(--highlight), var(--accent), var(--accent));
-    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4));
     animation: text-pulse 3s infinite ease-in-out;
   }
 
   .light .advaya-text {
     background-image: linear-gradient(to bottom, #000, var(--accent), var(--accent));
-    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2));
+    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.2));
   }
 
   @keyframes text-pulse {
-    0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4)); }
-    50% { filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)); }
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4)); }
+    50% { filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.7)); }
   }
 
   .light @keyframes text-pulse {
-    0%, 100% { filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2)); }
-    50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.4)); }
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.2)); }
+    50% { filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.4)); }
   }
 
   .neon-border {
@@ -67,31 +67,32 @@
   }
 
   .golden-text {
-    @apply text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-400 to-amber-700;
-    filter: drop-shadow(0 2px 10px rgba(251, 191, 36, 0.5));
+    @apply text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-700;
+    filter: drop-shadow(0 2px 10px rgba(250, 204, 21, 0.8));
+    font-weight: 900;
   }
 
   .light .golden-text {
-    @apply from-blue-400 via-blue-600 to-blue-800;
-    filter: drop-shadow(0 2px 10px rgba(37, 99, 235, 0.3));
+    @apply from-yellow-400 via-yellow-600 to-yellow-800;
+    filter: drop-shadow(0 2px 10px rgba(250, 204, 21, 0.5));
   }
 
   .golden-glow {
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5), inset 0 0 20px rgba(250, 204, 21, 0.3);
   }
 
   .light .golden-glow {
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.2), inset 0 0 20px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.3), inset 0 0 20px rgba(250, 204, 21, 0.2);
   }
 
   .golden-border {
-    @apply border-2 border-amber-500/30;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    @apply border-2 border-yellow-500/50;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
   }
 
   .light .golden-border {
-    @apply border-blue-500/30;
-    box-shadow: 0 0 15px rgba(37, 99, 235, 0.1);
+    @apply border-yellow-500/40;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
   }
 
   .cinematic-frame {

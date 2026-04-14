@@ -112,9 +112,9 @@ const AuthScreen: React.FC = () => {
                         
                         <div className={`flex mb-8 rounded-2xl p-1.5 border transition-colors ${isDark ? 'bg-primary/50 border-white/5' : 'bg-gray-100 border-gray-200'}`}>
                             <button onClick={() => { setActiveTab('team'); setError(null); }}
-                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'team' ? (isDark ? 'bg-accent text-primary shadow-xl' : 'bg-accent text-white shadow-xl') : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-500 hover:text-gray-900')}`}>Franchise Login</button>
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'team' ? (isDark ? 'bg-accent text-primary shadow-xl' : 'bg-accent text-white shadow-xl') : (isDark ? 'text-zinc-500' : 'text-gray-500')}`}>Franchise Login</button>
                             <button onClick={() => { setActiveTab('admin'); setError(null); }}
-                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'admin' ? (isDark ? 'bg-white text-primary shadow-xl' : 'bg-gray-900 text-white shadow-xl') : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-500 hover:text-gray-900')}`}>Organizer Portal</button>
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'admin' ? (isDark ? 'bg-accent text-primary shadow-xl' : 'bg-accent text-white shadow-xl') : (isDark ? 'text-zinc-500' : 'text-gray-500')}`}>Organizer Portal</button>
                         </div>
 
                         <h2 className={`text-xl font-black text-center mb-8 uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -134,7 +134,7 @@ const AuthScreen: React.FC = () => {
                                         className={`w-full border rounded-2xl py-4 pl-12 pr-4 font-black text-xs tracking-widest outline-none transition-all ${isDark ? 'bg-primary/80 border-zinc-800 text-white focus:border-accent' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-accent'}`} required />
                                 </div>
                                 {error && <p className="text-red-400 text-[10px] font-black uppercase tracking-widest text-center bg-red-400/10 py-3 rounded-xl border border-red-500/20">{error}</p>}
-                                <button type="submit" disabled={isLoading} className={`w-full font-black py-5 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-[0.2em] shadow-xl border-2 ${isDark ? 'bg-accent text-primary hover:bg-amber-400 border-accent/50 shadow-accent/40 shadow-[0_0_25px_rgba(251,191,36,0.3)]' : 'bg-accent text-white hover:bg-amber-600 border-accent shadow-accent/40 shadow-[0_0_25px_rgba(251,191,36,0.3)]'}`}>
+                                <button type="submit" disabled={isLoading} className={`w-full font-black py-5 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-[0.2em] shadow-xl border-2 ${isDark ? 'bg-accent text-primary border-accent/50 shadow-accent/40 shadow-[0_0_25px_rgba(251,191,36,0.3)]' : 'bg-accent text-white border-accent shadow-accent/40 shadow-[0_0_25px_rgba(251,191,36,0.3)]'}`}>
                                    {isLoading ? <RefreshCw className="animate-spin w-5 h-5 mx-auto"/> : 'SIGN IN TO AUCTION'}
                                 </button>
                             </form>
@@ -143,7 +143,7 @@ const AuthScreen: React.FC = () => {
                                 <input type="email" placeholder="EMAIL ADDRESS" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required
                                     className={`w-full border rounded-2xl py-4 px-6 font-black text-xs tracking-widest outline-none transition-all ${isDark ? 'bg-primary/80 border-zinc-800 text-white focus:border-accent' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-accent'}`} />
                                 {error && <p className="text-red-400 text-[10px] font-black uppercase tracking-widest text-center">{error}</p>}
-                                <button type="submit" disabled={isLoading} className={`w-full font-black py-5 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-[0.2em] shadow-xl ${isDark ? 'bg-accent text-primary hover:bg-amber-400 shadow-accent/20' : 'bg-accent text-white hover:bg-amber-600 shadow-accent/20'}`}>
+                                <button type="submit" disabled={isLoading} className={`w-full font-black py-5 rounded-2xl transition-all active:scale-95 uppercase text-xs tracking-[0.2em] shadow-xl ${isDark ? 'bg-accent text-primary shadow-accent/20' : 'bg-accent text-white shadow-accent/20'}`}>
                                    {isLoading ? 'Sending...' : 'Send Reset Link'}
                                 </button>
                                 <button type="button" onClick={() => setShowForgotPassword(false)} className={`w-full text-[10px] font-black uppercase tracking-widest transition-colors ${isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Back to Login</button>
@@ -151,16 +151,16 @@ const AuthScreen: React.FC = () => {
                         ) : (
                             <div className="space-y-6">
                                  <div className="grid grid-cols-1 gap-3">
-                                    <button onClick={handleGoogleLogin} disabled={isLoading} className={`w-full font-black py-4 rounded-2xl flex items-center justify-center transition-all text-xs tracking-widest shadow-xl ${isDark ? 'bg-white text-primary hover:bg-gray-200' : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50'}`}>
+                                    <button onClick={handleGoogleLogin} disabled={isLoading} className={`w-full font-black py-4 rounded-2xl flex items-center justify-center transition-all text-xs tracking-widest shadow-xl ${isDark ? 'bg-accent text-primary' : 'bg-accent text-white shadow-accent/20'}`}>
                                         <Chrome className="mr-3 h-5 w-5 text-red-500" /> Sign in with Google
                                     </button>
                                     
                                     <button 
                                         onClick={handleGoogleLogin} 
                                         disabled={isLoading} 
-                                        className={`w-full font-black py-4 rounded-2xl flex items-center justify-center transition-all text-[10px] tracking-[0.2em] gap-2 shadow-xl group ${isDark ? 'bg-slate-900 border border-accent/50 text-accent hover:bg-black' : 'bg-gray-900 text-white hover:bg-black'}`}
+                                        className={`w-full font-black py-4 rounded-2xl flex items-center justify-center transition-all text-[10px] tracking-[0.2em] gap-2 shadow-xl group ${isDark ? 'bg-accent text-primary' : 'bg-accent text-white'}`}
                                     >
-                                        <Zap className="h-4 w-4 text-accent group-hover:scale-125 transition-transform" /> SUPER ADMIN ENTRANCE
+                                        <Zap className="h-4 w-4 text-primary group-hover:scale-125 transition-transform" /> SUPER ADMIN ENTRANCE
                                     </button>
                                  </div>
 

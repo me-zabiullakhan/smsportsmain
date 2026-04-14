@@ -121,7 +121,7 @@ const CreateAuction: React.FC = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Auction Created!</h2>
                 <p className="text-gray-600 mb-8">Your auction <span className="font-bold">{formData.title}</span> has been saved.</p>
-                <button onClick={() => navigate('/admin')} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg">Go to Dashboard</button>
+                <button onClick={() => navigate('/admin')} className="w-full bg-accent text-white font-bold py-3 px-6 rounded-lg shadow-lg">Go to Dashboard</button>
             </div>
         </div>
       )}
@@ -151,7 +151,7 @@ const CreateAuction: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                         {['Cricket', 'Football', 'Kabaddi'].map(s => (
                             <button key={s} type="button" onClick={() => setFormData({...formData, sport: s})}
-                                className={`px-6 py-3 rounded-xl text-xs font-bold uppercase transition-all border-2 ${formData.sport === s ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
+                                className={`px-6 py-3 rounded-xl text-xs font-bold uppercase transition-all border-2 ${formData.sport === s ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}>
                                 {s}
                             </button>
                         ))}
@@ -190,7 +190,7 @@ const CreateAuction: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         {dbPlans.map(plan => (
                             <button key={plan.id} type="button" onClick={() => setFormData({...formData, plan: plan.id})}
-                                className={`px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all border-2 text-center flex flex-col ${formData.plan === plan.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'}`}>
+                                className={`px-4 py-3 rounded-xl text-xs font-bold uppercase transition-all border-2 text-center flex flex-col ${formData.plan === plan.id ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}>
                                 <span>{plan.name}</span>
                                 {plan.teams && <span className="text-[10px] opacity-60 mt-1">Up to {plan.teams} Teams</span>}
                             </button>
@@ -236,7 +236,7 @@ const CreateAuction: React.FC = () => {
                                  <div><label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Price Above</label><input type="number" className="w-full border border-gray-100 bg-gray-50 rounded-lg p-2 text-xs font-bold outline-none" value={newSlab.from} onChange={e => setNewSlab({...newSlab, from: e.target.value})} /></div>
                                  <div><label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Increase By</label><input type="number" className="w-full border border-gray-100 bg-gray-50 rounded-lg p-2 text-xs font-bold outline-none" value={newSlab.increment} onChange={e => setNewSlab({...newSlab, increment: e.target.value})} /></div>
                              </div>
-                             <button type="button" onClick={addSlab} className="mt-4 w-full py-3 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-lg shadow-lg active:scale-95">Add Rule</button>
+                             <button type="button" onClick={addSlab} className="mt-4 w-full py-3 bg-accent text-white text-[10px] font-bold uppercase rounded-lg shadow-lg active:scale-95">Add Rule</button>
                         </div>
                     </div>
                 </div>
@@ -250,7 +250,7 @@ const CreateAuction: React.FC = () => {
                     </div>
                 </div>
 
-                <button type="submit" disabled={loading} className={`w-full bg-black hover:bg-gray-800 text-white font-bold py-5 rounded-2xl shadow-xl transition-all active:scale-95 uppercase text-sm flex items-center justify-center gap-3 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                <button type="submit" disabled={loading} className={`w-full bg-accent text-white font-bold py-5 rounded-2xl shadow-xl transition-all active:scale-95 uppercase text-sm flex items-center justify-center gap-3 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
                     {loading ? <RefreshCw className="animate-spin h-5 w-5"/> : <CheckCircle className="h-5 w-5"/>}
                     Confirm and Create Auction
                 </button>
