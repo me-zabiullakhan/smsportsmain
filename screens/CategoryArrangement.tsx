@@ -33,7 +33,9 @@ import {
     CheckCircle,
     XCircle,
     X,
-    Pencil
+    Pencil,
+    Check,
+    Trophy
 } from 'lucide-react';
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
@@ -116,7 +118,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
     return (
         <div 
             ref={setDropRef}
-            className={`relative h-16 w-full border transition-all flex items-center justify-center group overflow-hidden ${
+            className={`relative min-h-[4.5rem] h-auto w-full border transition-all flex items-center justify-center group ${
                 isOver 
                 ? (isDark ? 'bg-accent/30 border-accent shadow-[0_0_15px_rgba(245,158,11,0.3)] z-10 scale-[1.02]' : 'bg-blue-500/30 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10 scale-[1.02]')
                 : (isDark ? 'bg-zinc-900/40 border-zinc-800/50' : 'bg-gray-50 border-gray-200')
@@ -133,13 +135,13 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
                     style={style}
                     {...listeners}
                     {...attributes}
-                    className="w-full h-full p-1.5 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
+                    className="w-full h-full p-2 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
                 >
                     <div className={`w-8 h-8 rounded-lg border flex-shrink-0 overflow-hidden flex items-center justify-center ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
                         <span className={`text-[10px] font-black ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{index + 1}</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className={`text-[10px] font-black leading-tight uppercase tracking-tight truncate ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
+                        <p className={`text-[10px] font-black leading-tight uppercase tracking-tight whitespace-normal break-words ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
                         <p className={`text-[8px] font-bold uppercase tracking-widest truncate ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.category}</p>
                     </div>
                     
@@ -187,6 +189,13 @@ const CategoryArrangement: React.FC = () => {
     const [history, setHistory] = useState<{ [key: string]: CategoryArrangementSlot }[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [showAddCategoryPopup, setShowAddCategoryPopup] = useState(false);
+    const [showDeleteCategoryPopup, setShowDeleteCategoryPopup] = useState(false);
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
+    const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+    const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
     const [activeDragId, setActiveDragId] = useState<string | null>(null);
     const [pendingSwap, setPendingSwap] = useState<{ slotId: string, newPlayer: Player } | null>(null);
     const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
@@ -263,13 +272,60 @@ const CategoryArrangement: React.FC = () => {
         setActiveDragId(event.active.id as string);
     };
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveDragId(null);
         if (!over) return;
 
         const slotId = over.id as string;
         const activeData = active.data.current as any;
+
+        // Handle All Categories view drop (format catId:slotId)
+        if (slotId.includes(':')) {
+            const [catId, sId] = slotId.split(':');
+            const player = activeData as Player;
+            const cat = categories.find(c => c.id === catId);
+            if (!cat) return;
+
+            const targetSlot = allSlots[catId]?.[sId];
+            if (targetSlot) {
+                setPendingSwap({ slotId, newPlayer: player });
+                return;
+            }
+
+            // Direct assignment for All Categories view
+            setIsSaving(true);
+            try {
+                const newCatSlots = { 
+                    ...(allSlots[catId] || {}), 
+                    [sId]: {
+                        playerId: player.id,
+                        playerName: player.name,
+                        category: player.category
+                    }
+                };
+                await db.collection('auctions').doc(id!).collection('arrangementDrafts').doc(catId).set({
+                    auctionId: id,
+                    categoryId: catId,
+                    slots: newCatSlots,
+                    config: customConfig[catId] || { rows: 0, cols: 0 },
+                    updatedAt: Date.now()
+                });
+                
+                // Update local allSlots
+                setAllSlots(prev => ({
+                    ...prev,
+                    [catId]: newCatSlots
+                }));
+                
+                showNotification(`Assigned ${player.name} to ${cat.name}`, "success");
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsSaving(false);
+            }
+            return;
+        }
 
         // If dragging from another slot
         if (activeData?.fromSlot) {
@@ -330,9 +386,43 @@ const CategoryArrangement: React.FC = () => {
         setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
     };
 
-    const handleSwap = () => {
-        if (!pendingSwap) return;
+    const handleSwap = async () => {
+        if (!pendingSwap || !id) return;
         const { slotId, newPlayer } = pendingSwap;
+
+        // Handle All Categories view swap
+        if (slotId.includes(':')) {
+            const [catId, sId] = slotId.split(':');
+            const catSlots = { ...(allSlots[catId] || {}) };
+            
+            catSlots[sId] = {
+                playerId: newPlayer.id,
+                playerName: newPlayer.name,
+                category: newPlayer.category
+            };
+
+            setIsSaving(true);
+            try {
+                await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(catId).update({
+                    slots: catSlots,
+                    updatedAt: Date.now()
+                });
+                
+                setAllSlots(prev => ({
+                    ...prev,
+                    [catId]: catSlots
+                }));
+                
+                showNotification("Players swapped successfully", "success");
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsSaving(false);
+                setPendingSwap(null);
+            }
+            return;
+        }
+
         const oldPlayerSlot = slots[slotId];
         
         // Find if new player was elsewhere
@@ -363,8 +453,43 @@ const CategoryArrangement: React.FC = () => {
         setPendingSwap(null);
     };
 
-    const handleReplace = () => {
-        if (!pendingSwap) return;
+    const handleReplace = async () => {
+        if (!pendingSwap || !id) return;
+        const { slotId, newPlayer } = pendingSwap;
+
+        // Handle All Categories view replace
+        if (slotId.includes(':')) {
+            const [catId, sId] = slotId.split(':');
+            const catSlots = { ...(allSlots[catId] || {}) };
+            
+            catSlots[sId] = {
+                playerId: newPlayer.id,
+                playerName: newPlayer.name,
+                category: newPlayer.category
+            };
+
+            setIsSaving(true);
+            try {
+                await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(catId).update({
+                    slots: catSlots,
+                    updatedAt: Date.now()
+                });
+                
+                setAllSlots(prev => ({
+                    ...prev,
+                    [catId]: catSlots
+                }));
+                
+                showNotification("Player replaced successfully", "success");
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsSaving(false);
+                setPendingSwap(null);
+            }
+            return;
+        }
+
         executeAssign(pendingSwap.slotId, pendingSwap.newPlayer);
         setPendingSwap(null);
     };
@@ -522,12 +647,21 @@ const CategoryArrangement: React.FC = () => {
 
     const currentCategory = categories.find(c => c.id === activeCategory);
     const isAllCategories = activeCategory === 'ALL_CATEGORIES';
-    const isAllrounderTable = currentCategory?.name.toLowerCase() === 'allrounder' || isAllCategories;
+    const isAllrounderTable = currentCategory?.name.toLowerCase() === 'allrounder';
     
     const config = customConfig[activeCategory] || { rows: 0, cols: 0 };
     const totalRequired = currentCategory?.requiredPlayers || 6;
-    const rowCount = config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6));
-    const colCount = config.cols || 6;
+    
+    // Transpose logic for All Categories
+    const rowCount = isAllCategories 
+        ? Math.max(6, ...categories.map(cat => {
+            const c = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
+            const tr = cat.requiredPlayers || 6;
+            return c.rows || Math.ceil(tr / 6) * 6; // Use actual slots if possible
+          }))
+        : (config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6)));
+        
+    const colCount = isAllCategories ? categories.length : (config.cols || 6);
     const prefix = isAllCategories ? 'ALL' : (currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT');
 
     const maxCols = Math.max(6, ...categories.map(cat => {
@@ -557,6 +691,11 @@ const CategoryArrangement: React.FC = () => {
     };
 
     const addCol = () => {
+        if (isAllCategories) {
+            setIsAddingCategory(true);
+            setIsDeletingCategory(false);
+            return;
+        }
         if (colCount >= 10) return; // Limit columns
         setCustomConfig(prev => ({
             ...prev,
@@ -568,6 +707,11 @@ const CategoryArrangement: React.FC = () => {
     };
 
     const removeCol = () => {
+        if (isAllCategories) {
+            setIsDeletingCategory(true);
+            setIsAddingCategory(false);
+            return;
+        }
         if (colCount <= 1) return;
         setCustomConfig(prev => ({
             ...prev,
@@ -578,11 +722,65 @@ const CategoryArrangement: React.FC = () => {
         }));
     };
 
-    const handleUpdateCategoryName = async () => {
-        if (!id || !activeCategory || !tempCategoryName.trim() || !currentCategory) return;
-        const newName = tempCategoryName.trim();
-        const oldName = currentCategory.name;
+    const handleAddCategory = async () => {
+        if (!id || !newCategoryName.trim()) return;
+        setIsSaving(true);
+        try {
+            const newCat = {
+                name: newCategoryName.trim(),
+                requiredPlayers: 6,
+                createdAt: Date.now()
+            };
+            await db.collection('auctions').doc(id).collection('categories').add(newCat);
+            setNewCategoryName('');
+            setShowAddCategoryPopup(false);
+            setIsAddingCategory(false);
+            showNotification("Category added successfully", "success");
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to add category", "error");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteCategory = async () => {
+        if (!id || !categoryToDelete) {
+            showNotification("Please select a category to delete", "error");
+            return;
+        }
+        setConfirmAction({
+            title: "Delete Category",
+            message: "Are you sure? This will remove all player assignments for this category.",
+            onConfirm: async () => {
+                setIsSaving(true);
+                try {
+                    await db.collection('auctions').doc(id).collection('categories').doc(categoryToDelete).delete();
+                    // Also delete draft
+                    await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(categoryToDelete).delete();
+                    
+                    setShowDeleteCategoryPopup(false);
+                    setIsDeletingCategory(false);
+                    setCategoryToDelete(null);
+                    showNotification("Category deleted successfully", "success");
+                } catch (err) {
+                    console.error(err);
+                    showNotification("Failed to delete category", "error");
+                } finally {
+                    setIsSaving(false);
+                    setConfirmAction(null);
+                }
+            }
+        });
+    };
+
+    const handleUpdateCategoryNameById = async (catId: string, newName: string) => {
+        if (!id || !newName.trim()) return;
+        const category = categories.find(c => c.id === catId);
+        if (!category) return;
+        const oldName = category.name;
         if (newName === oldName) {
+            setEditingCategoryId(null);
             setIsEditingName(false);
             return;
         }
@@ -595,7 +793,7 @@ const CategoryArrangement: React.FC = () => {
             const batch = db.batch();
 
             // 1. Update category name in Firestore
-            const catRef = db.collection('auctions').doc(id).collection('categories').doc(activeCategory);
+            const catRef = db.collection('auctions').doc(id).collection('categories').doc(catId);
             batch.update(catRef, { name: newName });
 
             // 2. Update all players belonging to this category in the main players collection
@@ -606,7 +804,6 @@ const CategoryArrangement: React.FC = () => {
             });
 
             // 3. Update all arrangement drafts to reflect the new category name in slots
-            // and migrate slot IDs if prefix changed or if it's an all-rounder board
             const draftsSnap = await db.collection('auctions').doc(id).collection('arrangementDrafts').get();
             
             draftsSnap.docs.forEach(draftDoc => {
@@ -622,22 +819,18 @@ const CategoryArrangement: React.FC = () => {
                     let newSlotId = slotId;
                     const newSlot = { ...slot };
 
-                    // Update category name inside the slot if it matches
                     if (slot.category === oldName) {
                         newSlot.category = newName;
                         changed = true;
                     }
 
-                    // Migration Logic for Slot IDs:
-                    // Case A: This is the draft for the category we are renaming (Prefix migration)
-                    if (draftDoc.id === activeCategory && oldPrefix !== newPrefix && !isThisDraftAllRounder) {
+                    if (draftDoc.id === catId && oldPrefix !== newPrefix && !isThisDraftAllRounder) {
                         if (slotId.startsWith(oldPrefix)) {
                             newSlotId = slotId.replace(oldPrefix, newPrefix);
                             changed = true;
                         }
                     }
                     
-                    // Case B: This is an All Rounder draft (Name migration)
                     if (isThisDraftAllRounder) {
                         if (slotId.startsWith(oldName + "_")) {
                             newSlotId = slotId.replace(oldName + "_", newName + "_");
@@ -657,51 +850,41 @@ const CategoryArrangement: React.FC = () => {
 
             // Update local state
             setPlayers(prev => prev.map(p => p.category === oldName ? { ...p, category: newName } : p));
-            setCategories(prev => prev.map(c => c.id === activeCategory ? { ...c, name: newName } : c));
+            setCategories(prev => prev.map(c => c.id === catId ? { ...c, name: newName } : c));
             
             // Update allSlots local state
             const newAllSlots = { ...allSlots };
-            Object.keys(newAllSlots).forEach(catId => {
-                const draftSlots = newAllSlots[catId] || {};
-                const draftCategory = categories.find(c => c.id === catId);
-                const isThisDraftAllRounder = draftCategory?.name.toLowerCase() === 'allrounder';
-                
-                const updatedDraftSlots: { [key: string]: CategoryArrangementSlot } = {};
-                
-                Object.entries(draftSlots).forEach(([slotId, slot]) => {
-                    let newSlotId = slotId;
-                    const newSlot = { ...slot };
-                    if (slot.category === oldName) newSlot.category = newName;
-                    
-                    if (catId === activeCategory && oldPrefix !== newPrefix && !isThisDraftAllRounder) {
-                        if (slotId.startsWith(oldPrefix)) {
-                            newSlotId = slotId.replace(oldPrefix, newPrefix);
-                        }
+            Object.keys(newAllSlots).forEach(cid => {
+                const slots = newAllSlots[cid];
+                const updatedSlots: { [key: string]: CategoryArrangementSlot } = {};
+                Object.entries(slots).forEach(([sid, s]) => {
+                    let newSid = sid;
+                    const newS = { ...s };
+                    if (s.category === oldName) newS.category = newName;
+                    if (cid === catId && oldPrefix !== newPrefix) {
+                        if (sid.startsWith(oldPrefix)) newSid = sid.replace(oldPrefix, newPrefix);
                     }
-                    
-                    if (isThisDraftAllRounder) {
-                        if (slotId.startsWith(oldName + "_")) {
-                            newSlotId = slotId.replace(oldName + "_", newName + "_");
-                        }
-                    }
-                    
-                    updatedDraftSlots[newSlotId] = newSlot;
+                    updatedSlots[newSid] = newS;
                 });
-                newAllSlots[catId] = updatedDraftSlots;
+                newAllSlots[cid] = updatedSlots;
             });
             setAllSlots(newAllSlots);
-            
-            // Update current slots if activeCategory was the one renamed
-            setSlots(newAllSlots[activeCategory] || {});
+            if (activeCategory === catId) setSlots(newAllSlots[catId]);
 
+            setEditingCategoryId(null);
             setIsEditingName(false);
-            showNotification("Category updated across all records", "success");
+            showNotification("Category renamed successfully", "success");
         } catch (err) {
             console.error(err);
-            showNotification("Failed to update category name", "error");
+            showNotification("Failed to rename category", "error");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleUpdateCategoryName = async () => {
+        if (!activeCategory) return;
+        handleUpdateCategoryNameById(activeCategory, tempCategoryName);
     };
 
     if (loading) return (
@@ -874,6 +1057,40 @@ const CategoryArrangement: React.FC = () => {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
+                                {isAddingCategory && isAllCategories && (
+                                    <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                                        <input 
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            placeholder="New Category..."
+                                            className={`bg-transparent px-3 py-1 text-[10px] font-bold outline-none w-32 ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                            autoFocus
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') handleAddCategory();
+                                                if (e.key === 'Escape') setIsAddingCategory(false);
+                                            }}
+                                        />
+                                        <button onClick={handleAddCategory} className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-lg"><Check className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => setIsAddingCategory(false)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"><X className="w-3.5 h-3.5" /></button>
+                                    </div>
+                                )}
+                                {isDeletingCategory && isAllCategories && (
+                                    <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                                        <select 
+                                            value={categoryToDelete || ''}
+                                            onChange={(e) => setCategoryToDelete(e.target.value)}
+                                            className={`bg-transparent px-3 py-1 text-[10px] font-bold outline-none w-32 ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                        >
+                                            <option value="" className={isDark ? 'bg-zinc-900' : 'bg-white'}>Select...</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id} value={cat.id} className={isDark ? 'bg-zinc-900' : 'bg-white'}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                        <button onClick={handleDeleteCategory} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+                                        <button onClick={() => setIsDeletingCategory(false)} className="p-1.5 text-gray-500 hover:bg-gray-500/10 rounded-lg"><X className="w-3.5 h-3.5" /></button>
+                                    </div>
+                                )}
                                 <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <button 
                                         onClick={addRow}
@@ -981,25 +1198,64 @@ const CategoryArrangement: React.FC = () => {
                                         <thead>
                                             <tr>
                                                 <th className={`w-24 p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
-                                                    <span className="golden-text">{isAllrounderTable ? 'CATEGORY' : '#'}</span>
+                                                    <span className="golden-text">{isAllCategories ? 'SLOT #' : (isAllrounderTable ? 'CATEGORY' : '#')}</span>
                                                 </th>
-                                                {Array.from({ length: colCount }).map((_, cIdx) => (
-                                                    <th key={cIdx + 1} className={`p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
-                                                        <span className="golden-text">{cIdx + 1}</span>
-                                                    </th>
-                                                ))}
+                                                {isAllCategories ? (
+                                                    categories.map((cat) => (
+                                                        <th key={cat.id} className={`p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
+                                                            {editingCategoryId === cat.id ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={tempCategoryName}
+                                                                        onChange={e => setTempCategoryName(e.target.value)}
+                                                                        className="bg-transparent border-b border-accent text-accent outline-none w-24 text-center"
+                                                                        autoFocus
+                                                                        onKeyDown={e => {
+                                                                            if (e.key === 'Enter') {
+                                                                                // We need a version of handleUpdateCategoryName that takes a category ID
+                                                                                handleUpdateCategoryNameById(cat.id || '', tempCategoryName);
+                                                                            }
+                                                                            if (e.key === 'Escape') setEditingCategoryId(null);
+                                                                        }}
+                                                                    />
+                                                                    <button onClick={() => handleUpdateCategoryNameById(cat.id || '', tempCategoryName)} className="text-green-500"><Check className="w-4 h-4" /></button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center justify-center gap-2 group">
+                                                                    <span className="golden-text">{cat.name}</span>
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            setEditingCategoryId(cat.id || '');
+                                                                            setTempCategoryName(cat.name);
+                                                                        }}
+                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <Pencil className={`w-3 h-3 ${isDark ? 'text-accent' : 'text-blue-600'}`} />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </th>
+                                                    ))
+                                                ) : (
+                                                    Array.from({ length: colCount }).map((_, cIdx) => (
+                                                        <th key={cIdx + 1} className={`p-5 border text-[14px] font-black uppercase tracking-widest shine-effect ${isDark ? 'bg-zinc-900/90 border-accent/20' : 'bg-gray-50 border-blue-100'}`}>
+                                                            <span className="golden-text">{cIdx + 1}</span>
+                                                        </th>
+                                                    ))
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {Array.from({ length: rowCount }).map((_, rIdx) => {
                                                 const rowNum = rIdx + 1;
-                                                const rowLabel = isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`;
+                                                const rowLabel = isAllCategories ? `${rowNum}` : (isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`);
                                                 return (
                                                     <tr key={rowLabel}>
                                                         <td className={`p-5 border text-center text-[12px] font-black uppercase tracking-widest whitespace-nowrap shine-effect ${isDark ? 'bg-zinc-900/60 border-accent/20' : 'bg-gray-50/50 border-blue-50'}`}>
                                                             <div className="flex items-center justify-center gap-2 golden-text">
                                                                 {rowLabel}
-                                                                {isAllrounderTable && (
+                                                                {!isAllCategories && isAllrounderTable && (
                                                                     <button 
                                                                         onClick={() => {
                                                                             const cat = categories[rIdx];
@@ -1016,47 +1272,75 @@ const CategoryArrangement: React.FC = () => {
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        {Array.from({ length: colCount }).map((_, cIdx) => {
-                                                            const col = cIdx + 1;
-                                                            const slotId = `${rowLabel}_${col}`;
-                                                            const isTarget = pendingSwap?.slotId === slotId;
-                                                            const globalIndex = (rIdx * colCount) + cIdx;
-                                                            return (
-                                                                <td key={slotId} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
-                                                                    <DroppableSlot 
-                                                                        id={slotId} 
-                                                                        player={slots[slotId]}
-                                                                        onAction={handleAction}
-                                                                        index={globalIndex}
-                                                                    />
-                                                                    {isTarget && (
-                                                                        <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 p-2 animate-fade-in ${isDark ? 'bg-zinc-950/95' : 'bg-white/95'}`}>
-                                                                            <p className={`text-[8px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-accent' : 'text-blue-600'}`}>Slot Occupied</p>
-                                                                            <div className="flex gap-2 w-full">
+                                                        {isAllCategories ? (
+                                                            categories.map((cat) => {
+                                                                const catPrefix = cat.name.substring(0, 3).toUpperCase();
+                                                                const catConfig = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
+                                                                const catTotalReq = cat.requiredPlayers || 6;
+                                                                const catCols = catConfig.cols || 6;
+                                                                
+                                                                // In All Categories view, we map slot index to actual slot ID
+                                                                // Slot 1 -> CAT1_1, Slot 2 -> CAT1_2 ... Slot 7 -> CAT2_1 (if 6 cols)
+                                                                const r = Math.ceil(rowNum / catCols);
+                                                                const c = ((rowNum - 1) % catCols) + 1;
+                                                                const slotId = `${catPrefix}${r}_${c}`;
+                                                                const catSlots = allSlots[cat.id || ''] || {};
+                                                                const player = catSlots[slotId];
+
+                                                                return (
+                                                                    <td key={`${cat.id}-${slotId}`} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
+                                                                        <DroppableSlot 
+                                                                            id={`${cat.id}:${slotId}`} 
+                                                                            player={player}
+                                                                            onAction={handleAction}
+                                                                            index={rowNum}
+                                                                        />
+                                                                    </td>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            Array.from({ length: colCount }).map((_, cIdx) => {
+                                                                const col = cIdx + 1;
+                                                                const slotId = `${rowLabel}_${col}`;
+                                                                const isTarget = pendingSwap?.slotId === slotId;
+                                                                const globalIndex = (rIdx * colCount) + cIdx;
+                                                                return (
+                                                                    <td key={slotId} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
+                                                                        <DroppableSlot 
+                                                                            id={slotId} 
+                                                                            player={slots[slotId]}
+                                                                            onAction={handleAction}
+                                                                            index={globalIndex}
+                                                                        />
+                                                                        {isTarget && (
+                                                                            <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 p-2 animate-fade-in ${isDark ? 'bg-zinc-950/95' : 'bg-white/95'}`}>
+                                                                                <p className={`text-[8px] font-black uppercase tracking-widest mb-1 ${isDark ? 'text-accent' : 'text-blue-600'}`}>Slot Occupied</p>
+                                                                                <div className="flex gap-2 w-full">
+                                                                                    <button 
+                                                                                        onClick={handleSwap}
+                                                                                        className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                                                                    >
+                                                                                        Swap
+                                                                                    </button>
+                                                                                    <button 
+                                                                                        onClick={handleReplace}
+                                                                                        className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
+                                                                                    >
+                                                                                        Replace
+                                                                                    </button>
+                                                                                </div>
                                                                                 <button 
-                                                                                    onClick={handleSwap}
-                                                                                    className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-accent text-zinc-950 hover:bg-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                                                                                    onClick={() => setPendingSwap(null)}
+                                                                                    className={`text-[7px] font-bold uppercase ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600'}`}
                                                                                 >
-                                                                                    Swap
-                                                                                </button>
-                                                                                <button 
-                                                                                    onClick={handleReplace}
-                                                                                    className={`flex-1 text-[8px] font-black uppercase py-1.5 rounded-lg transition-colors ${isDark ? 'bg-zinc-800 text-white hover:bg-zinc-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
-                                                                                >
-                                                                                    Replace
+                                                                                    Cancel
                                                                                 </button>
                                                                             </div>
-                                                                            <button 
-                                                                                onClick={() => setPendingSwap(null)}
-                                                                                className={`text-[7px] font-bold uppercase ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600'}`}
-                                                                            >
-                                                                                Cancel
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </td>
-                                                            );
-                                                        })}
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })
+                                                        )}
                                                     </tr>
                                                 );
                                             })}
@@ -1123,7 +1407,7 @@ const CategoryArrangement: React.FC = () => {
                         )}
                         <div className="text-center">
                             <h2 className="text-8xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-4">{auctionName}</h2>
-                            <p className="text-amber-500 font-black tracking-[0.6em] text-2xl uppercase opacity-80">OFFICIAL AUCTION BOARD</p>
+                            <p className="text-amber-500 font-black tracking-[0.6em] text-2xl uppercase opacity-80">OFFICIAL CATEGORY BOARD</p>
                         </div>
                         {auctionLogo && (
                             <img src={auctionLogo} className="w-32 h-32 rounded-3xl object-contain bg-zinc-900 border-2 border-amber-500/30 p-3 shadow-2xl shadow-amber-500/20 opacity-0" referrerPolicy="no-referrer" />
@@ -1178,15 +1462,15 @@ const CategoryArrangement: React.FC = () => {
                                                         if (col > cols) return <td key={slotId} className="p-3 border border-amber-500/20 bg-zinc-950/20 opacity-10"></td>;
 
                                                         return (
-                                                            <td key={slotId} className="p-3 border border-amber-500/20 min-w-[180px] relative">
+                                                            <td key={slotId} className="p-3 border border-amber-500/20 min-w-[200px] relative">
                                                                 <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest opacity-50">#{globalIndex}</div>
                                                                 {slot ? (
                                                                     <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg group">
                                                                         <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
                                                                             <User className="w-6 h-6 text-zinc-600" />
                                                                         </div>
-                                                                        <div className="min-w-0">
-                                                                            <p className="text-base font-black text-zinc-100 uppercase truncate leading-tight group-hover:text-amber-400 transition-colors">{slot.playerName}</p>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-base font-black text-zinc-100 uppercase leading-tight group-hover:text-amber-400 transition-colors whitespace-normal break-words">{slot.playerName}</p>
                                                                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{slot.category}</p>
                                                                         </div>
                                                                     </div>
@@ -1210,13 +1494,16 @@ const CategoryArrangement: React.FC = () => {
                 {/* Footer Branding */}
                 <div className="mt-20 pt-10 border-t-4 border-amber-500/30 flex items-center justify-between">
                     <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                            <Trophy className="w-10 h-10 text-zinc-950" />
+                        </div>
                         <div>
-                            <p className="text-2xl font-black text-white uppercase tracking-widest">{auctionName}</p>
-                            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">OFFICIAL TOURNAMENT BOARD</p>
+                            <p className="text-2xl font-black text-white uppercase tracking-widest">SM SPORTS</p>
+                            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">OFFICIAL TOURNAMENT PARTNER</p>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-2xl font-black text-zinc-400 uppercase tracking-widest italic">OFFICIAL AUCTION BOARD</p>
+                        <p className="text-2xl font-black text-zinc-400 uppercase tracking-widest italic">OFFICIAL CATEGORY BOARD</p>
                         <p className="text-sm font-bold text-zinc-600 uppercase tracking-widest mt-1">
                             GENERATED: {new Date().toLocaleDateString()}
                         </p>

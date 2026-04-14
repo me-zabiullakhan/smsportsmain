@@ -146,6 +146,7 @@ const AuctionManage: React.FC = () => {
     const [selectedReg, setSelectedReg] = useState<RegisteredPlayer | null>(null);
     const [isEditingReg, setIsEditingReg] = useState(false);
     const [expandedRegId, setExpandedRegId] = useState<string | null>(null);
+    const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
     const [allAuctions, setAllAuctions] = useState<any[]>([]);
     const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
     const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
@@ -1946,45 +1947,88 @@ const AuctionManage: React.FC = () => {
                                     </thead>
                                     <tbody className={`divide-y ${isDark ? 'divide-zinc-800' : 'divide-gray-100'}`}>
                                         {(activeTab === 'CATEGORIES' ? categories : activeTab === 'ROLES' ? roles : sponsors).map((item: any) => (
-                                            <tr key={item.id} className={`transition-colors group ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'}`}>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border overflow-hidden ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-100 border-gray-100'}`}>
-                                                            {item.imageUrl || item.photoUrl || item.logoUrl ? (
-                                                                <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                                                            ) : (
-                                                                <Layers className={`w-5 h-5 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}/>
-                                                            )}
+                                            <React.Fragment key={item.id}>
+                                                <tr 
+                                                    onClick={() => {
+                                                        if (activeTab === 'CATEGORIES') {
+                                                            setExpandedCategory(expandedCategory === item.id ? null : item.id);
+                                                        }
+                                                    }}
+                                                    className={`transition-colors group cursor-pointer ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'} ${expandedCategory === item.id ? (isDark ? 'bg-zinc-800/30' : 'bg-gray-50') : ''}`}
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border overflow-hidden ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-100 border-gray-100'}`}>
+                                                                {item.imageUrl || item.photoUrl || item.logoUrl ? (
+                                                                    <img src={item.imageUrl || item.photoUrl || item.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                                                                ) : (
+                                                                    <Layers className={`w-5 h-5 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}/>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`font-black uppercase text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>
+                                                                {activeTab === 'CATEGORIES' && (
+                                                                    <ChevronDown className={`w-4 h-4 transition-transform ${isDark ? 'text-zinc-600' : 'text-gray-400'} ${expandedCategory === item.id ? 'rotate-180' : ''}`} />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <span className={`font-black uppercase text-sm ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
-                                                    {activeTab === 'CATEGORIES' ? `₹${item.basePrice}` : '-'}
-                                                </td>
-                                                <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                                                    {activeTab === 'CATEGORIES' ? `${item.minPerTeam}-${item.maxPerTeam}` : '-'}
-                                                </td>
-                                                <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                                                    {activeTab === 'CATEGORIES' ? item.requiredPlayers || 0 : '-'}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${isDark ? 'bg-accent/10 text-accent' : 'bg-blue-50 text-blue-600'}`}>
-                                                        {activeTab === 'CATEGORIES' ? players.filter(p => p.category === item.name).length : '-'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => {
-                                                            setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
-                                                            setEditItem(item);
-                                                            setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
-                                                            setShowModal(true);
-                                                        }} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-accent hover:bg-accent/10' : 'text-blue-500 hover:bg-blue-50'}`}><Edit className="w-4 h-4"/></button>
-                                                        <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-red-400 hover:bg-red-400/10' : 'text-red-400 hover:bg-red-50'}`}><Trash2 className="w-4 h-4"/></button>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                    <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
+                                                        {activeTab === 'CATEGORIES' ? `₹${item.basePrice}` : '-'}
+                                                    </td>
+                                                    <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                        {activeTab === 'CATEGORIES' ? `${item.minPerTeam}-${item.maxPerTeam}` : '-'}
+                                                    </td>
+                                                    <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                                        {activeTab === 'CATEGORIES' ? item.requiredPlayers || 0 : '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${isDark ? 'bg-accent/10 text-accent' : 'bg-blue-50 text-blue-600'}`}>
+                                                            {activeTab === 'CATEGORIES' ? players.filter(p => p.category === item.name).length : '-'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                                            <button onClick={() => {
+                                                                setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
+                                                                setEditItem(item);
+                                                                setPreviewImage(item.imageUrl || item.photoUrl || item.logoUrl || '');
+                                                                setShowModal(true);
+                                                            }} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-accent hover:bg-accent/10' : 'text-blue-500 hover:bg-blue-50'}`}><Edit className="w-4 h-4"/></button>
+                                                            <button onClick={() => handleDelete(activeTab === 'CATEGORIES' ? 'CATEGORIE' : activeTab.slice(0, -1), item.id)} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-red-400 hover:bg-red-400/10' : 'text-red-400 hover:bg-red-50'}`}><Trash2 className="w-4 h-4"/></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {activeTab === 'CATEGORIES' && expandedCategory === item.id && (
+                                                    <tr>
+                                                        <td colSpan={6} className={`px-6 py-4 ${isDark ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                                {players.filter(p => p.category === item.name).length > 0 ? (
+                                                                    players.filter(p => p.category === item.name).map(player => (
+                                                                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100 shadow-sm'}`}>
+                                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
+                                                                                {player.photoUrl ? (
+                                                                                    <img src={player.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                                                ) : (
+                                                                                    <User className={`w-4 h-4 ${isDark ? 'text-zinc-600' : 'text-gray-400'}`} />
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="min-w-0">
+                                                                                <p className={`text-[11px] font-black uppercase truncate ${isDark ? 'text-zinc-100' : 'text-gray-800'}`}>{player.name}</p>
+                                                                                <p className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.role}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="col-span-full py-4 text-center">
+                                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>No players assigned to this category</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
                                         ))}
                                     </tbody>
                                 </table>

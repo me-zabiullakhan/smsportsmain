@@ -409,6 +409,13 @@ const AdminDashboard: React.FC = () => {
                     {/* Card Body */}
                     <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <button 
+                            onClick={() => window.open(`/auction/${auction.id}`, '_blank')}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                        >
+                            <Gavel className={`w-6 h-6 text-primary`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Room</span>
+                        </button>
+                        <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
                             className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
                         >
