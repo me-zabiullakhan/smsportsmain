@@ -276,7 +276,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <button 
                 onClick={() => navigate('/admin/create-auction')}
-                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl ${isDark ? 'bg-accent text-primary shadow-accent/20' : 'bg-accent text-white shadow-accent/20'}`}
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl bg-accent text-primary shadow-accent/20`}
             >
                 <Plus className="w-5 h-5" /> Start New Auction
             </button>
@@ -412,14 +412,14 @@ const AdminDashboard: React.FC = () => {
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/auction/${auction.id}`, '_blank');
                             }}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
                         >
                             <Gavel className={`w-6 h-6 text-primary`} />
                             <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Room</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
                         >
                             <Activity className={`w-6 h-6 text-primary`} />
                             <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Control</span>
@@ -428,21 +428,21 @@ const AdminDashboard: React.FC = () => {
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/obs-green/${auction.id}`, '_blank');
                             }}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
                         >
                             <Monitor className={`w-6 h-6 text-primary`} />
                             <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Public</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/arrangement`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
                         >
                             <Layout className={`w-6 h-6 text-primary`} />
                             <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Board</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/auction/${auction.id}/register`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent`}
+                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
                         >
                             <UserPlus className={`w-6 h-6 text-primary`} />
                             <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Signup</span>

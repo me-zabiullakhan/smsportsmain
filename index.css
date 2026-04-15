@@ -30,11 +30,11 @@
   /* Light Theme */
   --primary: #ffffff;
   --secondary: #f8fafc;
-  --accent: #facc15; /* Vibrant Yellow */
+  --accent: #2563eb; /* Vibrant Blue */
   --highlight: #000000;
   --surface: #f1f5f9;
   --on-surface: #0f172a;
-  --neon-glow: 0 0 15px rgba(250, 204, 21, 0.3), 0 0 30px rgba(250, 204, 21, 0.1);
+  --neon-glow: 0 0 15px rgba(37, 99, 235, 0.3), 0 0 30px rgba(37, 99, 235, 0.1);
 }
 
 @layer components {
@@ -47,7 +47,7 @@
 
   .light .advaya-text {
     background-image: linear-gradient(to bottom, #000, var(--accent), var(--accent));
-    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.2));
+    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2));
   }
 
   @keyframes text-pulse {
@@ -56,8 +56,8 @@
   }
 
   .light @keyframes text-pulse {
-    0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.2)); }
-    50% { filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.4)); }
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.2)); }
+    50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.4)); }
   }
 
   .neon-border {
@@ -73,8 +73,8 @@
   }
 
   .light .golden-text {
-    @apply from-yellow-400 via-yellow-600 to-yellow-800;
-    filter: drop-shadow(0 2px 10px rgba(250, 204, 21, 0.5));
+    @apply from-blue-400 via-blue-600 to-blue-800;
+    filter: drop-shadow(0 2px 10px rgba(37, 99, 235, 0.5));
   }
 
   .golden-glow {
@@ -82,7 +82,7 @@
   }
 
   .light .golden-glow {
-    box-shadow: 0 0 20px rgba(250, 204, 21, 0.3), inset 0 0 20px rgba(250, 204, 21, 0.2);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.3), inset 0 0 20px rgba(37, 99, 235, 0.2);
   }
 
   .golden-border {
@@ -91,8 +91,8 @@
   }
 
   .light .golden-border {
-    @apply border-yellow-500/40;
-    box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+    @apply border-2 border-blue-500/40;
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
   }
 
   .cinematic-frame {
@@ -134,7 +134,7 @@
   }
 
   .particle-bg {
-    background-image: radial-gradient(circle at 2px 2px, rgba(251, 191, 36, 0.15) 1px, transparent 0);
+    background-image: radial-gradient(circle at 2px 2px, rgba(250, 204, 21, 0.15) 1px, transparent 0);
     background-size: 40px 40px;
   }
 

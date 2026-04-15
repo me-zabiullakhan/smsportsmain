@@ -800,7 +800,7 @@ const AuctionManage: React.FC = () => {
                                     onClick={() => navigate(`/manage/${a.id}`)}
                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${
                                         id === a.id 
-                                        ? (isDark ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20') 
+                                        ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
                                         : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-accent/20' : 'bg-white border-gray-200 text-gray-400 hover:border-blue-200')
                                     }`}
                                 >
@@ -814,7 +814,7 @@ const AuctionManage: React.FC = () => {
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${
                                     activeTab === tab 
-                                    ? (isDark ? 'bg-accent text-zinc-950 shadow-sm' : 'bg-white text-blue-600 shadow-sm') 
+                                    ? 'bg-accent text-primary shadow-sm' 
                                     : (isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600')
                                 }`}>
                                 {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab === 'CAPTAIN_CODES' ? 'CAPTAIN CODES' : tab}
@@ -830,13 +830,13 @@ const AuctionManage: React.FC = () => {
                         <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                             <div className={`p-8 border-b flex justify-between items-center ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-gradient-to-r from-blue-50/50 to-transparent border-gray-100'}`}>
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 rounded-2xl shadow-lg ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20' : 'bg-blue-600 text-white shadow-blue-600/20'}`}><Settings className="w-6 h-6"/></div>
+                                    <div className={`p-3 rounded-2xl shadow-lg bg-accent text-primary shadow-accent/20`}><Settings className="w-6 h-6"/></div>
                                     <div>
                                         <h2 className={`text-2xl font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-gray-800'}`}>Auction Identity</h2>
                                         <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Configure core tournament logic</p>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 bg-accent text-zinc-950 shadow-accent/20`}>
+                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 bg-accent text-primary shadow-accent/20`}>
                                     <Save className="w-4 h-4"/> Sync Identity
                                 </button>
                             </div>
@@ -988,7 +988,7 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'TEAM')}/>
                                 </label>
-                                <button onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} className="bg-accent text-zinc-950 px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-accent/20"><Plus className="w-4 h-4"/> Add Team</button>
+                                <button onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} className="bg-accent text-primary px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-accent/20"><Plus className="w-4 h-4"/> Add Team</button>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1025,7 +1025,7 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
-                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-zinc-950 shadow-accent/20`}>
+                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20`}>
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
                             </div>
@@ -1922,7 +1922,7 @@ const AuctionManage: React.FC = () => {
                             <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Manage {activeTab}</h2>
                             <div className="flex gap-2">
                                 {activeTab === 'CATEGORIES' && (
-                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-amber-500 text-zinc-950 shadow-amber-500/20 hover:bg-amber-400'}`}>
+                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20 hover:bg-white`}>
                                         <LayoutGrid className="w-4 h-4"/> Category Room
                                     </button>
                                 )}
@@ -1930,7 +1930,7 @@ const AuctionManage: React.FC = () => {
                                     setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
                                     setEditItem({});
                                     setShowModal(true);
-                                }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all ${isDark ? 'bg-accent text-zinc-950 shadow-accent/20 hover:bg-white' : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'}`}><Plus className="w-4 h-4"/> Add New</button>
+                                }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20 hover:bg-blue-700`}><Plus className="w-4 h-4"/> Add New</button>
                             </div>
                         </div>
                         <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
@@ -2886,7 +2886,7 @@ const AuctionManage: React.FC = () => {
                             </button>
                             <button 
                                 onClick={confirmAction.onConfirm}
-                                className={`flex-1 py-4 rounded-2xl text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg ${isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'}`}
+                                className={`flex-1 py-4 rounded-2xl text-white text-xs font-black uppercase tracking-widest transition-all shadow-lg bg-accent text-primary shadow-accent/20 hover:bg-white`}
                             >
                                 Confirm
                             </button>

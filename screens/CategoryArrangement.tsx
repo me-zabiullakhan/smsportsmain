@@ -991,21 +991,21 @@ const CategoryArrangement: React.FC = () => {
                         </button>
                         <button 
                             onClick={handleReset}
-                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20`}
+                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all bg-accent border-accent text-primary shadow-lg shadow-accent/20`}
                         >
                             <RotateCcw className="w-4 h-4" /> Reset
                         </button>
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-primary shadow-accent/20`}
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Draft
                         </button>
                         <button 
                             onClick={handleExport}
                             disabled={isExporting}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-primary shadow-accent/20`}
                         >
                             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Export PNG
                         </button>
@@ -1045,7 +1045,7 @@ const CategoryArrangement: React.FC = () => {
                                             onClick={() => setFilterCategory('ALL')}
                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                                 filterCategory === 'ALL' 
-                                                ? 'bg-accent text-zinc-950' 
+                                                ? 'bg-accent text-primary' 
                                                 : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
                                             }`}
                                         >
@@ -1057,7 +1057,7 @@ const CategoryArrangement: React.FC = () => {
                                                 onClick={() => setFilterCategory(c.name)}
                                                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                                     filterCategory === c.name 
-                                                    ? 'bg-accent text-zinc-950' 
+                                                    ? 'bg-accent text-primary' 
                                                     : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
                                                 }`}
                                             >
@@ -1095,7 +1095,7 @@ const CategoryArrangement: React.FC = () => {
                                     onClick={() => setActiveCategory('ALL_CATEGORIES')}
                                     className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                         activeCategory === 'ALL_CATEGORIES' 
-                                        ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' 
+                                        ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
                                         : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
                                     }`}
                                 >
@@ -1107,7 +1107,7 @@ const CategoryArrangement: React.FC = () => {
                                         onClick={() => setActiveCategory(cat.id || '')}
                                         className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                             activeCategory === cat.id 
-                                            ? 'bg-accent border-accent text-zinc-950 shadow-lg shadow-accent/20' 
+                                            ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
                                             : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
                                         }`}
                                     >

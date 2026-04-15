@@ -690,7 +690,7 @@ const LiveAdminPanel: React.FC = () => {
                   onClick={() => updateBiddingStatus('ON')}
                   disabled={!hasPaidPlan}
                   className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center ${biddingStatus === 'ON'
-                      ? (isDark ? 'bg-green-500 text-black shadow-lg shadow-green-500/20' : 'bg-green-600 text-white shadow-lg shadow-green-600/20')
+                      ? 'bg-accent text-primary shadow-lg shadow-accent/20'
                       : (isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-gray-400 hover:text-gray-600')}`}
                 >
                   <Unlock className="w-3.5 h-3.5 mr-2" /> ON
@@ -698,7 +698,7 @@ const LiveAdminPanel: React.FC = () => {
                 <button
                   onClick={() => updateBiddingStatus('PAUSED')}
                   className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center ${biddingStatus !== 'ON'
-                      ? (isDark ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-red-600 text-white shadow-lg shadow-red-600/20')
+                      ? 'bg-accent text-primary shadow-lg shadow-accent/20'
                       : (isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-gray-400 hover:text-gray-600')}`}
                 >
                   <Lock className="w-3.5 h-3.5 mr-2" /> OFF
@@ -718,7 +718,7 @@ const LiveAdminPanel: React.FC = () => {
                       key={l}
                       onClick={() => updateTheme('PROJECTOR', l)}
                       className={`flex-1 px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${state.projectorLayout === l
-                          ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white')
+                          ? 'bg-accent text-primary'
                           : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-400 hover:text-blue-600')}`}
                     >
                       {l.slice(0, 4)}
@@ -734,7 +734,7 @@ const LiveAdminPanel: React.FC = () => {
                       key={l}
                       onClick={() => updateTheme('OBS', l)}
                       className={`flex-1 px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${state.obsLayout === l
-                          ? (isDark ? 'bg-accent text-zinc-950' : 'bg-blue-600 text-white')
+                          ? 'bg-accent text-primary'
                           : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-400 hover:text-blue-600')}`}
                     >
                       {l.slice(0, 4)}
@@ -752,8 +752,8 @@ const LiveAdminPanel: React.FC = () => {
                     key={v}
                     onClick={() => setAdminView(v === 'NONE' ? null : { type: v as any })}
                     className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${(!state.adminViewOverride && v === 'NONE') || (state.adminViewOverride?.type === v)
-                        ? (isDark ? 'bg-amber-500 text-black' : 'bg-amber-600 text-white')
-                        : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-400 hover:text-amber-600')}`}
+                        ? 'bg-accent text-primary'
+                        : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-400 hover:text-blue-600')}`}
                   >
                     {v}
                   </button>
@@ -766,7 +766,7 @@ const LiveAdminPanel: React.FC = () => {
                 <button
                   onClick={() => updateSponsorVisibility('PROJECTOR')}
                   className={`px-3 py-2 rounded-xl flex items-center gap-2 text-[9px] font-black uppercase tracking-widest border transition-all active:scale-95 ${state.sponsorConfig?.showOnProjector
-                      ? (isDark ? 'bg-accent text-zinc-950 border-accent shadow-lg shadow-accent/20' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20')
+                      ? 'bg-accent text-primary border-accent shadow-lg shadow-accent/20'
                       : (isDark ? 'bg-zinc-900 border-accent/10 text-zinc-500' : 'bg-white border-blue-500/10 text-gray-400')}`}
                 >
                   <Monitor className="w-3.5 h-3.5" /> Proj
@@ -849,7 +849,7 @@ const LiveAdminPanel: React.FC = () => {
           <button
             onClick={playerSelectionMode !== 'MANUAL' ? toggleSelectionMode : undefined}
             className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${playerSelectionMode === 'MANUAL'
-                ? (isDark ? 'bg-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20')
+                ? 'bg-accent text-primary shadow-lg shadow-accent/20'
                 : (isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-gray-400 hover:text-gray-600')}`}
           >
             Manual
@@ -857,7 +857,7 @@ const LiveAdminPanel: React.FC = () => {
           <button
             onClick={playerSelectionMode !== 'AUTO' ? toggleSelectionMode : undefined}
             className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${playerSelectionMode === 'AUTO'
-                ? (isDark ? 'bg-accent text-zinc-950 shadow-lg shadow-accent/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20')
+                ? 'bg-accent text-primary shadow-lg shadow-accent/20'
                 : (isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-gray-400 hover:text-gray-600')}`}
           >
             Auto
