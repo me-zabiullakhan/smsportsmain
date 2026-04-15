@@ -256,7 +256,7 @@ const LiveAdminPanel: React.FC = () => {
                                 }
                             }}
                             disabled={isProcessing}
-                            className="w-full bg-accent text-primary font-bold py-3 rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center"
+                            className="btn-golden w-full font-bold py-3 rounded-lg flex items-center justify-center"
                         >
                             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <RotateCcw className="mr-2 h-4 w-4"/>}
                             BRING BACK UNSOLD ({unsoldCount})
@@ -277,7 +277,7 @@ const LiveAdminPanel: React.FC = () => {
                             }
                         }}
                         disabled={isProcessing}
-                        className="w-full bg-accent text-primary font-bold py-4 rounded-lg shadow-lg shadow-accent/20 transition-all active:scale-95 flex items-center justify-center tracking-wide"
+                        className="btn-golden w-full font-bold py-4 rounded-lg flex items-center justify-center tracking-wide"
                     >
                         {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : "GENERATE SUMMARY & FINISH"}
                     </button>
@@ -335,7 +335,7 @@ const LiveAdminPanel: React.FC = () => {
                           <button 
                             onClick={confirmSell}
                             disabled={isProcessing}
-                            className="flex-1 bg-accent text-primary py-2 rounded text-sm font-bold shadow-lg flex items-center justify-center transition-colors"
+                            className="btn-golden flex-1 py-2 rounded text-sm font-bold flex items-center justify-center"
                           >
                               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Confirm'}
                           </button>
@@ -350,7 +350,7 @@ const LiveAdminPanel: React.FC = () => {
                       <button 
                         onClick={handleSellClick}
                         disabled={isProcessing}
-                        className="flex flex-col items-center justify-center bg-accent text-primary disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
+                        className="btn-golden flex flex-col items-center justify-center disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg"
                       >
                           {isProcessing ? <Loader2 className="mb-1 h-6 w-6 animate-spin"/> : <Check className="mb-1 h-6 w-6"/>}
                           {isProcessing ? 'SELLING...' : 'SOLD'}
@@ -358,7 +358,7 @@ const LiveAdminPanel: React.FC = () => {
                       <button 
                         onClick={handlePass}
                         disabled={isProcessing}
-                        className="flex flex-col items-center justify-center bg-accent text-primary disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg transition-all shadow-md active:scale-95"
+                        className="btn-golden flex flex-col items-center justify-center disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed font-bold py-4 px-2 rounded-lg"
                       >
                           {isProcessing ? <Loader2 className="mb-1 h-6 w-6 animate-spin"/> : <X className="mb-1 h-6 w-6"/>}
                           UNSOLD
@@ -437,11 +437,7 @@ const LiveAdminPanel: React.FC = () => {
                    <button 
                      onClick={() => handleStart(manualPlayerId)} 
                      disabled={isStartDisabled || !manualPlayerId}
-                     className={`w-full flex items-center justify-center font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-accent/20 active:scale-95
-                         ${isStartDisabled || !manualPlayerId
-                             ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                             : 'bg-accent text-primary'}`
-                     }
+                     className="btn-golden w-full flex items-center justify-center font-bold py-3 px-4 rounded-lg"
                    >
                        {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Play className="mr-2 h-5 w-5"/>} 
                        {manualPlayerId && players.find(p => String(p.id) === manualPlayerId)?.status === 'UNSOLD' ? 'Re-Auction Player' : 'Start Bidding'}
@@ -455,11 +451,7 @@ const LiveAdminPanel: React.FC = () => {
           <button 
             onClick={() => handleStart()} 
             disabled={isStartDisabled}
-            className={`w-full flex items-center justify-center font-bold py-4 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-accent/20 active:scale-95
-                ${isStartDisabled 
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                    : 'bg-accent text-primary'}`
-            }
+            className="btn-golden w-full flex items-center justify-center font-bold py-4 px-4 rounded-lg"
           >
               {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Shuffle className="mr-2 h-5 w-5"/>} 
               {state.status === AuctionStatus.NotStarted ? 'Start Auction (Auto Random)' : 'Next Random Player'}

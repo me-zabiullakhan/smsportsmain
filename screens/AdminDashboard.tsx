@@ -276,7 +276,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <button 
                 onClick={() => navigate('/admin/create-auction')}
-                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-2xl bg-accent text-primary shadow-accent/20`}
+                className={`btn-golden flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95`}
             >
                 <Plus className="w-5 h-5" /> Start New Auction
             </button>
@@ -343,7 +343,7 @@ const AdminDashboard: React.FC = () => {
                                         className={`w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                                             isCurrentPlan 
                                             ? 'bg-transparent border border-white/20 text-white/40 cursor-default' 
-                                            : (isDark ? 'bg-accent text-zinc-950' : 'bg-accent text-white')
+                                            : 'btn-golden'
                                         }`}
                                     >
                                         {isCurrentPlan ? 'Current' : 'Upgrade'}
@@ -372,10 +372,10 @@ const AdminDashboard: React.FC = () => {
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
                                     <h3 className={`text-2xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-900'}`}>{auction.title}</h3>
-                                    <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
-                                        auction.status === 'LIVE' ? 'bg-green-500/10 text-green-500 border-green-500/20 animate-pulse' : 
-                                        auction.status === 'COMPLETED' ? 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20' : 
-                                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                    <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border-2 ${
+                                        auction.status === 'LIVE' ? 'bg-green-500 text-white border-green-400 animate-pulse' : 
+                                        auction.status === 'COMPLETED' ? 'bg-zinc-700 text-zinc-300 border-zinc-600' : 
+                                        'bg-accent text-primary border-accent shadow-[0_0_10px_rgba(250,204,21,0.3)]'
                                     }`}>
                                         {auction.status}
                                     </span>
@@ -412,40 +412,40 @@ const AdminDashboard: React.FC = () => {
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/auction/${auction.id}`, '_blank');
                             }}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
+                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
                         >
-                            <Gavel className={`w-6 h-6 text-primary`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Room</span>
+                            <Gavel className="w-6 h-6" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Room</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
+                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
                         >
-                            <Activity className={`w-6 h-6 text-primary`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Control</span>
+                            <Activity className="w-6 h-6" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Control</span>
                         </button>
                         <button 
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/obs-green/${auction.id}`, '_blank');
                             }}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
+                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
                         >
-                            <Monitor className={`w-6 h-6 text-primary`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Public</span>
+                            <Monitor className="w-6 h-6" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Public</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/arrangement`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
+                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
                         >
-                            <Layout className={`w-6 h-6 text-primary`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Board</span>
+                            <Layout className="w-6 h-6" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Board</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/auction/${auction.id}/register`)}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-3xl border transition-all bg-accent border-accent shadow-lg shadow-accent/10`}
+                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
                         >
-                            <UserPlus className={`w-6 h-6 text-primary`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest text-primary`}>Signup</span>
+                            <UserPlus className="w-6 h-6" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Signup</span>
                         </button>
                     </div>
 
@@ -508,7 +508,7 @@ const AdminDashboard: React.FC = () => {
                                 setActiveTab('AUCTIONS');
                                 showNotification("Select an auction from the upgrade panel above", "success");
                             }}
-                            className={`w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl bg-accent text-zinc-950 shadow-accent/20`}
+                            className={`btn-golden w-full py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest active:scale-95`}
                         >
                             Select Plan
                         </button>
@@ -568,7 +568,7 @@ const AdminDashboard: React.FC = () => {
                           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} font-medium leading-relaxed`}>{currentPopup.message}</p>
                       )}
                       <div className="flex gap-3">
-                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`flex-1 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 bg-accent text-zinc-950 shadow-accent/20`}>{currentPopup.okButtonText}</button>
+                        <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`btn-golden flex-1 font-black py-4 rounded-2xl text-xs uppercase tracking-widest active:scale-95`}>{currentPopup.okButtonText}</button>
                         <button onClick={() => closeSystemPopup(currentPopup.id!)} className={`px-8 font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all ${isDark ? 'bg-white/10 hover:bg-white/20 text-amber-500' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}>{currentPopup.closeButtonText}</button>
                       </div>
                   </div>
@@ -655,7 +655,7 @@ const AdminDashboard: React.FC = () => {
                       </button>
                       <button 
                           onClick={confirmAction.onConfirm}
-                          className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg bg-accent text-zinc-950 shadow-accent/20`}
+                          className={`btn-golden flex-1 py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95`}
                       >
                           Confirm
                       </button>

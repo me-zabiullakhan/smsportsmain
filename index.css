@@ -143,6 +143,42 @@
   }
 }
 
+.btn-golden {
+  background-color: var(--accent) !important;
+  color: var(--primary) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 15px var(--accent);
+  font-weight: 900 !important;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-golden:hover {
+  box-shadow: 0 0 30px var(--accent);
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.btn-golden:disabled {
+  background-color: #3f3f46 !important; /* zinc-700 */
+  color: #71717a !important; /* zinc-500 */
+  border-color: #3f3f46 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  filter: none !important;
+  opacity: 0.6;
+}
+
+.light .btn-golden {
+  background-color: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--primary); }
