@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuction } from '../hooks/useAuction';
 import { useParams } from 'react-router-dom';
 import { User, Gavel, DollarSign, Trophy } from 'lucide-react';
+import { getEffectiveBasePrice } from '../utils';
 import { Player, Team, AuctionStatus } from '../types';
 
 interface OverlayState {
@@ -103,7 +104,8 @@ const OBSOverlay: React.FC = () => {
              const winningTeam = teams.find(t => t.name === currentPlayer.soldTo);
              if (winningTeam) resolvedBidder = winningTeam;
           }
-          setDisplay({ player: currentPlayer, bid: currentPlayer.soldPrice || currentBid || currentPlayer.basePrice, bidder: resolvedBidder, status: derivedStatus });
+          const effectiveBase = getEffectiveBasePrice(currentPlayer, state.categories);
+          setDisplay({ player: currentPlayer, bid: currentPlayer.soldPrice || currentBid || effectiveBase, bidder: resolvedBidder, status: derivedStatus });
       } else if (display.status !== 'WAITING' && display.status !== 'FINISHED') {
           timeoutRef.current = setTimeout(() => { setDisplay({ player: null, bid: 0, bidder: null, status: 'WAITING' }); }, 2000); 
       }
@@ -241,7 +243,7 @@ const OBSOverlay: React.FC = () => {
                                 ) : (
                                     <div className="flex flex-col items-end">
                                         <span className="text-black/50 text-[10px] font-bold uppercase tracking-widest">Base</span>
-                                        <span className="text-black font-bold text-2xl font-mono leading-none">₹{player?.basePrice.toLocaleString()}</span>
+                                        <span className="text-black font-bold text-2xl font-mono leading-none">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</span>
                                     </div>
                                 )}
                             </div>

@@ -5,7 +5,7 @@ import { AuctionStatus, Team, Player, ProjectorLayout, OBSLayout, UserRole } fro
 import TeamStatusCard from '../components/TeamStatusCard';
 import { Play, Check, X, ArrowLeft, Loader2, RotateCcw, AlertOctagon, DollarSign, Cast, Lock, Unlock, Monitor, ChevronDown, Shuffle, Search, User, Palette, Trophy, Gavel, Wallet, Eye, EyeOff, Clock, Zap, Undo2, RefreshCw, LayoutList, ShieldAlert, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { calculateMaxBid } from '../utils';
+import { calculateMaxBid, getEffectiveBasePrice } from '../utils';
 
 const LiveAdminPanel: React.FC = () => {
   const { state, userProfile, sellPlayer, passPlayer, startAuction, undoPlayerSelection, endAuction, resetAuction, resetCurrentPlayer, resetUnsoldPlayers, updateBiddingStatus, toggleSelectionMode, updateTheme, activeAuctionId, placeBid, nextBid, updateSponsorConfig, correctPlayerSale, setAdminView } = useAuction();
@@ -55,7 +55,7 @@ const LiveAdminPanel: React.FC = () => {
       } else if (state.currentPlayerId) {
           // Fallback to Base Price if no bids
           const p = players.find(player => String(player.id) === String(state.currentPlayerId));
-          if (p) setFinalPrice(p.basePrice);
+          if (p) setFinalPrice(getEffectiveBasePrice(p, state.categories));
       }
 
       // 2. Determine Team
@@ -519,7 +519,7 @@ const LiveAdminPanel: React.FC = () => {
                                 >
                                     <div className="flex justify-between items-center">
                                         <span className="uppercase tracking-tight">{p.name} <span className={`opacity-60 text-[8px] ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>({p.category})</span></span>
-                                        <span className="font-black tabular-nums">₹{p.basePrice}</span>
+                                        <span className="font-black tabular-nums">₹{getEffectiveBasePrice(p, state.categories).toLocaleString()}</span>
                                     </div>
                                     {p.status === 'UNSOLD' && <span className={`text-[8px] font-black uppercase tracking-[0.2em] mt-1 block ${isDark ? 'text-red-400' : 'text-red-600'}`}>Unsold</span>}
                                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { AuctionSetup, Team, Player, AuctionCategory, Sponsor, PlayerRole, RegistrationConfig, FormField, RegisteredPlayer, BidIncrementSlab, CaptainCode } from '../types';
+import { getEffectiveBasePrice } from '../utils';
 import { 
     ArrowLeft, Plus, Trash2, Edit, Save, X, Upload, Users, Layers, Trophy, 
     DollarSign, Image as ImageIcon, Briefcase, FileText, Settings, QrCode, 
@@ -1065,7 +1066,7 @@ const AuctionManage: React.FC = () => {
                                                 <td className="px-6 py-4">
                                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-accent' : 'text-blue-500'}`}>{p.role}</span>
                                                 </td>
-                                                <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>₹{p.basePrice}</td>
+                                                <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>₹{getEffectiveBasePrice(p, categories).toLocaleString()}</td>
                                                 <td className="px-6 py-4">
                                                     {p.status === 'SOLD' ? (
                                                         <div className="flex flex-col">

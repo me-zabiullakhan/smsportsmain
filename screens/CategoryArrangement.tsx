@@ -535,13 +535,25 @@ const CategoryArrangement: React.FC = () => {
         setPendingSwap(null);
     };
 
-    const handleAction = (action: 'REMOVE' | 'MOVE', slotId: string) => {
+    const handleAction = async (action: 'REMOVE' | 'MOVE', slotId: string) => {
         if (action === 'REMOVE') {
+            const playerToRemove = slots[slotId];
             setHistory([...history, slots]);
             const newSlots = { ...slots };
             delete newSlots[slotId];
             setSlots(newSlots);
             setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
+
+            // Update player category in Firestore to Standard
+            if (playerToRemove && id) {
+                try {
+                    await db.collection('auctions').doc(id).collection('players').doc(String(playerToRemove.playerId)).update({
+                        category: 'Standard'
+                    });
+                } catch (err) {
+                    console.error("Error resetting player category:", err);
+                }
+            }
         }
     };
 
@@ -801,11 +813,21 @@ const CategoryArrangement: React.FC = () => {
             onConfirm: async () => {
                 setIsSaving(true);
                 try {
+                    // 1. Reset all players assigned to this category
+                    const categoryName = categories.find(c => c.id === categoryToDelete)?.name;
+                    if (categoryName) {
+                        const playersToReset = players.filter(p => p.category === categoryName);
+                        const batch = db.batch();
+                        playersToReset.forEach(p => {
+                            const pRef = db.collection('auctions').doc(id).collection('players').doc(String(p.id));
+                            batch.update(pRef, { category: 'Standard' });
+                        });
+                        await batch.commit();
+                    }
+
+                    // 2. Delete category and draft
                     await db.collection('auctions').doc(id).collection('categories').doc(categoryToDelete).delete();
-                    // Also delete draft
                     await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(categoryToDelete).delete();
-                    
-                    // If the deleted category was the active one, the snapshot listener will handle resetting activeCategory
                     
                     setShowDeleteCategoryPopup(false);
                     setIsDeletingCategory(false);
