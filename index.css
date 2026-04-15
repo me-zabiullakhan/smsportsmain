@@ -144,10 +144,10 @@
 }
 
 .btn-golden {
-  background-color: var(--accent) !important;
-  color: var(--primary) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent);
+  background-color: #facc15 !important; /* yellow-400 */
+  color: #000000 !important;
+  border: 2px solid #facc15 !important;
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
   font-weight: 900 !important;
   transition: all 0.3s ease-in-out;
   display: flex;
@@ -156,7 +156,7 @@
 }
 
 .btn-golden:hover {
-  box-shadow: 0 0 30px var(--accent);
+  box-shadow: 0 0 30px rgba(250, 204, 21, 0.6);
   transform: scale(1.05);
   filter: brightness(1.1);
 }
@@ -173,10 +173,10 @@
 }
 
 .light .btn-golden {
-  background-color: var(--accent) !important;
-  color: white !important;
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+  background-color: #facc15 !important;
+  color: #000000 !important;
+  border-color: #facc15 !important;
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
 }
 
 /* Custom Scrollbar */

@@ -120,7 +120,7 @@ const BiddingPanel: React.FC = () => {
                                     ? (isDark ? 'bg-red-900/20 border-2 border-red-500/30 text-red-400 cursor-not-allowed' : 'bg-red-50 border-2 border-red-200 text-red-600 cursor-not-allowed')
                                     : (!canAfford || isLoadingBid)
                                         ? (isDark ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
-                                        : (isDark ? 'bg-accent text-zinc-950 hover:bg-white shadow-accent/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20')
+                                        : (isDark ? 'btn-golden shadow-accent/20' : 'btn-golden shadow-blue-600/20')
                             }
                         `}
                     >

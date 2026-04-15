@@ -991,21 +991,21 @@ const CategoryArrangement: React.FC = () => {
                         </button>
                         <button 
                             onClick={handleReset}
-                            className={`hidden md:flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all bg-accent border-accent text-primary shadow-lg shadow-accent/20`}
+                            className="btn-golden px-4 py-2.5 rounded-xl text-xs"
                         >
                             <RotateCcw className="w-4 h-4" /> Reset
                         </button>
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-primary shadow-accent/20`}
+                            className="btn-golden px-6 py-2.5 rounded-xl text-xs"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Draft
                         </button>
                         <button 
                             onClick={handleExport}
                             disabled={isExporting}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg bg-accent text-primary shadow-accent/20`}
+                            className="btn-golden px-6 py-2.5 rounded-xl text-xs"
                         >
                             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Export PNG
                         </button>

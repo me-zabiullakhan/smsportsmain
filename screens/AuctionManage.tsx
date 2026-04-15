@@ -800,7 +800,7 @@ const AuctionManage: React.FC = () => {
                                     onClick={() => navigate(`/manage/${a.id}`)}
                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap ${
                                         id === a.id 
-                                        ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
+                                        ? 'btn-golden' 
                                         : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-accent/20' : 'bg-white border-gray-200 text-gray-400 hover:border-blue-200')
                                     }`}
                                 >
@@ -814,7 +814,7 @@ const AuctionManage: React.FC = () => {
                             <button key={tab} onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase transition-all rounded-lg whitespace-nowrap ${
                                     activeTab === tab 
-                                    ? 'bg-accent text-primary shadow-sm' 
+                                    ? 'btn-golden' 
                                     : (isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-400 hover:text-gray-600')
                                 }`}>
                                 {tab === 'REGISTRATION' ? 'REG CONFIG' : tab === 'REQUESTS' ? `Requests (${registrations.length})` : tab === 'WAITLIST' ? `Waitlist (${waitlist.length})` : tab === 'CAPTAIN_CODES' ? 'CAPTAIN CODES' : tab}
@@ -836,7 +836,7 @@ const AuctionManage: React.FC = () => {
                                         <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Configure core tournament logic</p>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveSettings} className={`font-black py-3 px-8 rounded-xl shadow-lg text-[11px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 bg-accent text-primary shadow-accent/20`}>
+                                <button onClick={handleSaveSettings} className="btn-golden py-3 px-8 rounded-xl">
                                     <Save className="w-4 h-4"/> Sync Identity
                                 </button>
                             </div>
@@ -1922,7 +1922,7 @@ const AuctionManage: React.FC = () => {
                             <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Manage {activeTab}</h2>
                             <div className="flex gap-2">
                                 {activeTab === 'CATEGORIES' && (
-                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20 hover:bg-white`}>
+                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="btn-golden px-6 py-2 rounded-xl text-[10px]">
                                         <LayoutGrid className="w-4 h-4"/> Category Room
                                     </button>
                                 )}
@@ -1930,7 +1930,7 @@ const AuctionManage: React.FC = () => {
                                     setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
                                     setEditItem({});
                                     setShowModal(true);
-                                }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20 hover:bg-blue-700`}><Plus className="w-4 h-4"/> Add New</button>
+                                }} className="btn-golden px-6 py-2 rounded-xl text-[10px]"><Plus className="w-4 h-4"/> Add New</button>
                             </div>
                         </div>
                         <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>

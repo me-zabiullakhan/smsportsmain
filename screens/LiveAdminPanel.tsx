@@ -328,7 +328,7 @@ const LiveAdminPanel: React.FC = () => {
                       <div className="flex gap-2 pt-1">
                           <button 
                             onClick={cancelSell}
-                            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded text-sm font-bold transition-colors"
+                            className="btn-golden flex-1 py-2 rounded text-sm"
                           >
                               Cancel
                           </button>
@@ -368,7 +368,7 @@ const LiveAdminPanel: React.FC = () => {
                   <button 
                     onClick={handleCancelSelection} 
                     disabled={isProcessing}
-                    className="w-full flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm active:scale-95"
+                    className="btn-golden w-full py-2 rounded-lg text-xs"
                   >
                       <Undo2 className="w-4 h-4 mr-1" /> Change Player / Cancel Round
                   </button>
