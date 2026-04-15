@@ -126,7 +126,7 @@ const AppContent: React.FC = () => {
       <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/guide" element={<PlatformGuide />} />
-          <Route path="/auction/:auctionId" element={<Dashboard />} />
+          <Route path="/auction/:id" element={<Dashboard />} />
           <Route path="/auction/:id/register" element={<PlayerRegistration />} />
 
           <Route path="/auth" element={
@@ -169,8 +169,8 @@ const AppContent: React.FC = () => {
           } />
           <Route path="/match-overlay/:matchId" element={<MatchOverlay />} />
 
-          <Route path="/obs-overlay/:auctionId" element={<OBSOverlay />} />
-          <Route path="/obs-green/:auctionId" element={<ProjectorScreen />} />
+          <Route path="/obs-overlay/:id" element={<OBSOverlay />} />
+          <Route path="/obs-green/:id" element={<ProjectorScreen />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

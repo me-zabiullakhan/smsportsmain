@@ -52,7 +52,7 @@ const Marquee = React.memo(({ content, show, layout }: { content: string[], show
 
 const OBSOverlay: React.FC = () => {
   const { state, joinAuction } = useAuction();
-  const { auctionId } = useParams<{ auctionId: string }>();
+  const { id: auctionId } = useParams<{ id: string }>();
   const [display, setDisplay] = useState<OverlayState>({ player: null, bid: 0, bidder: null, status: 'WAITING' });
   const [currentSponsorIndex, setCurrentSponsorIndex] = useState(0);
   const loopInterval = state.sponsorConfig?.loopInterval || 5;

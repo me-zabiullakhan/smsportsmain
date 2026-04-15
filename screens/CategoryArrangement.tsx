@@ -118,7 +118,7 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
     return (
         <div 
             ref={setDropRef}
-            className={`relative min-h-[4.5rem] h-auto w-full border transition-all flex items-center justify-center group ${
+            className={`relative min-h-[5.5rem] h-auto w-full border transition-all flex items-center justify-center group ${
                 isOver 
                 ? (isDark ? 'bg-accent/30 border-accent shadow-[0_0_15px_rgba(245,158,11,0.3)] z-10 scale-[1.02]' : 'bg-blue-500/30 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10 scale-[1.02]')
                 : (isDark ? 'bg-zinc-900/40 border-zinc-800/50' : 'bg-gray-50 border-gray-200')
@@ -135,13 +135,13 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
                     style={style}
                     {...listeners}
                     {...attributes}
-                    className="w-full h-full p-2 flex items-center gap-2 relative z-10 cursor-grab active:cursor-grabbing"
+                    className="w-full h-full p-2.5 flex items-center gap-2.5 relative z-10 cursor-grab active:cursor-grabbing"
                 >
-                    <div className={`w-8 h-8 rounded-lg border flex-shrink-0 overflow-hidden flex items-center justify-center ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
+                    <div className={`w-9 h-9 rounded-lg border flex-shrink-0 overflow-hidden flex items-center justify-center ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
                         <span className={`text-[10px] font-black ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{index + 1}</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className={`text-[10px] font-black leading-tight uppercase tracking-tight whitespace-normal break-words ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
+                        <p className={`text-[11px] font-black leading-tight uppercase tracking-tight whitespace-normal break-words ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
                         <p className={`text-[8px] font-bold uppercase tracking-widest truncate ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.category}</p>
                     </div>
                     
@@ -220,45 +220,44 @@ const CategoryArrangement: React.FC = () => {
 
     useEffect(() => {
         if (!id) return;
-        const fetchData = async () => {
-            try {
-                const [auctionSnap, playersSnap, catsSnap] = await Promise.all([
-                    db.collection('auctions').doc(id).get(),
-                    db.collection('auctions').doc(id).collection('players').get(),
-                    db.collection('auctions').doc(id).collection('categories').get()
-                ]);
 
-                if (auctionSnap.exists) {
-                    const data = auctionSnap.data();
-                    setAuctionName(data?.name || data?.title || 'Auction Board');
-                    setAuctionLogo(data?.logoUrl || '');
-                }
-
-                const pList = playersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player));
-                const cList = catsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionCategory));
-
-                setPlayers(pList);
-                setCategories(cList);
-                if (cList.length > 0) setActiveCategory(cList[0].id || '');
-
-                // Fetch all drafts
-                const draftsSnap = await db.collection('auctions').doc(id).collection('arrangementDrafts').get();
-                const draftsMap: { [key: string]: any } = {};
-                const configMap: { [key: string]: any } = {};
-                draftsSnap.docs.forEach(doc => {
-                    draftsMap[doc.id] = doc.data().slots || {};
-                    configMap[doc.id] = doc.data().config || { rows: 0, cols: 0 };
-                });
-                setAllSlots(draftsMap);
-                setCustomConfig(configMap);
-
-                setLoading(false);
-            } catch (err) {
-                console.error(err);
-                setLoading(false);
+        const unsubAuction = db.collection('auctions').doc(id).onSnapshot(snap => {
+            if (snap.exists) {
+                const data = snap.data();
+                setAuctionName(data?.name || data?.title || 'Auction Board');
+                setAuctionLogo(data?.logoUrl || '');
             }
+        });
+
+        const unsubCategories = db.collection('auctions').doc(id).collection('categories').onSnapshot(snap => {
+            const cList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionCategory));
+            setCategories(cList);
+            if (cList.length > 0 && !activeCategory) setActiveCategory(cList[0].id || '');
+        });
+
+        const unsubPlayers = db.collection('auctions').doc(id).collection('players').onSnapshot(snap => {
+            const pList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player));
+            setPlayers(pList);
+        });
+
+        const unsubDrafts = db.collection('auctions').doc(id).collection('arrangementDrafts').onSnapshot(snap => {
+            const draftsMap: { [key: string]: any } = {};
+            const configMap: { [key: string]: any } = {};
+            snap.docs.forEach(doc => {
+                draftsMap[doc.id] = doc.data().slots || {};
+                configMap[doc.id] = doc.data().config || { rows: 0, cols: 0 };
+            });
+            setAllSlots(draftsMap);
+            setCustomConfig(configMap);
+            setLoading(false);
+        });
+
+        return () => {
+            unsubAuction();
+            unsubCategories();
+            unsubPlayers();
+            unsubDrafts();
         };
-        fetchData();
     }, [id]);
 
     useEffect(() => {
@@ -1394,7 +1393,7 @@ const CategoryArrangement: React.FC = () => {
             {/* Hidden Export Board */}
             <div 
                 ref={exportRef} 
-                className="fixed left-[-9999px] top-0 w-[1600px] bg-zinc-950 p-12 opacity-0 pointer-events-none z-[-1]"
+                className="fixed left-[-9999px] top-0 w-[1600px] bg-zinc-950 p-20 opacity-0 pointer-events-none z-[-1]"
                 style={{
                     backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.1) 0%, transparent 80%)'
                 }}
@@ -1418,7 +1417,7 @@ const CategoryArrangement: React.FC = () => {
                 <div className="w-full space-y-8">
                     <div className="text-center">
                             <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 uppercase tracking-tighter italic drop-shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                                {auctionName}
+                                {isAllCategories ? 'ALL CATEGORIES' : currentCategory?.name}
                             </h2>
                         </div>
 
@@ -1430,61 +1429,88 @@ const CategoryArrangement: React.FC = () => {
                                 <thead>
                                     <tr className="bg-zinc-900/90">
                                         <th className="w-32 p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">#</th>
-                                        {Array.from({ length: maxCols }).map((_, c) => (
-                                            <th key={c} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{c + 1}</th>
-                                        ))}
+                                        {isAllCategories ? (
+                                            categories.map(cat => (
+                                                <th key={cat.id} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{cat.name}</th>
+                                            ))
+                                        ) : (
+                                            Array.from({ length: colCount }).map((_, c) => (
+                                                <th key={c} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{c + 1}</th>
+                                            ))
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {categories.map(cat => {
-                                        const catSlots = allSlots[cat.id || ''] || {};
-                                        const catConfig = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
-                                        const isAllrounder = cat.name.toLowerCase() === 'allrounder';
-                                        const totalReq = cat.requiredPlayers || 6;
-                                        const rows = catConfig.rows || (isAllrounder ? categories.length : Math.ceil(totalReq / 6));
-                                        const cols = catConfig.cols || 6;
-                                        const pref = cat.name.substring(0, 3).toUpperCase();
-
-                                        return Array.from({ length: rows }).map((_, rIdx) => {
-                                            const rowLabel = isAllrounder ? categories[rIdx].name : `${pref}${rIdx + 1}`;
-                                            return (
-                                                <tr key={`${cat.id}-${rowLabel}`} className="hover:bg-amber-500/5 transition-colors">
-                                                    <td className="p-6 border border-amber-500/20 bg-zinc-900/40 text-center text-sm font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
-                                                        {rowLabel}
-                                                    </td>
-                                                    {Array.from({ length: maxCols }).map((_, cIdx) => {
-                                                        const col = cIdx + 1;
-                                                        const slotId = `${rowLabel}_${col}`;
-                                                        const slot = catSlots[slotId];
-                                                        const globalIndex = (rIdx * cols) + col;
-                                                        
-                                                        // Only render if within current column count for this row
-                                                        if (col > cols) return <td key={slotId} className="p-3 border border-amber-500/20 bg-zinc-950/20 opacity-10"></td>;
+                                    {Array.from({ length: rowCount }).map((_, rIdx) => {
+                                        const rowNum = rIdx + 1;
+                                        const rowLabel = isAllCategories ? `${rowNum}` : (isAllrounderTable ? (categories[rIdx]?.name || `EXTRA_${rowNum}`) : `${prefix}${rowNum}`);
+                                        return (
+                                            <tr key={rowLabel} className="hover:bg-amber-500/5 transition-colors">
+                                                <td className="p-6 border border-amber-500/20 bg-zinc-900/40 text-center text-sm font-black text-amber-200 uppercase tracking-widest whitespace-nowrap">
+                                                    {rowLabel}
+                                                </td>
+                                                {isAllCategories ? (
+                                                    categories.map((cat) => {
+                                                        const catPrefix = cat.name.substring(0, 3).toUpperCase();
+                                                        const catConfig = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
+                                                        const catCols = catConfig.cols || 6;
+                                                        const r = Math.ceil(rowNum / catCols);
+                                                        const c = ((rowNum - 1) % catCols) + 1;
+                                                        const slotId = `${catPrefix}${r}_${c}`;
+                                                        const catSlots = allSlots[cat.id || ''] || {};
+                                                        const player = catSlots[slotId];
 
                                                         return (
-                                                            <td key={slotId} className="p-3 border border-amber-500/20 min-w-[200px] relative">
-                                                                <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest opacity-50">#{globalIndex}</div>
-                                                                {slot ? (
-                                                                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg group">
-                                                                        <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
-                                                                            <User className="w-6 h-6 text-zinc-600" />
+                                                            <td key={`${cat.id}-${slotId}`} className="p-4 border border-amber-500/20 min-w-[240px] relative">
+                                                                {player ? (
+                                                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg">
+                                                                        <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
+                                                                            <User className="w-7 h-7 text-zinc-600" />
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
-                                                                            <p className="text-base font-black text-zinc-100 uppercase leading-tight group-hover:text-amber-400 transition-colors whitespace-normal break-words">{slot.playerName}</p>
-                                                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{slot.category}</p>
+                                                                            <p className="text-lg font-black text-zinc-100 uppercase leading-tight whitespace-normal break-words">{player.playerName}</p>
+                                                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{player.category}</p>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="h-14 flex items-center justify-center opacity-10">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                                                                    <div className="h-16 flex items-center justify-center opacity-10">
+                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
                                                                     </div>
                                                                 )}
                                                             </td>
                                                         );
-                                                    })}
-                                                </tr>
-                                            );
-                                        });
+                                                    })
+                                                ) : (
+                                                    Array.from({ length: colCount }).map((_, cIdx) => {
+                                                        const col = cIdx + 1;
+                                                        const slotId = `${rowLabel}_${col}`;
+                                                        const slot = slots[slotId];
+                                                        const globalIndex = (rIdx * colCount) + cIdx;
+
+                                                        return (
+                                                            <td key={slotId} className="p-4 border border-amber-500/20 min-w-[240px] relative">
+                                                                <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest opacity-50">#{globalIndex + 1}</div>
+                                                                {slot ? (
+                                                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg">
+                                                                        <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
+                                                                            <User className="w-7 h-7 text-zinc-600" />
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-lg font-black text-zinc-100 uppercase leading-tight whitespace-normal break-words">{slot.playerName}</p>
+                                                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{slot.category}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="h-16 flex items-center justify-center opacity-10">
+                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })
+                                                )}
+                                            </tr>
+                                        );
                                     })}
                                 </tbody>
                             </table>
@@ -1493,19 +1519,19 @@ const CategoryArrangement: React.FC = () => {
 
                 {/* Footer Branding */}
                 <div className="mt-20 pt-10 border-t-4 border-amber-500/30 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                            <Trophy className="w-10 h-10 text-zinc-950" />
+                    <div className="flex items-center gap-8">
+                        <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-2xl shadow-amber-500/40 border-4 border-white/20">
+                            <Trophy className="w-14 h-14 text-zinc-950" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black text-white uppercase tracking-widest">SM SPORTS</p>
-                            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">OFFICIAL TOURNAMENT PARTNER</p>
+                            <p className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-2">SM SPORTS</p>
+                            <p className="text-lg font-black text-amber-500 uppercase tracking-[0.4em] opacity-80">OFFICIAL TOURNAMENT PARTNER</p>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-2xl font-black text-zinc-400 uppercase tracking-widest italic">OFFICIAL CATEGORY BOARD</p>
-                        <p className="text-sm font-bold text-zinc-600 uppercase tracking-widest mt-1">
-                            GENERATED: {new Date().toLocaleDateString()}
+                        <p className="text-4xl font-black text-zinc-400 uppercase tracking-widest italic opacity-50">OFFICIAL CATEGORY BOARD</p>
+                        <p className="text-lg font-black text-zinc-600 uppercase tracking-widest mt-2">
+                            GENERATED: {new Date().toLocaleDateString()} • {new Date().toLocaleTimeString()}
                         </p>
                     </div>
                 </div>

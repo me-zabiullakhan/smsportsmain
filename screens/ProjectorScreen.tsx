@@ -55,7 +55,7 @@ const Marquee = React.memo(({ content, show, layout }: { content: string[], show
 
 const ProjectorScreen: React.FC = () => {
   const { state, joinAuction } = useAuction();
-  const { auctionId } = useParams<{ auctionId: string }>();
+  const { id: auctionId } = useParams<{ id: string }>();
   const [display, setDisplay] = useState<DisplayState>({ player: null, bid: 0, bidder: null, status: 'WAITING' });
   const [latestLog, setLatestLog] = useState<string>('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
