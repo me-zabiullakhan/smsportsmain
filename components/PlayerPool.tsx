@@ -17,14 +17,21 @@ const PlayerPool: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('All');
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
-  // Fetch Roles dynamically to populate filter
+  // Fetch Roles and Categories dynamically to populate filter
   useEffect(() => {
       if(!activeAuctionId) return;
-      const unsub = db.collection('auctions').doc(activeAuctionId).collection('roles').onSnapshot(s => {
+      const unsubRoles = db.collection('auctions').doc(activeAuctionId).collection('roles').onSnapshot(s => {
           setAvailableRoles(s.docs.map(d => d.data().name));
       });
-      return () => unsub();
+      const unsubCats = db.collection('auctions').doc(activeAuctionId).collection('categories').onSnapshot(s => {
+          setAvailableCategories(s.docs.map(d => d.data().name));
+      });
+      return () => {
+          unsubRoles();
+          unsubCats();
+      };
   }, [activeAuctionId]);
 
   const soldPlayerIds = useMemo(() => new Set(teams.flatMap(team => team.players.map(p => p.id))), [teams]);
@@ -46,7 +53,7 @@ const PlayerPool: React.FC = () => {
     }
 
     if (selectedRole !== 'All' && activeTab !== 'teams') {
-        list = list.filter(p => p.role === selectedRole || (!p.role && p.category === selectedRole));
+        list = list.filter(p => p.role === selectedRole || p.category === selectedRole);
     }
 
     if (searchTerm && activeTab !== 'teams') {
@@ -66,7 +73,10 @@ const PlayerPool: React.FC = () => {
       </button>
   );
 
-  const rolesToDisplay = availableRoles.length > 0 ? ['All', ...availableRoles] : ['All', 'Batsman', 'Bowler', 'All Rounder', 'Wicket Keeper'];
+  const rolesToDisplay = useMemo(() => {
+      const combined = Array.from(new Set([...availableRoles, ...availableCategories]));
+      return ['All', ...combined];
+  }, [availableRoles, availableCategories]);
 
   return (
     <div className={`rounded-[2.5rem] shadow-2xl h-full flex flex-col border-4 transition-all duration-500 overflow-hidden ${isDark ? 'bg-secondary border-accent/20 shadow-accent/5' : 'bg-white border-blue-500/20 shadow-blue-600/10'}`}>

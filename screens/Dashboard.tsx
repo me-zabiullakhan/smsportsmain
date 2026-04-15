@@ -146,7 +146,7 @@ const Dashboard: React.FC = () => {
         )}
       </main>
       <footer className={`text-center py-6 border-t font-black uppercase tracking-[0.3em] text-[9px] transition-colors ${isDark ? 'bg-secondary border-accent/10 text-zinc-500' : 'bg-white border-gray-100 text-gray-400'}`}>
-        <p>SM SPORTS • Live Auction System • <a href={`${window.location.origin}${window.location.pathname}#/obs-overlay/${auctionId}`} target="_blank" className="text-accent hover:underline">Open OBS Overlay</a></p>
+        <p>SM SPORTS • Live Auction System • <a href={`${window.location.origin}/#/obs-overlay/${auctionId}`} target="_blank" className="text-accent hover:underline">Open OBS Overlay</a></p>
       </footer>
     </div>
   );

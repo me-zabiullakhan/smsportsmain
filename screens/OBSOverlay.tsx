@@ -164,6 +164,17 @@ const OBSOverlay: React.FC = () => {
   const { player, bid, bidder, status } = display;
   const layout = state.obsLayout || 'STANDARD';
 
+  if (!state.status && !state.tournamentName) {
+      return (
+          <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-white font-black uppercase tracking-widest">
+              <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-black/50 backdrop-blur-md border border-white/10">
+                  <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-sm animate-pulse">Initializing Overlay...</p>
+              </div>
+          </div>
+      );
+  }
+
   return (
     <>
         <SystemLogoFrame />

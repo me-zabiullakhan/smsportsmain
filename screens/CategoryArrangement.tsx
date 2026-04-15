@@ -232,7 +232,15 @@ const CategoryArrangement: React.FC = () => {
         const unsubCategories = db.collection('auctions').doc(id).collection('categories').onSnapshot(snap => {
             const cList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionCategory));
             setCategories(cList);
-            if (cList.length > 0 && !activeCategory) setActiveCategory(cList[0].id || '');
+            
+            // If active category is deleted or not set, pick the first one
+            if (cList.length > 0) {
+                if (!activeCategory || !cList.find(c => c.id === activeCategory)) {
+                    setActiveCategory(cList[0].id || '');
+                }
+            } else {
+                setActiveCategory('');
+            }
         });
 
         const unsubPlayers = db.collection('auctions').doc(id).collection('players').onSnapshot(snap => {
@@ -613,7 +621,7 @@ const CategoryArrangement: React.FC = () => {
             el.style.left = '0';
 
             // Small delay to ensure DOM has updated and layout is correct
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             const canvas = await html2canvas(el, {
                 scale: 2,
@@ -796,6 +804,8 @@ const CategoryArrangement: React.FC = () => {
                     await db.collection('auctions').doc(id).collection('categories').doc(categoryToDelete).delete();
                     // Also delete draft
                     await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(categoryToDelete).delete();
+                    
+                    // If the deleted category was the active one, the snapshot listener will handle resetting activeCategory
                     
                     setShowDeleteCategoryPopup(false);
                     setIsDeletingCategory(false);

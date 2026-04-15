@@ -172,6 +172,18 @@ const ProjectorScreen: React.FC = () => {
   const { player, bid, bidder, status } = display;
   const layout = state.projectorLayout || 'STANDARD';
 
+  if (!state.status && !state.tournamentName) {
+      return (
+          <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white font-black uppercase tracking-widest">
+              <div className="flex flex-col items-center gap-6">
+                  <div className="w-20 h-20 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-2xl animate-pulse">Loading Auction Data...</p>
+                  <p className="text-[10px] text-zinc-500 tracking-[0.5em]">SM SPORTS LIVE SYSTEM</p>
+              </div>
+          </div>
+      );
+  }
+
   return (
       <div className="h-screen w-full relative">
           {layout !== 'ADVAYA' && <SystemLogoFrame />}
