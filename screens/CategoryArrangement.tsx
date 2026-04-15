@@ -295,14 +295,23 @@ const CategoryArrangement: React.FC = () => {
             // Direct assignment for All Categories view
             setIsSaving(true);
             try {
+                const targetCategory = categories.find(c => c.id === catId);
+                const targetCategoryName = targetCategory?.name || player.category;
+
                 const newCatSlots = { 
                     ...(allSlots[catId] || {}), 
                     [sId]: {
                         playerId: player.id,
                         playerName: player.name,
-                        category: player.category
+                        category: targetCategoryName
                     }
                 };
+
+                // Update player's category in Firestore to reflect the board they are dropped into
+                await db.collection('auctions').doc(id!).collection('players').doc(player.id).update({
+                    category: targetCategoryName
+                });
+
                 await db.collection('auctions').doc(id!).collection('arrangementDrafts').doc(catId).set({
                     auctionId: id,
                     categoryId: catId,
@@ -363,7 +372,7 @@ const CategoryArrangement: React.FC = () => {
         executeAssign(slotId, player);
     };
 
-    const executeAssign = (slotId: string, player: Player) => {
+    const executeAssign = async (slotId: string, player: Player) => {
         // Check if player already assigned elsewhere
         const existingSlot = Object.entries(slots).find(([_, s]) => s.playerId === player.id);
         
@@ -375,11 +384,20 @@ const CategoryArrangement: React.FC = () => {
         }
 
         setHistory([...history, slots]);
+        
+        const targetCategory = categories.find(c => c.id === activeCategory);
+        const targetCategoryName = targetCategory?.name || player.category;
+
         newSlots[slotId] = {
             playerId: player.id,
             playerName: player.name,
-            category: player.category
+            category: targetCategoryName
         };
+
+        // Update player's category in Firestore to reflect the board they are dropped into
+        await db.collection('auctions').doc(id!).collection('players').doc(player.id).update({
+            category: targetCategoryName
+        });
 
         setSlots(newSlots);
         setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
@@ -394,14 +412,22 @@ const CategoryArrangement: React.FC = () => {
             const [catId, sId] = slotId.split(':');
             const catSlots = { ...(allSlots[catId] || {}) };
             
+            const targetCategory = categories.find(c => c.id === catId);
+            const targetCategoryName = targetCategory?.name || newPlayer.category;
+
             catSlots[sId] = {
                 playerId: newPlayer.id,
                 playerName: newPlayer.name,
-                category: newPlayer.category
+                category: targetCategoryName
             };
 
             setIsSaving(true);
             try {
+                // Update player's category in Firestore
+                await db.collection('auctions').doc(id!).collection('players').doc(newPlayer.id).update({
+                    category: targetCategoryName
+                });
+
                 await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(catId).update({
                     slots: catSlots,
                     updatedAt: Date.now()
@@ -431,6 +457,9 @@ const CategoryArrangement: React.FC = () => {
         
         setHistory([...history, slots]);
 
+        const targetCategory = categories.find(c => c.id === activeCategory);
+        const targetCategoryName = targetCategory?.name || newPlayer.category;
+
         if (existingSlot) {
             // Swap: Put old player where new player was
             newSlots[existingSlot[0]] = {
@@ -444,8 +473,13 @@ const CategoryArrangement: React.FC = () => {
         newSlots[slotId] = {
             playerId: newPlayer.id,
             playerName: newPlayer.name,
-            category: newPlayer.category
+            category: targetCategoryName
         };
+
+        // Update player's category in Firestore
+        await db.collection('auctions').doc(id!).collection('players').doc(newPlayer.id).update({
+            category: targetCategoryName
+        });
 
         setSlots(newSlots);
         setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
@@ -575,6 +609,11 @@ const CategoryArrangement: React.FC = () => {
             // Temporarily make it visible for capture
             el.style.opacity = '1';
             el.style.pointerEvents = 'auto';
+            el.style.position = 'static';
+            el.style.left = '0';
+
+            // Small delay to ensure DOM has updated and layout is correct
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const canvas = await html2canvas(el, {
                 scale: 2,
