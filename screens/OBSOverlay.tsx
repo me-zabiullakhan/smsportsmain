@@ -206,62 +206,56 @@ const OBSOverlay: React.FC = () => {
         
         {layout === 'ADVAYA' && (
             <div className="min-h-screen w-full relative font-sans overflow-hidden">
-                <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between gap-6 animate-slide-up">
+                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-4 animate-slide-up">
                     {/* Player Info */}
-                    <div className="flex-1 bg-black/95 backdrop-blur-xl rounded-[32px] border-2 border-yellow-500 p-6 flex items-center gap-8 shadow-[0_0_50px_rgba(234,179,8,0.4)] relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.6)]"></div>
-                        <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-yellow-500/40 shadow-[0_0_25px_rgba(234,179,8,0.4)] shrink-0">
+                    <div className="flex-1 bg-black/95 backdrop-blur-xl rounded-2xl border-2 border-yellow-500 p-3 flex items-center gap-6 shadow-[0_0_30px_rgba(234,179,8,0.3)] relative overflow-hidden group">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden border border-yellow-500/40 shadow-[0_0_15px_rgba(234,179,8,0.3)] shrink-0">
                             <img src={player?.photoUrl} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110" />
                         </div>
                         <div className="min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="bg-yellow-500 text-black px-3 py-0.5 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-[0_0_15px_rgba(234,179,8,0.6)]">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="bg-yellow-500 text-black px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest">
                                     {player?.category}
                                 </span>
-                                <span className="text-white/40 font-mono text-[10px]">#{player?.id.toString().slice(-4)}</span>
+                                <span className="text-white/40 font-mono text-[9px]">#{player?.id.toString().slice(-4)}</span>
                             </div>
-                            <h1 className="text-4xl font-black uppercase tracking-tighter text-white truncate drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">{player?.name}</h1>
-                            <p className="text-yellow-500 font-bold uppercase tracking-[0.2em] text-xs mt-1 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">{player?.speciality || player?.category}</p>
+                            <h1 className="text-2xl font-black uppercase tracking-tight text-white truncate">{player?.name}</h1>
+                            <p className="text-yellow-500 font-bold uppercase tracking-widest text-[10px] mt-0.5">{player?.speciality || player?.category}</p>
                         </div>
-                        {/* Neon Glow Border */}
-                        <div className="absolute inset-0 border-2 border-yellow-500/30 rounded-[32px] animate-pulse pointer-events-none"></div>
                     </div>
 
                     {/* Bidding Info */}
-                    <div className="w-[450px] flex flex-col gap-4">
-                        <div className="bg-yellow-500 rounded-[32px] p-6 flex items-center justify-between shadow-[0_25px_60px_rgba(234,179,8,0.5)] relative overflow-hidden border-4 border-yellow-400 shadow-[0_0_30px_rgba(234,179,8,0.4)]">
-                            <div className="absolute top-0 right-0 w-32 h-full bg-white/30 skew-x-[-20deg] translate-x-16"></div>
+                    <div className="w-[380px] flex flex-col gap-2">
+                        <div className="bg-yellow-500 rounded-2xl p-3 px-6 flex items-center justify-between shadow-[0_15px_40px_rgba(234,179,8,0.4)] relative overflow-hidden border-2 border-yellow-400">
                             <div className="relative z-10">
-                                <p className="text-black/70 text-[10px] font-black uppercase tracking-widest mb-1">Current Bid</p>
-                                <p className="text-6xl font-black text-black tabular-nums leading-none tracking-tighter italic drop-shadow-md">{bid.toLocaleString()}</p>
+                                <p className="text-black/70 text-[9px] font-black uppercase tracking-widest mb-0.5">Current Bid</p>
+                                <p className="text-4xl font-black text-black tabular-nums leading-none tracking-tighter italic">{bid.toLocaleString()}</p>
                             </div>
                             <div className="text-right relative z-10">
                                 {status === 'SOLD' ? (
-                                    <span className="bg-black text-yellow-500 px-5 py-2 rounded-2xl font-black text-2xl italic uppercase tracking-widest animate-bounce shadow-[0_0_20px_rgba(0,0,0,0.5)]">SOLD</span>
+                                    <span className="bg-black text-yellow-500 px-4 py-1.5 rounded-xl font-black text-xl italic uppercase tracking-widest animate-bounce">SOLD</span>
                                 ) : status === 'UNSOLD' ? (
-                                    <span className="bg-red-600 text-white px-5 py-2 rounded-2xl font-black text-2xl italic uppercase tracking-widest shadow-[0_0_20px_rgba(220,38,38,0.5)]">UNSOLD</span>
+                                    <span className="bg-red-600 text-white px-4 py-1.5 rounded-xl font-black text-xl italic uppercase tracking-widest">UNSOLD</span>
                                 ) : (
                                     <div className="flex flex-col items-end">
-                                        <span className="text-black/50 text-[10px] font-bold uppercase tracking-widest">Base</span>
-                                        <span className="text-black font-bold text-2xl font-mono leading-none">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</span>
+                                        <span className="text-black/50 text-[9px] font-bold uppercase tracking-widest">Base</span>
+                                        <span className="text-black font-bold text-xl font-mono leading-none">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {bidder && (
-                            <div className="bg-black/95 backdrop-blur-xl rounded-full p-4 pl-8 flex items-center justify-between border-2 border-yellow-500 shadow-[0_15px_40px_rgba(0,0,0,0.6),0_0_30px_rgba(234,179,8,0.3)] animate-slide-up">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-3 h-3 bg-yellow-500 rounded-full animate-ping shadow-[0_0_15px_rgba(234,179,8,1)]"></div>
-                                    <span className="text-white/50 font-bold uppercase tracking-widest text-[11px]">Leading:</span>
-                                    <span className="text-white text-xl font-black uppercase italic tracking-tight">{bidder.name}</span>
+                            <div className="bg-black/95 backdrop-blur-xl rounded-xl p-2.5 pl-6 flex items-center justify-between border border-yellow-500/50 shadow-lg animate-slide-up">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                                    <span className="text-white text-sm font-black uppercase italic tracking-tight">{bidder.name}</span>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3">
                                     <div className="text-right">
-                                        <p className="text-white/40 text-[9px] font-bold uppercase leading-none">Purse</p>
-                                        <p className="text-yellow-500 font-mono font-bold text-lg leading-none mt-1">{bidder.budget.toLocaleString()}</p>
+                                        <p className="text-yellow-500 font-mono font-bold text-sm leading-none">{bidder.budget.toLocaleString()}</p>
                                     </div>
-                                    {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-12 h-12 object-contain bg-white p-1 rounded-full border-2 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.3)]" /> : <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-sm text-white border-2 border-yellow-500/30">{bidder.name.charAt(0)}</div>}
+                                    {bidder.logoUrl ? <img src={bidder.logoUrl} className="w-8 h-8 object-contain bg-white p-0.5 rounded-full border border-yellow-500/30" /> : <div className="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-[10px] text-white border border-yellow-500/30">{bidder.name.charAt(0)}</div>}
                                 </div>
                             </div>
                         )}
