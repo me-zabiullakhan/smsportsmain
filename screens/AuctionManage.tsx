@@ -369,13 +369,29 @@ const AuctionManage: React.FC = () => {
         if (!id) return;
         let col = modalType.toLowerCase() + 's';
         if (modalType === 'CATEGORY') col = 'categories';
-        const itemData = { ...editItem, logoUrl: previewImage || editItem.logoUrl || '', photoUrl: previewImage || editItem.photoUrl || '', imageUrl: previewImage || editItem.imageUrl || '' };
+        
+        const itemData = { 
+            ...editItem, 
+            logoUrl: previewImage || editItem.logoUrl || '', 
+            photoUrl: previewImage || editItem.photoUrl || '', 
+            imageUrl: previewImage || editItem.imageUrl || '',
+            id: editItem.id || db.collection('auctions').doc(id).collection(col).doc().id
+        };
+
+        // Auto-generate Team ID for new teams
+        if (modalType === 'TEAM' && !editItem.id) {
+            const nextIdx = teams.reduce((max, t) => {
+                const codeNum = parseInt(String(t.teamCode || '').replace('T', '') || '0');
+                return isNaN(codeNum) ? max : Math.max(max, codeNum);
+            }, 0) + 1;
+            itemData.teamCode = `T${nextIdx.toString().padStart(3, '0')}`;
+        }
         
         try {
             if (editItem.id) {
-                await db.collection('auctions').doc(id).collection(col).doc(editItem.id).update(itemData);
+                await db.collection('auctions').doc(id).collection(col).doc(editItem.id).set(itemData, { merge: true });
             } else {
-                await db.collection('auctions').doc(id).collection(col).add({ ...itemData, createdAt: Date.now() });
+                await db.collection('auctions').doc(id).collection(col).doc(itemData.id).set({ ...itemData, createdAt: Date.now() });
             }
             closeModal();
         } catch (err: any) { showNotification("Save failed: " + err.message); }
@@ -413,10 +429,26 @@ const AuctionManage: React.FC = () => {
             const batch = db.batch();
             const col = type.toLowerCase() + 's';
             
+            let teamIdx = teams.reduce((max, t) => {
+                const codeNum = parseInt(String(t.teamCode || '').replace('T', '') || '0');
+                return isNaN(codeNum) ? max : Math.max(max, codeNum);
+            }, 0);
+
             data.forEach(row => {
                 const ref = db.collection('auctions').doc(id).collection(col).doc();
                 if (type === 'TEAM') {
-                    batch.set(ref, { id: ref.id, name: row.Name || row.name, owner: row.Owner || '', budget: Number(row.Budget) || settingsForm.purseValue, players: [], logoUrl: '' });
+                    teamIdx++;
+                    const generatedCode = `T${teamIdx.toString().padStart(3, '0')}`;
+                    batch.set(ref, { 
+                        id: ref.id, 
+                        teamCode: row.ID || row.Id || row.teamCode || generatedCode,
+                        name: row.Name || row.name, 
+                        owner: row.Owner || '', 
+                        budget: Number(row.Budget) || settingsForm.purseValue, 
+                        players: [], 
+                        logoUrl: '',
+                        password: String(row.Password || row.password || '')
+                    });
                 } else {
                     batch.set(ref, { id: ref.id, name: row.Name || row.name, category: row.Category || 'Standard', role: row.Role || 'All Rounder', basePrice: Number(row.BasePrice) || settingsForm.basePrice, nationality: 'India', photoUrl: '', stats: { matches: 0, runs: 0, wickets: 0 } });
                 }
@@ -1000,7 +1032,14 @@ const AuctionManage: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="font-black text-gray-800 uppercase text-sm leading-none">{team.name}</p>
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">₹{team.budget}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase">₹{team.budget}</p>
+                                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                                <p className="text-[10px] text-blue-600 font-black uppercase">{team.teamCode || 'NO ID'}</p>
+                                            </div>
+                                            {team.password && (
+                                                <p className="text-[9px] text-gray-400 font-bold uppercase mt-1">Pass: {team.password}</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2373,9 +2412,21 @@ const AuctionManage: React.FC = () => {
                             )}
 
                             {modalType === 'TEAM' && (
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Assigned Purse (₹)</label>
-                                    <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.budget} onChange={e => setEditItem({...editItem, budget: Number(e.target.value)})} />
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Assigned Purse (₹)</label>
+                                        <input type="number" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.budget} onChange={e => setEditItem({...editItem, budget: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Team Password</label>
+                                        <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={editItem?.password || ''} onChange={e => setEditItem({...editItem, password: e.target.value})} placeholder="Set team access password" />
+                                    </div>
+                                    {editItem?.teamCode && (
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Team Registration ID</label>
+                                            <input disabled className="w-full bg-gray-100 border-2 border-gray-200 rounded-xl px-4 py-3 font-black text-blue-600 opacity-60 cursor-not-allowed" value={editItem.teamCode} />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

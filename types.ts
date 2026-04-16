@@ -59,6 +59,7 @@ export interface RegisteredPlayer {
 
 export interface Team {
   id: number | string;
+  teamCode?: string; // Automatically generated like T001, T002
   name: string;
   shortName?: string;
   owner: string;

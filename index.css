@@ -147,18 +147,19 @@
   background-color: #facc15 !important; /* yellow-400 */
   color: #000000 !important;
   border: 2px solid #facc15 !important;
-  box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.2);
   font-weight: 900 !important;
   transition: all 0.3s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 0 5px rgba(250, 204, 21, 0.2);
 }
 
 .btn-golden:hover {
-  box-shadow: 0 0 30px rgba(250, 204, 21, 0.6);
+  box-shadow: 0 0 40px rgba(250, 204, 21, 0.8), 0 0 20px rgba(250, 204, 21, 0.4);
   transform: scale(1.05);
-  filter: brightness(1.1);
+  filter: brightness(1.2);
 }
 
 .btn-golden:disabled {

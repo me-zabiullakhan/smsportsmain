@@ -121,11 +121,15 @@ const ProjectorScreen: React.FC = () => {
   }, [state]);
 
   const SystemLogoFrame = () => (
-      <div className="absolute top-4 left-4 w-40 h-40 bg-white rounded-3xl border-4 border-highlight p-3 shadow-2xl flex items-center justify-center z-50 overflow-hidden">
+      <div className="absolute top-4 left-4 h-24 bg-white rounded-2xl border-2 border-highlight p-3 shadow-xl flex items-center gap-4 z-50 px-6">
+          <div className="flex flex-col text-right">
+              <span className="text-black font-black text-2xl tracking-tighter leading-none">SM SPORTS</span>
+              <span className="text-highlight text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic">Auction Engine</span>
+          </div>
           {state.systemLogoUrl ? (
-              <img src={state.systemLogoUrl} className="max-w-full max-h-full object-contain" alt="Logo" />
+              <img src={state.systemLogoUrl} className="h-full object-contain" alt="Logo" />
           ) : (
-              <Trophy className="w-full h-full text-highlight opacity-20" />
+              <Trophy className="h-10 w-10 text-highlight opacity-40 shrink-0" />
           )}
       </div>
   );
@@ -191,8 +195,16 @@ const ProjectorScreen: React.FC = () => {
           <SponsorLoop />
           {layout === 'STANDARD' && (
               <div className="h-screen w-full bg-gray-100 flex flex-col font-sans overflow-hidden relative">
-                <div className="h-24 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-8 z-50 shrink-0 relative pl-48"><h1 className="text-3xl md:text-5xl font-black text-gray-800 uppercase tracking-widest drop-shadow-sm truncate">{state.tournamentName || "AUCTION 2025"}</h1></div>
-                <div className="flex-1 flex gap-4 p-4 pb-16 min-h-0 relative z-10 items-center justify-center"><div className="w-[30%] bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 border-white flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 h-[65vh]"><img src={player?.photoUrl} alt={player?.name} className="w-full h-full object-cover object-top" /><div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg shadow-lg border border-gray-200"><span className="font-bold text-xl text-gray-800 uppercase tracking-wide">{player?.category}</span></div></div><div className="flex-1 flex flex-col gap-4 min-h-0 h-[65vh]"><div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 flex justify-between items-start shrink-0"><div><div className="flex items-center gap-2 mb-2 text-gray-500 font-bold tracking-widest uppercase text-sm"><Globe className="w-4 h-4" /> {player?.nationality}</div><h1 className="text-6xl lg:text-7xl font-black text-gray-900 leading-none mb-2 truncate max-w-[50vw]">{player?.name}</h1><p className="text-2xl text-highlight font-bold flex items-center mt-2"><User className="w-6 h-6 mr-2"/> {player?.speciality || player?.category}</p></div><div className="text-right whitespace-nowrap bg-gray-50 p-4 rounded-xl border border-gray-200"><p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Base Price</p><p className="text-4xl font-bold text-gray-700 font-mono">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</p></div></div><div className="flex-1 bg-gray-900 rounded-3xl p-4 shadow-2xl relative overflow-hidden flex flex-col justify-center items-center border-4 border-gray-800">{status === 'SOLD' && <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"><div className="flex flex-col items-center"><div className="bg-green-600 text-white font-black text-7xl lg:text-8xl px-12 py-4 border-8 border-white -rotate-12 shadow-[0_0_50px_rgba(22,163,74,0.6)] animate-bounce-in tracking-widest uppercase mb-8">SOLD</div>{bidder && <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-up"><div className="text-right"><p className="text-xs text-gray-400 font-bold uppercase">Sold To</p><p className="text-3xl font-black text-gray-800">{bidder.name}</p></div>{bidder.logoUrl ? <img src={bidder.logoUrl} className="w-16 h-16 rounded-full border border-gray-200 object-contain" /> : <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xl">{bidder.name.charAt(0)}</div>}</div>}</div></div>}{status === 'UNSOLD' && <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"><div className="bg-red-600 text-white font-black text-8xl px-12 py-4 border-8 border-white -rotate-12 shadow-[0_0_50px_rgba(220,38,38,0.6)] animate-bounce-in tracking-widest uppercase">UNSOLD</div></div>}<p className="text-highlight font-bold text-lg lg:text-xl uppercase tracking-[0.5em] mb-4 relative z-10">{bidder ? 'Current Bid Amount' : 'Base Price'}</p><div className="text-[12vh] lg:text-[18vh] leading-none font-black text-white tabular-nums drop-shadow-2xl relative z-10">{bid.toLocaleString()}</div>{status === 'LIVE' && bidder && (<div className="mt-6 bg-gray-800 px-8 py-3 rounded-full flex items-center gap-6 border border-gray-700 relative z-10 shadow-lg"><div className="text-right"><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Highest Bidder</p><p className="text-2xl font-bold text-white">{bidder.name}</p></div>{bidder.logoUrl ? <img src={bidder.logoUrl} className="w-12 h-12 rounded-full bg-white p-0.5" /> : <div className="w-12 h-12 bg-gray-600 rounded-full" />}</div>)}</div></div></div>
+                <div className="h-24 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-8 z-50 shrink-0 relative pl-48">
+                    <div className="flex-1 flex justify-center">
+                        <div className="bg-black px-10 py-2 rounded-[2rem] border-2 border-highlight shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+                            <h1 className="text-3xl md:text-5xl font-black text-highlight uppercase tracking-widest drop-shadow-sm truncate">
+                                {state.tournamentName || "AUCTION 2025"}
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 flex gap-4 p-4 pb-16 min-h-0 relative z-10 items-center justify-center"><div className="w-[30%] bg-white rounded-3xl shadow-2xl overflow-hidden relative border-4 border-white flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 h-[65vh]"><img src={player?.photoUrl} alt={player?.name} className="w-full h-full object-cover object-top" /><div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg shadow-lg border border-gray-200"><span className="font-bold text-xl text-gray-800 uppercase tracking-wide">{player?.category}</span></div></div><div className="flex-1 flex flex-col gap-4 min-h-0 h-[65vh]"><div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 flex justify-between items-start shrink-0"><div><div className="flex items-center gap-2 mb-2 text-gray-500 font-bold tracking-widest uppercase text-sm"><Globe className="w-4 h-4" /> {player?.nationality}</div><h1 className="text-6xl lg:text-7xl font-black text-gray-900 leading-none mb-2 truncate max-w-[50vw]">{player?.name}</h1><p className="text-2xl text-highlight font-bold flex items-center mt-2"><User className="w-6 h-6 mr-2"/> {player?.speciality || player?.category}</p></div><div className="text-right whitespace-nowrap bg-gray-50 p-4 rounded-xl border border-gray-200"><p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Base Price</p><p className="text-4xl font-bold text-gray-700 font-mono">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</p></div></div><div className="flex-1 bg-gray-900 rounded-3xl p-4 shadow-2xl relative overflow-hidden flex flex-col justify-center items-center border-4 border-gray-800">{status === 'SOLD' && <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"><div className="flex flex-col items-center"><div className="bg-green-600 text-white font-black text-7xl lg:text-8xl px-12 py-4 border-8 border-white -rotate-12 shadow-[0_0_50px_rgba(22,163,74,0.6)] animate-bounce-in tracking-widest uppercase mb-8">SOLD</div>{bidder && <div className="bg-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-up"><div className="text-right"><p className="text-xs text-gray-400 font-bold uppercase">Sold To</p><p className="text-3xl font-black text-gray-800">{bidder.name}</p></div>{bidder.logoUrl ? <img src={bidder.logoUrl} className="w-16 h-16 rounded-full border border-gray-200 object-contain" /> : <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center font-bold text-xl">{bidder.name.charAt(0)}</div>}</div>}</div></div>}{status === 'UNSOLD' && <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"><div className="bg-red-600 text-white font-black text-8xl px-12 py-4 border-8 border-white -rotate-12 shadow-[0_0_50px_rgba(220,38,38,0.6)] animate-bounce-in tracking-widest uppercase">UNSOLD</div></div>}<p className="text-highlight font-bold text-lg lg:text-xl uppercase tracking-[0.5em] mb-4 relative z-10">{bidder ? 'Current Bid Amount' : 'Base Price'}</p><div className={`text-[12vh] lg:text-[18vh] leading-none font-black tabular-nums drop-shadow-2xl relative z-10 ${bidder ? 'text-white' : 'text-highlight animate-pulse'}`}>{bid.toLocaleString()}</div>{status === 'LIVE' && bidder && (<div className="mt-6 bg-gray-800 px-8 py-3 rounded-full flex items-center gap-6 border border-gray-700 relative z-10 shadow-lg"><div className="text-right"><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Highest Bidder</p><p className="text-2xl font-bold text-white">{bidder.name}</p></div>{bidder.logoUrl ? <img src={bidder.logoUrl} className="w-12 h-12 rounded-full bg-white p-0.5" /> : <div className="w-12 h-12 bg-gray-600 rounded-full" />}</div>)}</div></div></div>
                 <div className="mt-auto flex gap-4 h-[15vh] relative z-20 bg-gray-100 shrink-0 p-4 pt-0"><div className="w-1/3 bg-white rounded-3xl shadow-lg border border-gray-200 p-4 flex flex-col justify-center relative overflow-hidden"><div className="absolute top-0 left-0 w-2 h-full bg-highlight"></div><h3 className="text-gray-400 font-bold uppercase text-xs tracking-widest mb-1 flex items-center"><TrendingUp className="w-3 h-3 mr-1"/> Recent Activity</h3><div className="text-xl lg:text-2xl font-bold text-gray-800 leading-snug truncate">{latestLog || "Auction in progress..."}</div></div><div className="flex-1 bg-gray-900 rounded-3xl shadow-lg border border-gray-800 p-4 overflow-hidden flex flex-col"><h3 className="text-gray-400 font-bold uppercase text-xs tracking-widest mb-2 flex items-center"><Wallet className="w-3 h-3 mr-1"/> Team Purses Remaining</h3><div className="flex-1 overflow-x-auto overflow-y-hidden flex items-center gap-3 custom-scrollbar">{state.teams.map(team => (<div key={team.id} className="min-w-[140px] bg-gray-800 p-2 rounded-xl border border-gray-700 flex flex-col items-center text-center shrink-0">{team.logoUrl ? <img src={team.logoUrl} className="w-6 h-6 rounded-full mb-1 bg-white p-0.5 object-contain" /> : <div className="w-6 h-6 rounded-full bg-gray-600 mb-1 flex items-center justify-center text-white font-bold text-xs">{team.name.charAt(0)}</div>}<h4 className="text-white font-bold text-xs truncate w-full">{team.name}</h4><p className="text-green-400 font-mono font-bold text-sm">{team.budget}</p></div>))}</div></div></div>
               </div>
           )}
@@ -299,10 +311,12 @@ const ProjectorScreen: React.FC = () => {
                   
                   <div className="h-20 flex items-center justify-between px-12 z-50 relative">
                       <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-highlight rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(56,178,172,0.5)]">
+                          <div className="w-12 h-12 bg-highlight rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.5)]">
                               <Trophy className="text-black w-6 h-6" />
                           </div>
-                          <h1 className="text-3xl font-black uppercase tracking-tighter italic">{state.tournamentName || "AUCTION"}</h1>
+                          <div className="bg-white/10 px-8 py-2 rounded-full border border-white/20">
+                              <h1 className="text-3xl font-black uppercase tracking-tighter italic text-highlight">{state.tournamentName || "AUCTION"}</h1>
+                          </div>
                       </div>
                       <div className="text-highlight font-mono text-xl tracking-widest">LIVE AUCTION // 2025</div>
                   </div>
@@ -393,9 +407,9 @@ const ProjectorScreen: React.FC = () => {
                   {/* Header - Customized for ADVAYA */}
                   <div className="h-28 flex items-center justify-center px-16 z-50 relative border-b border-yellow-500/10 backdrop-blur-sm">
                       <div className="text-center">
-                          <div className="relative inline-block">
-                              <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-30 rounded-full"></div>
-                              <h1 className="text-6xl font-black uppercase tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-500 drop-shadow-[0_0_20px_rgba(234,179,8,0.5)]">
+                          <div className="relative inline-block bg-black/40 px-12 py-4 rounded-[40px] border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.1)]">
+                              <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 rounded-full"></div>
+                              <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-yellow-500 drop-shadow-[0_0_30px_rgba(234,179,8,0.6)]">
                                   {state.tournamentName || "AUCTION 2025"}
                               </h1>
                           </div>
@@ -475,9 +489,9 @@ const ProjectorScreen: React.FC = () => {
                                   </div>
                               )}
 
-                              <div className="relative z-10 flex flex-col items-center">
-                                  <p className="text-yellow-500/40 font-black text-2xl uppercase tracking-[1em] mb-8">CURRENT BID</p>
-                                  <div className="text-[22vh] font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)]">{bid.toLocaleString()}</div>
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <p className="text-yellow-500/40 font-black text-2xl uppercase tracking-[1em] mb-8">{bidder ? 'CURRENT BID' : 'BASE PRICE'}</p>
+                                    <div className="text-[22vh] font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)]">{bid.toLocaleString()}</div>
                                   
                                   {status === 'LIVE' && bidder && (
                                       <div className="mt-12 flex flex-col items-center animate-slide-up">
@@ -605,10 +619,10 @@ const ProjectorScreen: React.FC = () => {
                   {/* Top Bar */}
                   <div className="h-20 flex items-center justify-between px-16 z-40 relative border-b border-cyan-500/20 bg-black/40 backdrop-blur-md">
                       <div className="flex items-center gap-10">
-                          <div className="flex flex-col">
-                              <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">System.Protocol</span>
-                              <h1 className="text-3xl font-black uppercase tracking-widest text-white">{state.tournamentName || "AUCTION_CORE"}</h1>
-                          </div>
+                      <div className="flex flex-col bg-cyan-500/10 px-8 py-2 rounded-lg border border-cyan-500/30">
+                          <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">System.Protocol</span>
+                          <h1 className="text-3xl font-black uppercase tracking-widest text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">{state.tournamentName || "AUCTION_CORE"}</h1>
+                      </div>
                           <div className="h-10 w-px bg-cyan-500/20"></div>
                           <div className="flex flex-col">
                               <span className="text-[10px] text-cyan-500/50 uppercase tracking-[0.5em]">Status</span>
