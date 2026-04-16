@@ -745,12 +745,30 @@ const LiveAdminPanel: React.FC = () => {
             </div>
 
             <div className={`flex flex-col gap-2 w-full pt-3 border-t ${isDark ? 'border-accent/10' : 'border-blue-500/10'}`}>
-              <label className={`block text-[8px] uppercase font-black tracking-[0.2em] ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>Admin View Override</label>
+              <div className="flex justify-between items-center">
+                <label className={`block text-[8px] uppercase font-black tracking-[0.2em] ${isDark ? 'text-zinc-600' : 'text-gray-400'}`}>Admin View Override</label>
+                {state.adminViewOverride?.type === 'SQUAD' && (
+                  <select 
+                    className={`text-[8px] font-black uppercase bg-transparent border-none focus:ring-0 ${isDark ? 'text-accent' : 'text-blue-600'}`}
+                    value={state.adminViewOverride.data?.teamId || ''}
+                    onChange={(e) => setAdminView({ type: 'SQUAD', data: { teamId: e.target.value } })}
+                  >
+                    <option value="">Select Team</option>
+                    {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                )}
+              </div>
               <div className={`flex flex-wrap gap-1.5 p-1.5 rounded-xl border ${isDark ? 'bg-zinc-900 border-accent/10' : 'bg-white border-blue-500/10'}`}>
                 {['NONE', 'SQUAD', 'PURSES', 'TOP_5', 'UNSOLD'].map(v => (
                   <button
                     key={v}
-                    onClick={() => setAdminView(v === 'NONE' ? null : { type: v as any })}
+                    onClick={() => {
+                      if (v === 'SQUAD') {
+                        setAdminView({ type: 'SQUAD', data: { teamId: teams[0]?.id } });
+                      } else {
+                        setAdminView(v === 'NONE' ? null : { type: v as any });
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${(!state.adminViewOverride && v === 'NONE') || (state.adminViewOverride?.type === v)
                         ? 'bg-accent text-primary'
                         : (isDark ? 'text-zinc-500 hover:text-white' : 'text-gray-400 hover:text-blue-600')}`}
