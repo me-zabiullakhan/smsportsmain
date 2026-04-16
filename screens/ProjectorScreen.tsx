@@ -114,7 +114,8 @@ const ProjectorScreen: React.FC = () => {
           if (derivedStatus === 'SOLD' && !resolvedBidder && currentPlayer.soldTo) {
              resolvedBidder = teams.find(t => t.name === currentPlayer.soldTo) || null;
           }
-          setDisplay({ player: currentPlayer, bid: currentPlayer.soldPrice || currentBid || currentPlayer.basePrice, bidder: resolvedBidder, status: derivedStatus });
+          const effectiveBase = getEffectiveBasePrice(currentPlayer, state.categories);
+          setDisplay({ player: currentPlayer, bid: currentPlayer.soldPrice || currentBid || effectiveBase, bidder: resolvedBidder, status: derivedStatus });
       } else if (display.status !== 'WAITING' && display.status !== 'FINISHED') {
           timeoutRef.current = setTimeout(() => { setDisplay({ player: null, bid: 0, bidder: null, status: 'WAITING' }); }, 2000); 
       }
@@ -666,7 +667,7 @@ const ProjectorScreen: React.FC = () => {
                           <div className="grid grid-cols-2 gap-6 h-24">
                               <div className="bg-black border border-cyan-500/20 p-4 rounded-xl flex flex-col justify-center">
                                   <span className="text-[8px] text-cyan-500/50 uppercase mb-1">Base_Valuation</span>
-                                  <p className="text-2xl font-black text-white">₹{player?.basePrice.toLocaleString()}</p>
+                                  <p className="text-2xl font-black text-white">₹{player ? getEffectiveBasePrice(player, state.categories).toLocaleString() : '0'}</p>
                               </div>
                               <div className="bg-black border border-cyan-500/20 p-4 rounded-xl flex flex-col justify-center">
                                   <span className="text-[8px] text-cyan-500/50 uppercase mb-1">Origin_Node</span>
