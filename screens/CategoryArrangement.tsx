@@ -35,7 +35,10 @@ import {
     X,
     Pencil,
     Check,
-    Trophy
+    Trophy,
+    Layers,
+    LayoutGrid,
+    PlusCircle
 } from 'lucide-react';
 import { db } from '../firebase';
 import { Player, AuctionCategory, CategoryArrangementDraft, CategoryArrangementSlot } from '../types';
@@ -92,7 +95,7 @@ const DraggablePlayer: React.FC<DraggablePlayerProps> = ({ player, disabled }) =
 
 interface DroppableSlotProps {
     id: string;
-    player?: CategoryArrangementSlot;
+    player?: Player | null; // Changed from CategoryArrangementSlot to Player
     onAction: (action: 'REMOVE' | 'MOVE', slotId: string) => void;
     index: number;
 }
@@ -138,10 +141,14 @@ const DroppableSlot: React.FC<DroppableSlotProps> = ({ id, player, onAction, ind
                     className="w-full h-full p-2.5 flex items-center gap-2.5 relative z-10 cursor-grab active:cursor-grabbing"
                 >
                     <div className={`w-9 h-9 rounded-lg border flex-shrink-0 overflow-hidden flex items-center justify-center ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-100 border-gray-200'}`}>
-                        <span className={`text-[10px] font-black ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{index + 1}</span>
+                        {player.photoUrl ? (
+                            <img src={player.photoUrl} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className={`text-[10px] font-black ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{index + 1}</span>
+                        )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className={`text-[11px] font-black leading-tight uppercase tracking-tight whitespace-normal break-words ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.playerName}</p>
+                        <p className={`text-[11px] font-black leading-tight uppercase tracking-tight whitespace-normal break-words ${isDark ? 'text-accent' : 'text-blue-600'}`}>{player.name}</p>
                         <p className={`text-[8px] font-bold uppercase tracking-widest truncate ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.category}</p>
                     </div>
                     
@@ -202,6 +209,9 @@ const CategoryArrangement: React.FC = () => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempCategoryName, setTempCategoryName] = useState('');
     const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [editItem, setEditItem] = useState<any>({});
+    const [rowCountExtra, setRowCountExtra] = useState(0);
 
     const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
         setNotification({ message, type });
@@ -233,14 +243,8 @@ const CategoryArrangement: React.FC = () => {
             const cList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionCategory));
             setCategories(cList);
             
-            // If active category is deleted or not set, pick the first one
-            if (cList.length > 0) {
-                if (!activeCategory || !cList.find(c => c.id === activeCategory)) {
-                    setActiveCategory(cList[0].id || '');
-                }
-            } else {
-                setActiveCategory('');
-            }
+            // Always use ALL_CATEGORIES view as requested
+            setActiveCategory('ALL_CATEGORIES');
         });
 
         const unsubPlayers = db.collection('auctions').doc(id).collection('players').onSnapshot(snap => {
@@ -763,13 +767,13 @@ const CategoryArrangement: React.FC = () => {
     const totalRequired = currentCategory?.requiredPlayers || 6;
     
     // Transpose logic for All Categories
-    const rowCount = isAllCategories 
+    const rowCount = (isAllCategories 
         ? Math.max(6, ...categories.map(cat => {
             const c = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
             const tr = cat.requiredPlayers || 6;
             return c.rows || Math.ceil(tr / 6) * 6; // Use actual slots if possible
           }))
-        : (config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6)));
+        : (config.rows || (isAllrounderTable ? categories.length : Math.ceil(totalRequired / 6)))) + rowCountExtra;
         
     const colCount = isAllCategories ? categories.length : (config.cols || 6);
     const prefix = isAllCategories ? 'ALL' : (currentCategory?.name.substring(0, 3).toUpperCase() || 'CAT');
@@ -780,75 +784,54 @@ const CategoryArrangement: React.FC = () => {
     }));
 
     const addRow = () => {
-        setCustomConfig(prev => ({
-            ...prev,
-            [activeCategory]: {
-                rows: rowCount + 1,
-                cols: colCount
-            }
-        }));
+        setRowCountExtra(prev => prev + 1);
     };
 
     const removeRow = () => {
         if (rowCount <= 1) return;
-        setCustomConfig(prev => ({
-            ...prev,
-            [activeCategory]: {
-                rows: rowCount - 1,
-                cols: colCount
-            }
-        }));
+        setRowCountExtra(prev => Math.max(0, prev - 1));
     };
 
     const addCol = () => {
-        if (isAllCategories) {
-            setIsAddingCategory(true);
-            setIsDeletingCategory(false);
-            return;
-        }
-        if (colCount >= 10) return; // Limit columns
-        setCustomConfig(prev => ({
-            ...prev,
-            [activeCategory]: {
-                rows: rowCount,
-                cols: colCount + 1
-            }
-        }));
+        setModalType('CATEGORY');
+        setEditItem({
+            name: '',
+            basePrice: 3000,
+            requiredPlayers: 6,
+            minPerTeam: 1,
+            maxPerTeam: 2,
+            bidIncrement: 100,
+            slabs: []
+        });
+        setShowModal(true);
     };
 
     const removeCol = () => {
-        if (isAllCategories) {
-            setIsDeletingCategory(true);
-            setIsAddingCategory(false);
-            return;
-        }
-        if (colCount <= 1) return;
-        setCustomConfig(prev => ({
-            ...prev,
-            [activeCategory]: {
-                rows: rowCount,
-                cols: colCount - 1
-            }
-        }));
+        setIsDeletingCategory(true);
+        setIsAddingCategory(false);
     };
 
-    const handleAddCategory = async () => {
-        if (!id || !newCategoryName.trim()) return;
+    const [modalType, setModalType] = useState<'CATEGORY'>('CATEGORY');
+
+    const handleCrudSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id) return;
         setIsSaving(true);
         try {
-            const newCat = {
-                name: newCategoryName.trim(),
-                requiredPlayers: 6,
-                createdAt: Date.now()
-            };
-            await db.collection('auctions').doc(id).collection('categories').add(newCat);
-            setNewCategoryName('');
-            setShowAddCategoryPopup(false);
-            setIsAddingCategory(false);
-            showNotification("Category added successfully", "success");
+            if (editItem.id) {
+                await db.collection('auctions').doc(id).collection('categories').doc(editItem.id).set(editItem);
+                showNotification("Category updated successfully", "success");
+            } else {
+                await db.collection('auctions').doc(id).collection('categories').add({
+                    ...editItem,
+                    createdAt: Date.now()
+                });
+                showNotification("Category added successfully", "success");
+            }
+            setShowModal(false);
         } catch (err) {
             console.error(err);
-            showNotification("Failed to add category", "error");
+            showNotification("Failed to save category", "error");
         } finally {
             setIsSaving(false);
         }
@@ -1139,44 +1122,11 @@ const CategoryArrangement: React.FC = () => {
 
                     {/* Right Panel: Table */}
                     <main className="flex-1 space-y-8">
-                        {/* Category Selection: Inline Options */}
-                        <div className="space-y-3">
-                            <label className={`text-[10px] font-black uppercase tracking-[0.2em] ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Select Category Board</label>
-                            <div className="flex flex-wrap gap-3">
-                                <button 
-                                    onClick={() => setActiveCategory('ALL_CATEGORIES')}
-                                    className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
-                                        activeCategory === 'ALL_CATEGORIES' 
-                                        ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 border-indigo-400 text-white shadow-xl shadow-indigo-500/30 scale-105 z-10' 
-                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')
-                                    }`}
-                                >
-                                    All Categories
-                                </button>
-                                {categories.map((cat, idx) => {
-                                    const colors = [
-                                        'from-amber-500 to-amber-600',
-                                        'from-blue-500 to-blue-600',
-                                        'from-emerald-500 to-emerald-600',
-                                        'from-purple-500 to-purple-600',
-                                        'from-rose-500 to-rose-600'
-                                    ];
-                                    const color = colors[idx % colors.length];
-                                    return (
-                                        <button 
-                                            key={cat.id}
-                                            onClick={() => setActiveCategory(cat.id || '')}
-                                            className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
-                                                activeCategory === cat.id 
-                                                ? `bg-gradient-to-br ${color} border-white/20 text-white shadow-xl shadow-black/20 scale-105 z-10` 
-                                                : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')
-                                            }`}
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                        {/* Category Selection: Removed individual category boards, keeping only All Categories as Master Board */}
+                        <div className="flex items-center justify-between">
+                            <h2 className={`text-2xl font-black uppercase tracking-tighter italic ${isDark ? 'text-white' : 'text-blue-600'}`}>
+                                All Categories Master Board
+                            </h2>
                         </div>
 
                         {/* Controls */}
@@ -1189,24 +1139,6 @@ const CategoryArrangement: React.FC = () => {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                {isAddingCategory && isAllCategories && (
-                                    <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
-                                        <input 
-                                            type="text"
-                                            value={newCategoryName}
-                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                            placeholder="New Category..."
-                                            className={`bg-transparent px-3 py-1 text-[10px] font-bold outline-none w-32 ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                            autoFocus
-                                            onKeyDown={e => {
-                                                if (e.key === 'Enter') handleAddCategory();
-                                                if (e.key === 'Escape') setIsAddingCategory(false);
-                                            }}
-                                        />
-                                        <button onClick={handleAddCategory} className="p-1.5 text-green-500 hover:bg-green-500/10 rounded-lg"><Check className="w-3.5 h-3.5" /></button>
-                                        <button onClick={() => setIsAddingCategory(false)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"><X className="w-3.5 h-3.5" /></button>
-                                    </div>
-                                )}
                                 {isDeletingCategory && isAllCategories && (
                                     <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                         <select 
@@ -1226,10 +1158,11 @@ const CategoryArrangement: React.FC = () => {
                                 <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <button 
                                         onClick={addRow}
-                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r flex items-center gap-2 ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
                                         title="Add Row"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
+                                        <span>Add Rows</span>
                                     </button>
                                     <button 
                                         onClick={removeRow}
@@ -1242,15 +1175,16 @@ const CategoryArrangement: React.FC = () => {
                                 <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <button 
                                         onClick={addCol}
-                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
-                                        title="Add Column"
+                                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-r flex items-center gap-2 ${isDark ? 'text-zinc-400 hover:text-accent hover:bg-zinc-800 border-zinc-800' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-gray-200'}`}
+                                        title="Add Column / Category"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
+                                        <span>Add Column (Category)</span>
                                     </button>
                                     <button 
                                         onClick={removeCol}
                                         className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${isDark ? 'text-zinc-400 hover:text-red-500 hover:bg-zinc-800' : 'text-gray-500 hover:text-red-600 hover:bg-gray-50'}`}
-                                        title="Remove Column"
+                                        title="Remove Column / Category"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -1417,7 +1351,8 @@ const CategoryArrangement: React.FC = () => {
                                                                 const c = ((rowNum - 1) % catCols) + 1;
                                                                 const slotId = `${catPrefix}${r}_${c}`;
                                                                 const catSlots = allSlots[cat.id || ''] || {};
-                                                                const player = catSlots[slotId];
+                                                                const slotData = catSlots[slotId];
+                                                                const player = slotData ? players.find(p => String(p.id) === String(slotData.playerId)) : null;
 
                                                                 return (
                                                                     <td key={`${cat.id}-${slotId}`} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
@@ -1425,7 +1360,7 @@ const CategoryArrangement: React.FC = () => {
                                                                             id={`${cat.id}:${slotId}`} 
                                                                             player={player}
                                                                             onAction={handleAction}
-                                                                            index={rowNum}
+                                                                            index={rowNum - 1}
                                                                         />
                                                                     </td>
                                                                 );
@@ -1435,12 +1370,15 @@ const CategoryArrangement: React.FC = () => {
                                                                 const col = cIdx + 1;
                                                                 const slotId = `${rowLabel}_${col}`;
                                                                 const isTarget = pendingSwap?.slotId === slotId;
+                                                                const slotData = slots[slotId];
+                                                                const player = slotData ? players.find(p => String(p.id) === String(slotData.playerId)) : null;
                                                                 const globalIndex = (rIdx * colCount) + cIdx;
+
                                                                 return (
                                                                     <td key={slotId} className={`p-0 border min-w-[160px] relative ${isDark ? 'border-accent/20' : 'border-blue-50'}`}>
                                                                         <DroppableSlot 
                                                                             id={slotId} 
-                                                                            player={slots[slotId]}
+                                                                            player={player} 
                                                                             onAction={handleAction}
                                                                             index={globalIndex}
                                                                         />
@@ -1591,25 +1529,19 @@ const CategoryArrangement: React.FC = () => {
                                                         const c = ((rowNum - 1) % catCols) + 1;
                                                         const slotId = `${catPrefix}${r}_${c}`;
                                                         const catSlots = allSlots[cat.id || ''] || {};
-                                                        const player = catSlots[slotId];
+                                                        const slotData = catSlots[slotId];
+                                                        const player = slotData ? players.find(p => String(p.id) === String(slotData.playerId)) : null;
+                                                        // Ensure player still belongs to this category
+                                                        const isValid = player && (player.category === cat.name || !player.category || player.category === 'Standard');
 
                                                         return (
-                                                            <td key={`${cat.id}-${slotId}`} className="p-4 border border-amber-500/20 min-w-[240px] relative">
-                                                                {player ? (
-                                                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg">
-                                                                        <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
-                                                                            <User className="w-7 h-7 text-zinc-600" />
-                                                                        </div>
-                                                                        <div className="min-w-0 flex-1">
-                                                                            <p className="text-lg font-black text-zinc-100 uppercase leading-tight whitespace-normal break-words">{player.playerName}</p>
-                                                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{player.category}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="h-16 flex items-center justify-center opacity-10">
-                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                                                                    </div>
-                                                                )}
+                                                            <td key={`${cat.id}-${slotId}`} className="p-4 border border-amber-500/20 min-w-[240px] relative transition-all duration-300">
+                                                                <DroppableSlot 
+                                                                    id={`${cat.id}:${slotId}`} 
+                                                                    index={rowNum - 1} 
+                                                                    player={isValid ? player : null} 
+                                                                    onAction={handleAction}
+                                                                />
                                                             </td>
                                                         );
                                                     })
@@ -1617,27 +1549,18 @@ const CategoryArrangement: React.FC = () => {
                                                     Array.from({ length: colCount }).map((_, cIdx) => {
                                                         const col = cIdx + 1;
                                                         const slotId = `${rowLabel}_${col}`;
-                                                        const slot = slots[slotId];
+                                                        const slotData = slots[slotId];
+                                                        const player = slotData ? players.find(p => String(p.id) === String(slotData.playerId)) : null;
                                                         const globalIndex = (rIdx * colCount) + cIdx;
 
                                                         return (
-                                                            <td key={slotId} className="p-4 border border-amber-500/20 min-w-[240px] relative">
-                                                                <div className="absolute top-1 left-1 text-[8px] font-black text-zinc-800 uppercase tracking-widest opacity-50">#{globalIndex + 1}</div>
-                                                                {slot ? (
-                                                                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-900/80 border border-amber-500/20 shadow-lg">
-                                                                        <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-700">
-                                                                            <User className="w-7 h-7 text-zinc-600" />
-                                                                        </div>
-                                                                        <div className="min-w-0 flex-1">
-                                                                            <p className="text-lg font-black text-zinc-100 uppercase leading-tight whitespace-normal break-words">{slot.playerName}</p>
-                                                                            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{slot.category}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="h-16 flex items-center justify-center opacity-10">
-                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                                                                    </div>
-                                                                )}
+                                                            <td key={slotId} className="p-4 border border-amber-500/20 min-w-[240px] relative transition-all duration-300">
+                                                                <DroppableSlot 
+                                                                    id={slotId} 
+                                                                    index={globalIndex} 
+                                                                    player={player} 
+                                                                    onAction={handleAction}
+                                                                />
                                                             </td>
                                                         );
                                                     })
@@ -1739,6 +1662,56 @@ const CategoryArrangement: React.FC = () => {
                                 Confirm
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* SHARED CATEGORY MODAL */}
+            {showModal && (
+                <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className={`rounded-[2rem] shadow-2xl max-w-sm w-full overflow-hidden border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                        <div className={`p-6 flex justify-between items-center relative overflow-hidden ${isDark ? 'bg-zinc-800 text-accent' : 'bg-blue-600 text-white'}`}>
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                            <h3 className="text-lg font-black uppercase tracking-tight relative z-10">{editItem?.id ? 'Modify' : 'Initialize'} Category</h3>
+                            <button onClick={() => setShowModal(false)} className="relative z-10 hover:rotate-90 transition-transform"><X className="w-6 h-6"/></button>
+                        </div>
+                        <form onSubmit={handleCrudSave} className="p-8 space-y-6">
+                            <div>
+                                <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Identity Name</label>
+                                <input required className={`w-full border-2 rounded-xl px-4 py-3 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.name || ''} onChange={e => setEditItem({...editItem, name: e.target.value})} />
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Base Price (₹)</label>
+                                        <input type="number" className={`w-full border-2 rounded-xl px-4 py-2.5 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.basePrice || 0} onChange={e => setEditItem({...editItem, basePrice: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Bid Increment (₹)</label>
+                                        <input type="number" className={`w-full border-2 rounded-xl px-4 py-2.5 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.bidIncrement || 0} onChange={e => setEditItem({...editItem, bidIncrement: Number(e.target.value)})} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Min / Team</label>
+                                        <input type="number" className={`w-full border-2 rounded-xl px-4 py-2.5 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.minPerTeam || 0} onChange={e => setEditItem({...editItem, minPerTeam: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Max / Team</label>
+                                        <input type="number" className={`w-full border-2 rounded-xl px-4 py-2.5 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.maxPerTeam || 0} onChange={e => setEditItem({...editItem, maxPerTeam: Number(e.target.value)})} />
+                                    </div>
+                                    <div>
+                                        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Required</label>
+                                        <input type="number" className={`w-full border-2 rounded-xl px-4 py-2.5 font-bold outline-none transition-all ${isDark ? 'bg-zinc-950 border-zinc-800 text-white focus:border-accent/50' : 'bg-gray-50 border-gray-100 text-gray-700 focus:bg-white focus:border-blue-400'}`} value={editItem?.requiredPlayers || 0} onChange={e => setEditItem({...editItem, requiredPlayers: Number(e.target.value)})} />
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" disabled={isSaving} className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${isDark ? 'bg-accent hover:bg-white text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin"/> : <CheckCircle className="w-4 h-4"/>}
+                                {editItem?.id ? 'Update Category' : 'Create Category'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}

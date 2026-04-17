@@ -2131,13 +2131,13 @@ const AuctionManage: React.FC = () => {
                                                                         className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-xs font-bold transition-all outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white focus:border-blue-500/50 shadow-inner' : 'bg-white border-gray-100 text-gray-800 focus:border-blue-500/50 shadow-sm'}`}
                                                                     />
                                                                     {assignSearch && (
-                                                                        <div className={`absolute z-50 left-0 right-0 mt-2 rounded-2xl border shadow-2xl max-h-60 overflow-y-auto ${isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                                                                        <div className={`mt-2 rounded-2xl border ${isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-gray-50 border-gray-100 shadow-inner'} max-h-60 overflow-y-auto custom-scrollbar`}>
                                                                             {players.filter(p => !p.category || p.category === 'Standard').filter(p => p.name.toLowerCase().includes(assignSearch.toLowerCase())).length > 0 ? (
                                                                                 players.filter(p => !p.category || p.category === 'Standard').filter(p => p.name.toLowerCase().includes(assignSearch.toLowerCase())).map(p => (
                                                                                     <div 
                                                                                         key={p.id}
                                                                                         onClick={() => handleAssignPlayerToCategory(p.id, item.name)}
-                                                                                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b last:border-0 ${isDark ? 'hover:bg-zinc-800 border-zinc-800' : 'hover:bg-gray-50 border-gray-50'}`}
+                                                                                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b last:border-0 ${isDark ? 'hover:bg-zinc-800/50 border-zinc-800' : 'hover:bg-white border-gray-100'}`}
                                                                                     >
                                                                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-100 border-gray-200'}`}>
                                                                                              {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-gray-400" />}
