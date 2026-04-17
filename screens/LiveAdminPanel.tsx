@@ -7,8 +7,8 @@ import { Play, Check, X, ArrowLeft, Loader2, RotateCcw, AlertOctagon, DollarSign
 import { useNavigate } from 'react-router-dom';
 
 const LiveAdminPanel: React.FC = () => {
-  const { state, sellPlayer, passPlayer, startAuction, undoPlayerSelection, endAuction, resetAuction, resetCurrentPlayer, resetUnsoldPlayers, updateBiddingStatus, toggleSelectionMode, updateTheme, activeAuctionId, placeBid, nextBid, updateSponsorConfig, correctPlayerSale } = useAuction();
-  const { teams, players, biddingStatus, playerSelectionMode, categories, maxPlayersPerTeam } = state;
+  const { state, sellPlayer, passPlayer, startAuction, undoPlayerSelection, endAuction, resetAuction, resetCurrentPlayer, resetUnsoldPlayers, updateBiddingStatus, toggleSelectionMode, updateTheme, activeAuctionId, placeBid, nextBid, updateSponsorConfig, correctPlayerSale, setAdminView } = useAuction();
+  const { teams, players, biddingStatus, playerSelectionMode, categories, maxPlayersPerTeam, roles } = state;
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -24,6 +24,7 @@ const LiveAdminPanel: React.FC = () => {
   const [manualPlayerId, setManualPlayerId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState(''); // New search state
   const [filterCategory, setFilterCategory] = useState<string>('ALL'); // New category filter state
+  const [filterRole, setFilterRole] = useState<string>('ALL'); // New role filter state
   const [showUnsold, setShowUnsold] = useState(false); // Toggle to include unsold players
 
   // Undo State
@@ -292,16 +293,19 @@ const LiveAdminPanel: React.FC = () => {
                       {/* Inline Form */}
                       <div>
                           <label className="block text-[10px] text-text-secondary uppercase font-bold mb-1">Sold To Team</label>
-                          <select 
-                            value={selectedTeamId}
-                            onChange={(e) => setSelectedTeamId(e.target.value)}
-                            className="w-full bg-primary border border-gray-600 rounded p-2 text-sm text-white font-bold outline-none focus:border-green-500"
-                          >
-                              <option value="">Select Team...</option>
+                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-1">
                               {teams.map(t => (
-                                  <option key={t.id} value={t.id}>{t.name} ({t.budget})</option>
+                                  <button 
+                                      key={t.id}
+                                      type="button"
+                                      onClick={() => setSelectedTeamId(String(t.id))}
+                                      className={`p-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2 text-left flex flex-col justify-between h-14 ${String(selectedTeamId) === String(t.id) ? 'bg-gradient-to-br from-green-600 to-green-700 border-green-400 text-white shadow-lg shadow-green-500/20 scale-105 z-10' : 'bg-primary border-gray-600 text-gray-400 hover:border-gray-500'}`}
+                                  >
+                                      <span className="truncate w-full">{t.name}</span>
+                                      <span className={`text-[9px] ${String(selectedTeamId) === String(t.id) ? 'text-green-100' : 'text-gray-500'}`}>₹{t.budget}</span>
+                                  </button>
                               ))}
-                          </select>
+                           </div>
                       </div>
                       
                       <div>
@@ -417,98 +421,141 @@ const LiveAdminPanel: React.FC = () => {
                const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                      p.category.toLowerCase().includes(searchTerm.toLowerCase());
                const matchesCategory = filterCategory === 'ALL' || p.category === filterCategory;
-               return matchesSearch && matchesCategory;
+               const matchesRole = filterRole === 'ALL' || (p.role === filterRole || p.speciality === filterRole);
+               return matchesSearch && matchesCategory && matchesRole;
            });
  
            return (
-               <div className="space-y-3 bg-primary/20 p-3 rounded-lg border border-gray-600">
-                   <div>
-                       <div className="flex justify-between items-center mb-1">
-                           <label className="block text-[10px] text-text-secondary uppercase font-bold">Select Next Player</label>
-                           <label className="flex items-center text-[10px] text-yellow-400 cursor-pointer">
-                               <input type="checkbox" checked={showUnsold} onChange={(e) => setShowUnsold(e.target.checked)} className="mr-1 accent-yellow-500" />
+               <div className="space-y-4 bg-primary/20 p-4 rounded-2xl border border-gray-700 shadow-xl">
+                   <div className="space-y-3">
+                       <div className="flex justify-between items-center px-1">
+                           <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest">Player Pool</label>
+                           <label className="flex items-center text-[10px] text-amber-500 cursor-pointer hover:text-amber-400 transition-colors bg-amber-500/5 px-2 py-1 rounded-lg border border-amber-500/10">
+                               <input type="checkbox" checked={showUnsold} onChange={(e) => setShowUnsold(e.target.checked)} className="mr-2 accent-amber-500" />
                                Include Unsold
                            </label>
                        </div>
                        
-                       {/* Search & Category Filter */}
-                       <div className="flex gap-2 mb-2">
-                           <div className="relative flex-1">
-                               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
-                               <input 
-                                    type="text"
-                                    className="w-full bg-gray-900 border border-gray-700 rounded p-1.5 pl-7 text-[11px] h-8 text-white focus:border-highlight outline-none"
-                                    placeholder="Search name..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                               />
-                           </div>
-                           <div className="relative w-32">
-                               <select
-                                   value={filterCategory}
-                                   onChange={(e) => setFilterCategory(e.target.value)}
-                                   className="w-full bg-gray-800 border border-gray-700 rounded px-2 h-8 text-[10px] text-white focus:border-highlight outline-none appearance-none font-bold pr-6"
-                               >
-                                   <option value="ALL">ALL CAT</option>
-                                   {categories.map(cat => (
-                                       <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
-                                   ))}
-                               </select>
-                               <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                           </div>
+                       {/* Search Bar */}
+                       <div className="relative">
+                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                           <input 
+                                type="text"
+                                className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-[11px] h-10 text-white focus:border-blue-500/50 outline-none transition-all shadow-inner"
+                                placeholder="Search player name or info..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                           />
+                       </div>
+
+                       {/* Filter by Category Buttons */}
+                       <div className="space-y-2">
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Filter by Category</span>
+                            <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                                <button
+                                   onClick={() => setFilterCategory('ALL')}
+                                   className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm transition-all border shrink-0
+                                       ${filterCategory === 'ALL' 
+                                           ? 'bg-amber-500 border-amber-400 text-black scale-105 z-10 shadow-lg shadow-amber-500/20' 
+                                           : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}
+                                   `}
+                                >
+                                    ALL BOARDS
+                                </button>
+                                {categories.map(cat => (
+                                    <button
+                                       key={cat.id || cat.name}
+                                       onClick={() => setFilterCategory(cat.name)}
+                                       className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm transition-all border shrink-0
+                                           ${filterCategory === cat.name 
+                                               ? 'bg-blue-600 border-blue-400 text-white scale-105 z-10 shadow-lg shadow-blue-500/20' 
+                                               : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}
+                                       `}
+                                    >
+                                        {cat.name.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                       </div>
+
+                       {/* Filter by Role Buttons */}
+                       <div className="space-y-2">
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Filter by Role</span>
+                            <div className="flex flex-wrap gap-1.5">
+                                {['ALL', 'BATSMAN', 'BOWLER', 'ALL-ROUNDER', 'WICKETKEEPER'].map(role => (
+                                    <button
+                                       key={role}
+                                       onClick={() => setFilterRole(role)}
+                                       className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm transition-all border
+                                           ${filterRole === role 
+                                               ? 'bg-blue-600 border-blue-400 text-white scale-105 z-10 shadow-lg shadow-blue-500/20' 
+                                               : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}
+                                       `}
+                                    >
+                                        {role}
+                                    </button>
+                                ))}
+                            </div>
                        </div>
 
                        {/* Options listed directly as per instructions */}
-                       <div className="max-h-40 overflow-y-auto border border-gray-700 rounded bg-gray-900 custom-scrollbar mb-2">
+                       <div className="max-h-56 overflow-y-auto border border-gray-800 rounded-2xl bg-gray-950 custom-scrollbar shadow-inner">
                             {filteredPlayers.length > 0 ? filteredPlayers.map(p => (
                                 <div 
                                     key={p.id}
                                     onClick={() => setManualPlayerId(String(p.id))}
-                                    className={`p-2 text-[10px] cursor-pointer border-b border-gray-800 last:border-0 transition-colors ${manualPlayerId === String(p.id) ? 'bg-accent/20 text-accent font-bold' : 'text-gray-300'}`}
+                                    className={`px-4 py-3 cursor-pointer border-b border-gray-900 last:border-0 transition-all flex items-center gap-3 ${manualPlayerId === String(p.id) ? 'bg-blue-600/10 border-l-4 border-l-blue-500' : 'hover:bg-white/5'}`}
                                 >
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex flex-col">
-                                            <span>{p.name} <span className="opacity-60">({p.category})</span></span>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${manualPlayerId === String(p.id) ? 'bg-blue-600 border-blue-400 text-white' : 'bg-gray-800 border-gray-700 text-gray-500'}`}>
+                                       <User className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex justify-between items-center mb-0.5">
+                                            <span className={`text-[11px] font-black uppercase tracking-tight truncate ${manualPlayerId === String(p.id) ? 'text-blue-400' : 'text-gray-100'}`}>{p.name}</span>
+                                            <span className="text-[10px] font-mono text-green-500 font-bold">₹{p.basePrice?.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">{p.category}</span>
+                                            <div className="w-1 h-1 rounded-full bg-gray-700"></div>
+                                            <span className="text-[9px] font-bold text-blue-500/80 uppercase tracking-widest">{p.role || p.speciality}</span>
+                                            
                                             {p.status === 'UNSOLD' && (
-                                                confirmingAction === `RESET_UNSOLD_${p.id}` ? (
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[8px] text-white">Bring back?</span>
-                                                        <button 
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                setIsProcessing(true);
-                                                                try { await correctPlayerSale(String(p.id), null, 0); } catch(e){}
-                                                                finally { setIsProcessing(false); setConfirmingAction(null); }
-                                                            }}
-                                                            className="text-green-500 hover:text-green-400 font-bold"
-                                                        >
-                                                            Yes
-                                                        </button>
-                                                        <button 
-                                                            onClick={(e) => { e.stopPropagation(); setConfirmingAction(null); }}
-                                                            className="text-red-500 hover:text-red-400 font-bold"
-                                                        >
-                                                            No
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-red-400 text-[8px] font-bold uppercase">Unsold</span>
-                                                        <button 
-                                                            onClick={(e) => { e.stopPropagation(); setConfirmingAction(`RESET_UNSOLD_${p.id}`); }}
-                                                            className="text-[8px] bg-gray-700 px-1 rounded hover:bg-gray-600"
-                                                        >
-                                                            Reset
-                                                        </button>
-                                                    </div>
-                                                )
+                                               <div className="ml-auto flex items-center gap-2 animate-fade-in">
+                                                   {confirmingAction === `RESET_UNSOLD_${p.id}` ? (
+                                                       <div className="flex items-center gap-2">
+                                                           <button 
+                                                               onClick={async (e) => {
+                                                                   e.stopPropagation();
+                                                                   setIsProcessing(true);
+                                                                   try { await correctPlayerSale(String(p.id), null, 0); } catch(e){}
+                                                                   finally { setIsProcessing(false); setConfirmingAction(null); }
+                                                               }}
+                                                               className="text-green-500 hover:bg-green-500/10 px-1.5 py-0.5 rounded text-[8px] font-black uppercase"
+                                                           >
+                                                               Confirm Reset
+                                                           </button>
+                                                           <button 
+                                                               onClick={(e) => { e.stopPropagation(); setConfirmingAction(null); }}
+                                                               className="text-gray-500 hover:text-white text-[8px] font-black uppercase"
+                                                           >
+                                                               X
+                                                           </button>
+                                                       </div>
+                                                   ) : (
+                                                       <button 
+                                                           onClick={(e) => { e.stopPropagation(); setConfirmingAction(`RESET_UNSOLD_${p.id}`); }}
+                                                           className="text-[8px] bg-red-900/40 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full hover:bg-red-900/60 transition-colors uppercase font-black tracking-widest"
+                                                       >
+                                                           Unsold (Reset?)
+                                                       </button>
+                                                   )}
+                                               </div>
                                             )}
                                         </div>
-                                        <span className="font-mono">{p.basePrice}</span>
                                     </div>
                                 </div>
                             )) : (
-                                <div className="p-4 text-center text-gray-500 text-[10px] italic">No players found</div>
+                                <div className="py-12 text-center text-gray-600 text-[10px] font-black uppercase tracking-[0.25em]">No players available</div>
                             )}
                        </div>
                    </div>
@@ -516,10 +563,14 @@ const LiveAdminPanel: React.FC = () => {
                    <button 
                      onClick={() => handleStart(manualPlayerId)} 
                      disabled={isStartDisabled || !manualPlayerId}
-                     className="btn-golden w-full flex items-center justify-center font-bold py-3 px-4 rounded-lg"
+                     className={`w-full flex items-center justify-center font-black uppercase tracking-[0.2em] py-4 px-6 rounded-2xl transition-all shadow-2xl
+                       ${manualPlayerId 
+                           ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-blue-500/20 active:scale-95' 
+                           : 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700'}
+                     `}
                    >
-                       {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Play className="mr-2 h-5 w-5"/>} 
-                       {manualPlayerId && players.find(p => String(p.id) === manualPlayerId)?.status === 'UNSOLD' ? 'Re-Auction Player' : 'Start Bidding'}
+                       {isProcessing ? <Loader2 className="mr-3 h-5 w-5 animate-spin"/> : <Play className="mr-3 h-5 w-5"/>} 
+                       {manualPlayerId && players.find(p => String(p.id) === manualPlayerId)?.status === 'UNSOLD' ? 'Re-Auction Player' : 'Bring to Board'}
                    </button>
                </div>
            );
@@ -653,57 +704,63 @@ const LiveAdminPanel: React.FC = () => {
                     </button>
                     
                     {/* Bidding Status Segmented Buttons listed directly */}
-                    <div className="flex bg-gray-800 rounded p-1 ml-1 overflow-hidden border border-gray-700">
+                    <div className="flex bg-gray-800 rounded-xl p-1.5 ml-1 overflow-hidden border border-gray-700 shadow-inner">
                         <button 
                             onClick={() => updateBiddingStatus('ON')}
-                            className={`px-3 py-1 rounded-l text-[10px] font-bold transition-all flex items-center ${biddingStatus === 'ON' ? 'btn-golden text-black shadow-lg scale-105 z-10' : 'text-gray-400 hover:text-white bg-transparent'}`}
+                            className={`px-5 py-2 rounded-lg text-[10px] font-black transition-all flex items-center ${biddingStatus === 'ON' ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)] scale-105 z-10' : 'text-gray-500 hover:text-gray-300 bg-transparent'}`}
                         >
-                            <Unlock className="w-3 h-3 mr-1"/> ON
+                            <Unlock className={`w-3.5 h-3.5 mr-1.5 ${biddingStatus === 'ON' ? 'animate-pulse' : ''}`}/> ON
                         </button>
                         <button 
                             onClick={() => updateBiddingStatus('PAUSED')}
-                            className={`px-3 py-1 rounded-r text-[10px] font-bold transition-all flex items-center ${biddingStatus !== 'ON' ? 'btn-golden text-black shadow-lg scale-105 z-10' : 'text-gray-400 hover:text-white bg-transparent'}`}
+                            className={`px-5 py-2 rounded-lg text-[10px] font-black transition-all flex items-center ${biddingStatus !== 'ON' ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] scale-105 z-10' : 'text-gray-500 hover:text-gray-300 bg-transparent'}`}
                         >
-                            <Lock className="w-3 h-3 mr-1"/> OFF
+                            <Lock className="w-3.5 h-3.5 mr-1.5"/> OFF
                         </button>
                     </div>
                   </div>
               </div>
 
-              {/* Display & Sponsors Toolbar (Dropdowns for layouts) */}
-              <div className="flex flex-wrap gap-2 items-center bg-primary/50 rounded-lg p-2 w-full mt-1 border-t border-gray-700">
-                  <div className="flex items-center gap-2 flex-grow">
-                      <div className="flex-1">
-                          <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">Projector Theme</label>
-                          <div className="relative">
-                            <select 
-                                value={state.projectorLayout}
-                                onChange={(e) => updateTheme('PROJECTOR', e.target.value as ProjectorLayout)}
-                                className="w-full bg-gray-800 text-highlight text-[10px] h-8 rounded pl-2 pr-6 border border-gray-700 appearance-none outline-none font-bold"
-                            >
-                                {['STANDARD', 'IPL', 'MODERN', 'ADVAYA', 'FUTURISTIC', 'NEON'].map(l => (
-                                    <option key={l} value={l}>{l}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                          </div>
-                      </div>
-                      <div className="flex-1">
-                          <label className="block text-[8px] text-gray-400 uppercase font-bold mb-0.5">OBS Theme</label>
-                          <div className="relative">
-                            <select 
-                                value={state.obsLayout}
-                                onChange={(e) => updateTheme('OBS', e.target.value as OBSLayout)}
-                                className="w-full bg-gray-800 text-highlight text-[10px] h-8 rounded pl-2 pr-6 border border-gray-700 appearance-none outline-none font-bold"
-                            >
-                                {['STANDARD', 'ADVAYA', 'MINIMAL', 'VERTICAL'].map(l => (
-                                    <option key={l} value={l}>{l}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                          </div>
+              {/* Display & Sponsors Toolbar (Buttons for layouts) */}
+              <div className="flex flex-col gap-3 bg-primary/50 shadow-inner rounded-xl p-3 w-full mt-1 border border-gray-800">
+                  <div className="space-y-2">
+                      <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">Projector Theme</span>
+                      <div className="flex flex-wrap gap-1.5">
+                          {['STANDARD', 'IPL', 'MODERN', 'ADVAYA', 'FUTURISTIC', 'NEON'].map(l => (
+                              <button
+                                key={l}
+                                onClick={() => updateTheme('PROJECTOR', l as ProjectorLayout)}
+                                className={`px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border
+                                    ${state.projectorLayout === l 
+                                        ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}
+                                `}
+                              >
+                                  {l}
+                              </button>
+                          ))}
                       </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                      <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] px-1">OBS Overlay Theme</span>
+                      <div className="flex flex-wrap gap-1.5">
+                          {['STANDARD', 'ADVAYA', 'MINIMAL', 'VERTICAL'].map(l => (
+                              <button
+                                key={l}
+                                onClick={() => updateTheme('OBS', l as OBSLayout)}
+                                className={`px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border
+                                    ${state.obsLayout === l 
+                                        ? 'bg-green-600 border-green-400 text-white shadow-lg shadow-green-500/20' 
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'}
+                                `}
+                              >
+                                  {l}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
 
                   <div className="w-px h-8 bg-gray-600 mx-1"></div>
 
@@ -742,21 +799,75 @@ const LiveAdminPanel: React.FC = () => {
       </div>
       
       {/* SELECTION MODE TOGGLE (Inline Segments) */}
-      <div className="bg-primary/40 rounded-lg p-2 mb-4 flex justify-between items-center border border-gray-700">
-          <span className="text-xs font-bold text-text-secondary uppercase ml-1">Selection Mode</span>
-          <div className="flex bg-gray-800 rounded p-1 border border-gray-700 overflow-hidden">
-              <button 
-                onClick={playerSelectionMode !== 'MANUAL' ? toggleSelectionMode : undefined}
-                className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${playerSelectionMode === 'MANUAL' ? 'btn-golden text-black shadow-lg scale-105 z-10' : 'text-gray-500 hover:text-white'}`}
-              >
-                  Manual
-              </button>
-              <button 
-                onClick={playerSelectionMode !== 'AUTO' ? toggleSelectionMode : undefined}
-                className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${playerSelectionMode === 'AUTO' ? 'btn-golden text-black shadow-lg scale-105 z-10' : 'text-gray-500 hover:text-white'}`}
-              >
-                  Auto
-              </button>
+      <div className="bg-primary/40 rounded-2xl p-3 mb-4 flex flex-col gap-3 border border-gray-700 shadow-xl">
+          <div className="flex justify-between items-center px-1">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selection Mode</span>
+              <div className="flex bg-gray-900 rounded-xl p-1 border border-gray-800 overflow-hidden shadow-inner">
+                  <button 
+                    onClick={playerSelectionMode !== 'MANUAL' ? toggleSelectionMode : undefined}
+                    className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${playerSelectionMode === 'MANUAL' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] scale-105 z-10' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                      Manual
+                  </button>
+                  <button 
+                    onClick={playerSelectionMode !== 'AUTO' ? toggleSelectionMode : undefined}
+                    className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${playerSelectionMode === 'AUTO' ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-105 z-10' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                      Auto
+                  </button>
+              </div>
+          </div>
+
+          <div className="h-px bg-gray-800/50 w-full"></div>
+
+          <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Admin View Override</span>
+              <div className="flex flex-wrap gap-2 p-1">
+                  {[
+                      { id: 'NONE', label: 'None', color: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400' },
+                      { id: 'SQUAD', label: 'Squad View', color: 'bg-white border border-gray-200 text-gray-700' },
+                      { id: 'PURSES', label: 'Team Purses', color: 'bg-white border border-gray-200 text-gray-700' },
+                      { id: 'LEADERBOARD', label: 'Leaderboard', color: 'bg-white border border-gray-200 text-gray-700' }
+                  ].map(view => (
+                      <button
+                        key={view.id}
+                        onClick={() => {
+                            if (view.id === 'NONE') {
+                                setAdminView({ type: 'NONE' });
+                            } else if (view.id === 'SQUAD') {
+                                // Default to first team if none selected
+                                setAdminView({ type: 'SQUAD', data: { teamId: teams[0]?.id } });
+                            } else {
+                                setAdminView({ type: view.id as any });
+                            }
+                        }}
+                        className={`flex-1 min-w-[100px] px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all text-center
+                            ${(state.adminViewOverride?.type === view.id) 
+                                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20 scale-105 z-10 border-blue-400' 
+                                : view.color}
+                        `}
+                      >
+                          {view.label}
+                      </button>
+                  ))}
+              </div>
+              {state.adminViewOverride?.type === 'SQUAD' && state.adminViewOverride.data?.teamId && (
+                  <div className="flex flex-wrap gap-1.5 p-1 bg-black/20 rounded-xl border border-white/5 mt-1 overflow-x-auto pb-2">
+                      {teams.map(team => (
+                          <button
+                            key={team.id}
+                            onClick={() => setAdminView({ type: 'SQUAD', data: { teamId: team.id } })}
+                            className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all flex-shrink-0
+                                ${state.adminViewOverride?.data?.teamId === team.id 
+                                    ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20' 
+                                    : 'bg-gray-800/50 text-gray-500 hover:text-white'}
+                            `}
+                          >
+                              {team.name}
+                          </button>
+                      ))}
+                  </div>
+              )}
           </div>
       </div>
 

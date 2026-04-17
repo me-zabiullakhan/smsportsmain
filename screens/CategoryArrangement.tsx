@@ -1043,10 +1043,10 @@ const CategoryArrangement: React.FC = () => {
                                     <div className="flex flex-wrap gap-2">
                                         <button 
                                             onClick={() => setFilterCategory('ALL')}
-                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
                                                 filterCategory === 'ALL' 
-                                                ? 'bg-accent text-primary' 
-                                                : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
+                                                ? 'bg-blue-600 text-white border-2 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.4)] scale-105 z-10' 
+                                                : (isDark ? 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white' : 'bg-white border border-gray-200 text-gray-500 hover:text-blue-600')
                                             }`}
                                         >
                                             All
@@ -1055,10 +1055,10 @@ const CategoryArrangement: React.FC = () => {
                                             <button 
                                                 key={c.id}
                                                 onClick={() => setFilterCategory(c.name)}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
                                                     filterCategory === c.name 
-                                                    ? 'bg-accent text-primary' 
-                                                    : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-500')
+                                                    ? 'bg-amber-500 text-black border-2 border-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-105 z-10' 
+                                                    : (isDark ? 'bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white' : 'bg-white border border-gray-200 text-gray-500 hover:text-amber-600')
                                                 }`}
                                             >
                                                 {c.name}
@@ -1090,30 +1090,40 @@ const CategoryArrangement: React.FC = () => {
                         {/* Category Selection: Inline Options */}
                         <div className="space-y-3">
                             <label className={`text-[10px] font-black uppercase tracking-[0.2em] ml-1 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Select Category Board</label>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-3">
                                 <button 
                                     onClick={() => setActiveCategory('ALL_CATEGORIES')}
                                     className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
                                         activeCategory === 'ALL_CATEGORIES' 
-                                        ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
-                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
+                                        ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 border-indigo-400 text-white shadow-xl shadow-indigo-500/30 scale-105 z-10' 
+                                        : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')
                                     }`}
                                 >
                                     All Categories
                                 </button>
-                                {categories.map(cat => (
-                                    <button 
-                                        key={cat.id}
-                                        onClick={() => setActiveCategory(cat.id || '')}
-                                        className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
-                                            activeCategory === cat.id 
-                                            ? 'bg-accent border-accent text-primary shadow-lg shadow-accent/20' 
-                                            : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400' : 'bg-white border-gray-200 text-gray-500')
-                                        }`}
-                                    >
-                                        {cat.name}
-                                    </button>
-                                ))}
+                                {categories.map((cat, idx) => {
+                                    const colors = [
+                                        'from-amber-500 to-amber-600',
+                                        'from-blue-500 to-blue-600',
+                                        'from-emerald-500 to-emerald-600',
+                                        'from-purple-500 to-purple-600',
+                                        'from-rose-500 to-rose-600'
+                                    ];
+                                    const color = colors[idx % colors.length];
+                                    return (
+                                        <button 
+                                            key={cat.id}
+                                            onClick={() => setActiveCategory(cat.id || '')}
+                                            className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                                activeCategory === cat.id 
+                                                ? `bg-gradient-to-br ${color} border-white/20 text-white shadow-xl shadow-black/20 scale-105 z-10` 
+                                                : (isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300')
+                                            }`}
+                                        >
+                                            {cat.name}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 

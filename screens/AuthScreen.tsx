@@ -151,16 +151,16 @@ const AuthScreen: React.FC = () => {
                         ) : (
                             <div className="space-y-6">
                                  <div className="grid grid-cols-1 gap-3">
-                                    <button onClick={handleGoogleLogin} disabled={isLoading} className={`btn-golden w-full font-black py-4 rounded-2xl flex items-center justify-center text-xs tracking-widest`}>
+                                     <button onClick={handleGoogleLogin} disabled={isLoading} className="w-full font-black py-4 rounded-2xl flex items-center justify-center text-xs tracking-widest transition-all shadow-lg bg-white text-gray-900 hover:bg-gray-50 border border-gray-100 active:scale-[0.98]">
                                         <Chrome className="mr-3 h-5 w-5 text-red-500" /> Sign in with Google
                                     </button>
                                     
                                     <button 
                                         onClick={handleGoogleLogin} 
                                         disabled={isLoading} 
-                                        className={`btn-golden w-full font-black py-4 rounded-2xl flex items-center justify-center text-[10px] tracking-[0.2em] gap-2 group`}
+                                        className="w-full font-black py-4 rounded-2xl flex items-center justify-center text-[10px] tracking-[0.2em] gap-2 group transition-all shadow-lg bg-white text-gray-900 hover:bg-gray-50 border border-gray-100 active:scale-[0.98]"
                                     >
-                                        <Zap className="h-4 w-4 text-primary group-hover:scale-125 transition-transform" /> SUPER ADMIN ENTRANCE
+                                        <Zap className="h-4 w-4 text-amber-500 transition-transform group-hover:scale-125" /> SUPER ADMIN ENTRANCE
                                     </button>
                                  </div>
 

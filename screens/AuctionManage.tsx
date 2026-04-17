@@ -935,6 +935,25 @@ const AuctionManage: React.FC = () => {
                                             <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.matchesDate} onChange={e => setSettingsForm({...settingsForm, matchesDate: e.target.value})} placeholder="e.g. 10th - 15th April" />
                                         </div>
                                         <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Select Sport</label>
+                                            <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-2xl border-2 border-gray-100">
+                                                {['CRICKET', 'FOOTBALL', 'KABADDI', 'OTHER'].map(s => (
+                                                    <button
+                                                        key={s}
+                                                        type="button"
+                                                        onClick={() => setSettingsForm({...settingsForm, sport: s})}
+                                                        className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                                                            settingsForm.sport === s 
+                                                            ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20' 
+                                                            : 'bg-white border-white text-gray-400 hover:border-blue-200 hover:text-blue-500'
+                                                        }`}
+                                                    >
+                                                        {s}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tournament Venue</label>
                                             <input type="text" className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all" value={settingsForm.venue || ''} onChange={e => setSettingsForm({...settingsForm, venue: e.target.value})} placeholder="e.g. Chinnaswamy Stadium" />
                                         </div>
@@ -1025,26 +1044,27 @@ const AuctionManage: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {teams.map(team => (
-                                <div key={team.id} className="bg-white p-5 rounded-[1.5rem] border border-gray-200 shadow-sm flex items-center justify-between group">
+                                <div key={team.id} className={`p-5 rounded-[1.5rem] border shadow-sm flex items-center justify-between group transition-all ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 p-1">
-                                            {team.logoUrl ? <img src={team.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" /> : <Users className="text-gray-300 w-6 h-6"/>}
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden border p-1 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}>
+                                            {team.logoUrl ? <img src={team.logoUrl} className="w-full h-full object-contain" referrerPolicy="no-referrer" /> : <Users className={`w-6 h-6 ${isDark ? 'text-zinc-700' : 'text-gray-300'}`}/>}
                                         </div>
                                         <div>
-                                            <p className="font-black text-gray-800 uppercase text-sm leading-none">{team.name}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase">₹{team.budget}</p>
-                                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                                <p className="text-[10px] text-blue-600 font-black uppercase">{team.teamCode || 'NO ID'}</p>
+                                            <p className={`font-black uppercase text-sm leading-none ${isDark ? 'text-white' : 'text-gray-800'}`}>{team.name}</p>
+                                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1.5 ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>Owner: <span className={isDark ? 'text-zinc-100' : 'text-gray-900'}>{team.owner || 'No Owner'}</span></p>
+                                            <div className="flex items-center gap-2 mt-2.5">
+                                                <p className={`text-[10px] font-bold uppercase ${isDark ? 'text-accent' : 'text-blue-600'}`}>₹{team.budget}</p>
+                                                <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-gray-300'}`}></div>
+                                                <p className={`text-[10px] font-black uppercase ${isDark ? 'text-accent' : 'text-blue-600'}`}>{team.teamCode || 'NO ID'}</p>
                                             </div>
                                             {team.password && (
-                                                <p className="text-[9px] text-gray-400 font-bold uppercase mt-1">Pass: {team.password}</p>
+                                                <p className={`text-[9px] font-black uppercase mt-1.5 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Pass: {team.password}</p>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => { setModalType('TEAM'); setEditItem(team); setPreviewImage(team.logoUrl); setShowModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit className="w-4 h-4"/></button>
-                                        <button onClick={() => handleDelete('TEAM', String(team.id))} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                                    <div className="flex gap-2 items-center">
+                                        <button onClick={() => { setModalType('TEAM'); setEditItem(team); setPreviewImage(team.logoUrl); setShowModal(true); }} className={`p-3 rounded-xl transition-all shadow-sm ${isDark ? 'bg-zinc-800 text-amber-500 hover:bg-zinc-700' : 'bg-gray-50 text-blue-600 hover:bg-white border border-gray-100 hover:shadow-md'}`}><Edit className="w-4 h-4"/></button>
+                                        <button onClick={() => handleDelete('TEAM', String(team.id))} className={`p-3 rounded-xl transition-all shadow-sm ${isDark ? 'bg-red-900/10 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100'}`}><Trash2 className="w-4 h-4"/></button>
                                     </div>
                                 </div>
                             ))}

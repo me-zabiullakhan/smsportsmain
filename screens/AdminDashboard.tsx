@@ -407,45 +407,45 @@ const AdminDashboard: React.FC = () => {
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="p-8 grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <button 
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/auction/${auction.id}`, '_blank');
                             }}
-                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white flex-col gap-2 p-5 rounded-3xl transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center border border-emerald-500/50"
                         >
                             <Gavel className="w-6 h-6" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">Room</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Auction Room</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/manage`)}
-                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
+                            className="bg-blue-600 hover:bg-blue-700 text-white flex-col gap-2 p-5 rounded-3xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center border border-blue-500/50"
                         >
                             <Activity className="w-6 h-6" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">Control</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Live Control</span>
                         </button>
                         <button 
                             onClick={() => {
                                 window.open(`${window.location.origin}/#/obs-green/${auction.id}`, '_blank');
                             }}
-                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
+                            className="bg-purple-600 hover:bg-purple-700 text-white flex-col gap-2 p-5 rounded-3xl transition-all shadow-lg shadow-purple-600/20 active:scale-95 flex items-center justify-center border border-purple-500/50"
                         >
                             <Monitor className="w-6 h-6" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">Public</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Public View</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/admin/auction/${auction.id}/arrangement`)}
-                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
+                            className="bg-amber-500 hover:bg-amber-600 text-white flex-col gap-2 p-5 rounded-3xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 flex items-center justify-center border border-amber-400/50"
                         >
                             <Layout className="w-6 h-6" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">Board</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Category Board</span>
                         </button>
                         <button 
                             onClick={() => navigate(`/auction/${auction.id}/register`)}
-                            className="btn-golden flex-col gap-3 p-6 rounded-3xl"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white flex-col gap-2 p-5 rounded-3xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center border border-indigo-500/50 sm:col-span-1"
                         >
                             <UserPlus className="w-6 h-6" />
-                            <span className="text-[9px] font-black uppercase tracking-widest">Signup</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest">Player Signup</span>
                         </button>
                     </div>
 
