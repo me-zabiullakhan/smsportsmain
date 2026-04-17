@@ -213,6 +213,18 @@ const CategoryArrangement: React.FC = () => {
     const [editItem, setEditItem] = useState<any>({});
     const [rowCountExtra, setRowCountExtra] = useState(0);
 
+    const saveArrangementSettings = async (extra: number) => {
+        if (!id) return;
+        try {
+            await db.collection('auctions').doc(id).collection('arrangementDrafts').doc('SETTINGS').set({
+                rowCountExtra: extra,
+                updatedAt: Date.now()
+            }, { merge: true });
+        } catch (err) {
+            console.error("Error saving settings:", err);
+        }
+    };
+
     const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 5000);
@@ -256,8 +268,12 @@ const CategoryArrangement: React.FC = () => {
             const draftsMap: { [key: string]: any } = {};
             const configMap: { [key: string]: any } = {};
             snap.docs.forEach(doc => {
-                draftsMap[doc.id] = doc.data().slots || {};
-                configMap[doc.id] = doc.data().config || { rows: 0, cols: 0 };
+                if (doc.id === 'SETTINGS') {
+                    setRowCountExtra(doc.data().rowCountExtra || 0);
+                } else {
+                    draftsMap[doc.id] = doc.data().slots || {};
+                    configMap[doc.id] = doc.data().config || { rows: 0, cols: 0 };
+                }
             });
             setAllSlots(draftsMap);
             setCustomConfig(configMap);
@@ -784,12 +800,16 @@ const CategoryArrangement: React.FC = () => {
     }));
 
     const addRow = () => {
-        setRowCountExtra(prev => prev + 1);
+        const newVal = rowCountExtra + 1;
+        setRowCountExtra(newVal);
+        saveArrangementSettings(newVal);
     };
 
     const removeRow = () => {
         if (rowCount <= 1) return;
-        setRowCountExtra(prev => Math.max(0, prev - 1));
+        const newVal = Math.max(0, rowCountExtra - 1);
+        setRowCountExtra(newVal);
+        saveArrangementSettings(newVal);
     };
 
     const addCol = () => {
@@ -837,46 +857,43 @@ const CategoryArrangement: React.FC = () => {
         }
     };
 
-    const handleDeleteCategory = async () => {
-        if (!id || !categoryToDelete) {
+    const handleDeleteCategory = async (catId: string) => {
+        const targetId = catId || categoryToDelete;
+        if (!id || !targetId) {
             showNotification("Please select a category to delete", "error");
             return;
         }
-        setConfirmAction({
-            title: "Delete Category",
-            message: "Are you sure? This will remove all player assignments for this category.",
-            onConfirm: async () => {
-                setIsSaving(true);
-                try {
-                    // 1. Reset all players assigned to this category
-                    const categoryName = categories.find(c => c.id === categoryToDelete)?.name;
-                    if (categoryName) {
-                        const playersToReset = players.filter(p => p.category === categoryName);
-                        const batch = db.batch();
-                        playersToReset.forEach(p => {
-                            const pRef = db.collection('auctions').doc(id).collection('players').doc(String(p.id));
-                            batch.update(pRef, { category: 'Standard' });
-                        });
-                        await batch.commit();
-                    }
 
-                    // 2. Delete category and draft
-                    await db.collection('auctions').doc(id).collection('categories').doc(categoryToDelete).delete();
-                    await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(categoryToDelete).delete();
-                    
-                    setShowDeleteCategoryPopup(false);
-                    setIsDeletingCategory(false);
-                    setCategoryToDelete(null);
-                    showNotification("Category deleted successfully", "success");
-                } catch (err) {
-                    console.error(err);
-                    showNotification("Failed to delete category", "error");
-                } finally {
-                    setIsSaving(false);
-                    setConfirmAction(null);
-                }
+        const categoryName = categories.find(c => c.id === targetId)?.name;
+        if (!window.confirm(`Delete category "${categoryName}"? This will remove all player assignments for this category.`)) return;
+
+        setIsSaving(true);
+        try {
+            // 1. Reset all players assigned to this category
+            if (categoryName) {
+                const playersToReset = players.filter(p => p.category === categoryName);
+                const batch = db.batch();
+                playersToReset.forEach(p => {
+                    const pRef = db.collection('auctions').doc(id).collection('players').doc(String(p.id));
+                    batch.update(pRef, { category: 'Standard' });
+                });
+                await batch.commit();
             }
-        });
+
+            // 2. Delete category and draft
+            await db.collection('auctions').doc(id).collection('categories').doc(targetId).delete();
+            await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(targetId).delete();
+            
+            setIsDeletingCategory(false);
+            setCategoryToDelete(null);
+            showNotification("Category deleted successfully", "success");
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to delete category", "error");
+        } finally {
+            setIsSaving(false);
+            setConfirmAction(null);
+        }
     };
 
     const handleUpdateCategoryNameById = async (catId: string, newName: string) => {
@@ -1140,19 +1157,13 @@ const CategoryArrangement: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 {isDeletingCategory && isAllCategories && (
-                                    <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
-                                        <select 
-                                            value={categoryToDelete || ''}
-                                            onChange={(e) => setCategoryToDelete(e.target.value)}
-                                            className={`bg-transparent px-3 py-1 text-[10px] font-bold outline-none w-32 ${isDark ? 'text-white' : 'text-gray-900'}`}
-                                        >
-                                            <option value="" className={isDark ? 'bg-zinc-900' : 'bg-white'}>Select...</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.id} className={isDark ? 'bg-zinc-900' : 'bg-white'}>{cat.name}</option>
-                                            ))}
-                                        </select>
-                                        <button onClick={handleDeleteCategory} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-                                        <button onClick={() => setIsDeletingCategory(false)} className="p-1.5 text-gray-500 hover:bg-gray-500/10 rounded-lg"><X className="w-3.5 h-3.5" /></button>
+                                    <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}>
+                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                            Select category from table header to delete
+                                        </p>
+                                        <button onClick={() => setIsDeletingCategory(false)} className={`p-1 rounded-full hover:bg-red-500/20 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 )}
                                 <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
@@ -1502,7 +1513,17 @@ const CategoryArrangement: React.FC = () => {
                                         <th className="w-32 p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">#</th>
                                         {isAllCategories ? (
                                             categories.map(cat => (
-                                                <th key={cat.id} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900">{cat.name}</th>
+                                                <th key={cat.id} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900 relative group">
+                                                    {cat.name}
+                                                    {isDeletingCategory && (
+                                                        <button 
+                                                            onClick={() => handleDeleteCategory(cat.id || '')}
+                                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg active:scale-95"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </th>
                                             ))
                                         ) : (
                                             Array.from({ length: colCount }).map((_, c) => (
