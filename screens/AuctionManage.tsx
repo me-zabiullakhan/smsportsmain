@@ -11,7 +11,7 @@ import {
     Check as CheckIcon, Check, ShieldCheck, Tag, User, TrendingUp, CreditCard, Shield, 
     UserCheck, UserX, Share2, Download, FileSpreadsheet, Filter, Key, 
     ExternalLink, LayoutList, ToggleRight, ToggleLeft, RefreshCw, FileUp, 
-    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2, AlertTriangle
+    Star, UserPlus, Loader2, FileDown, ChevronRight, Zap, ListChecks, Type, Hash, ChevronDownCircle, Megaphone, Phone, Printer, LayoutGrid, Maximize2, AlertTriangle, Move
 } from 'lucide-react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
@@ -395,6 +395,35 @@ const AuctionManage: React.FC = () => {
             }
             closeModal();
         } catch (err: any) { showNotification("Save failed: " + err.message); }
+    };
+
+    const [assignSearch, setAssignSearch] = useState('');
+
+    const handleAssignPlayerToCategory = async (playerId: string | number, categoryName: string) => {
+        if (!id) return;
+        try {
+            await db.collection('auctions').doc(id).collection('players').doc(String(playerId)).update({
+                category: categoryName
+            });
+            showNotification(`Player assigned to ${categoryName}`, "success");
+            setAssignSearch('');
+        } catch (error) {
+            console.error(error);
+            showNotification("Failed to assign player");
+        }
+    };
+
+    const handleRemovePlayerFromCategory = async (playerId: string | number) => {
+        if (!id) return;
+        try {
+            await db.collection('auctions').doc(id).collection('players').doc(String(playerId)).update({
+                category: 'Standard'
+            });
+            showNotification("Player removed from category", "success");
+        } catch (error) {
+            console.error(error);
+            showNotification("Failed to remove player");
+        }
     };
 
     const closeModal = () => {
@@ -1033,13 +1062,18 @@ const AuctionManage: React.FC = () => {
                 {activeTab === 'TEAMS' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter">Franchise Registry ({teams.length})</h2>
+                            <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Franchise Registry ({teams.length})</h2>
                             <div className="flex gap-2">
-                                <label className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-[10px] font-black uppercase cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-2">
+                                <label className={`border px-4 py-2 rounded-xl text-[10px] font-black uppercase cursor-pointer transition-all flex items-center gap-2 shadow-sm ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'TEAM')}/>
                                 </label>
-                                <button onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} className="bg-accent text-primary px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg shadow-accent/20"><Plus className="w-4 h-4"/> Add Team</button>
+                                <button 
+                                    onClick={() => { setModalType('TEAM'); setEditItem({ name: '', owner: '', budget: settingsForm.purseValue }); setShowModal(true); }} 
+                                    className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border shadow-sm transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <Plus className="w-4 h-4"/> Add Team
+                                </button>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1084,7 +1118,10 @@ const AuctionManage: React.FC = () => {
                                     <FileUp className="w-4 h-4"/> Import XLSX
                                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleExcelImport(e, 'PLAYER')}/>
                                 </label>
-                                <button onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-lg transition-all bg-accent text-primary shadow-accent/20`}>
+                                <button 
+                                    onClick={() => { setModalType('PLAYER'); setEditItem({ name: '', category: 'Standard', role: 'All Rounder', basePrice: settingsForm.basePrice, nationality: 'India' }); setShowModal(true); }} 
+                                    className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border shadow-sm transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                >
                                     <Plus className="w-4 h-4"/> Add Player
                                 </button>
                             </div>
@@ -1981,7 +2018,10 @@ const AuctionManage: React.FC = () => {
                             <h2 className={`text-xl font-black uppercase tracking-tighter ${isDark ? 'text-white' : 'text-gray-800'}`}>Manage {activeTab}</h2>
                             <div className="flex gap-2">
                                 {activeTab === 'CATEGORIES' && (
-                                    <button onClick={() => navigate(`/admin/auction/${id}/arrangement`)} className="btn-golden px-6 py-2 rounded-xl text-[10px]">
+                                    <button 
+                                        onClick={() => navigate(`/category-arrangement/${id}`)} 
+                                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border shadow-sm transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                    >
                                         <LayoutGrid className="w-4 h-4"/> Category Room
                                     </button>
                                 )}
@@ -1989,7 +2029,9 @@ const AuctionManage: React.FC = () => {
                                     setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
                                     setEditItem({});
                                     setShowModal(true);
-                                }} className="btn-golden px-6 py-2 rounded-xl text-[10px]"><Plus className="w-4 h-4"/> Add New</button>
+                                }} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border shadow-sm transition-all ${isDark ? 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                                    <Plus className="w-4 h-4"/> Add New
+                                </button>
                             </div>
                         </div>
                         <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
@@ -2049,6 +2091,18 @@ const AuctionManage: React.FC = () => {
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                                            {activeTab === 'CATEGORIES' && (
+                                                                <button 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        navigate(`/category-arrangement/${id}`);
+                                                                    }}
+                                                                    className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${isDark ? 'bg-zinc-800 text-blue-400 hover:bg-blue-400/10' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                                                                >
+                                                                    <Move className="w-4 h-4"/>
+                                                                    <span className="text-[9px] font-black uppercase">Assign</span>
+                                                                </button>
+                                                            )}
                                                             <button onClick={() => {
                                                                 setModalType(activeTab === 'CATEGORIES' ? 'CATEGORY' : activeTab === 'ROLES' ? 'ROLE' : 'SPONSOR');
                                                                 setEditItem(item);
@@ -2062,10 +2116,51 @@ const AuctionManage: React.FC = () => {
                                                 {activeTab === 'CATEGORIES' && expandedCategory === item.id && (
                                                     <tr>
                                                         <td colSpan={6} className={`px-6 py-4 ${isDark ? 'bg-zinc-950/50' : 'bg-gray-50/50'}`}>
+                                                            {/* Assign Player Inline Search */}
+                                                            <div className="mb-6 max-w-md">
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                                    <UserPlus className="w-3 h-3 text-blue-500" /> Assign New Player to {item.name}
+                                                                </p>
+                                                                <div className="relative">
+                                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                                    <input 
+                                                                        type="text"
+                                                                        placeholder="Search by name to assign..."
+                                                                        value={assignSearch}
+                                                                        onChange={(e) => setAssignSearch(e.target.value)}
+                                                                        className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-xs font-bold transition-all outline-none ${isDark ? 'bg-zinc-900 border-zinc-800 text-white focus:border-blue-500/50 shadow-inner' : 'bg-white border-gray-100 text-gray-800 focus:border-blue-500/50 shadow-sm'}`}
+                                                                    />
+                                                                    {assignSearch && (
+                                                                        <div className={`absolute z-50 left-0 right-0 mt-2 rounded-2xl border shadow-2xl max-h-60 overflow-y-auto ${isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                                                                            {players.filter(p => !p.category || p.category === 'Standard').filter(p => p.name.toLowerCase().includes(assignSearch.toLowerCase())).length > 0 ? (
+                                                                                players.filter(p => !p.category || p.category === 'Standard').filter(p => p.name.toLowerCase().includes(assignSearch.toLowerCase())).map(p => (
+                                                                                    <div 
+                                                                                        key={p.id}
+                                                                                        onClick={() => handleAssignPlayerToCategory(p.id, item.name)}
+                                                                                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors border-b last:border-0 ${isDark ? 'hover:bg-zinc-800 border-zinc-800' : 'hover:bg-gray-50 border-gray-50'}`}
+                                                                                    >
+                                                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-gray-100 border-gray-200'}`}>
+                                                                                             {p.photoUrl ? <img src={p.photoUrl} className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-gray-400" />}
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <p className={`text-[11px] font-black uppercase ${isDark ? 'text-zinc-100' : 'text-gray-800'}`}>{p.name}</p>
+                                                                                            <p className={`text-[9px] font-bold text-gray-500`}>{p.role} • {p.category || 'Standard'}</p>
+                                                                                        </div>
+                                                                                        <Plus className="w-4 h-4 text-blue-500" />
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                <div className="p-4 text-center text-[10px] text-gray-500 font-bold uppercase">No unassigned players found</div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                                                 {players.filter(p => p.category === item.name).length > 0 ? (
                                                                     players.filter(p => p.category === item.name).map(player => (
-                                                                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100 shadow-sm'}`}>
+                                                                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-xl border relative group/card ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-100 shadow-sm'}`}>
                                                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden border ${isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
                                                                                 {player.photoUrl ? (
                                                                                     <img src={player.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -2073,10 +2168,20 @@ const AuctionManage: React.FC = () => {
                                                                                     <User className={`w-4 h-4 ${isDark ? 'text-zinc-600' : 'text-gray-400'}`} />
                                                                                 )}
                                                                             </div>
-                                                                            <div className="min-w-0">
+                                                                            <div className="min-w-0 flex-1">
                                                                                 <p className={`text-[11px] font-black uppercase truncate ${isDark ? 'text-zinc-100' : 'text-gray-800'}`}>{player.name}</p>
                                                                                 <p className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>{player.role}</p>
                                                                             </div>
+                                                                            <button 
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleRemovePlayerFromCategory(player.id);
+                                                                                }}
+                                                                                className="opacity-0 group-hover/card:opacity-100 p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-all active:scale-95"
+                                                                                title="Remove from category"
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                            </button>
                                                                         </div>
                                                                     ))
                                                                 ) : (
@@ -2104,32 +2209,32 @@ const AuctionManage: React.FC = () => {
                                 <Plus className="w-4 h-4"/> Create Code
                             </button>
                         </div>
-                        <div className="bg-white rounded-[2rem] border border-gray-200 shadow-sm overflow-hidden">
+                        <div className={`rounded-[2rem] border shadow-sm overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200 shadow-sm'}`}>
                             <div className="overflow-x-auto custom-scrollbar">
                                 <table className="w-full text-left">
-                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                    <thead className={`border-b ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-gray-50 border-gray-100'}`}>
                                         <tr>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Code</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Codes</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Assigned To</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Team Name</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Usage</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Team Usage</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Status</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Code</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Team Codes</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Assigned To</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Team Name</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Usage</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Team Usage</th>
+                                            <th className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>Status</th>
                                             <th className="px-6 py-4 text-right"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {captainCodes.map(code => (
-                                            <tr key={code.id} className="hover:bg-gray-50 transition-colors group">
+                                            <tr key={code.id} className={`transition-colors group ${isDark ? 'hover:bg-zinc-800/50' : 'hover:bg-gray-50'}`}>
                                                 <td className="px-6 py-4">
-                                                    <span className="font-mono font-black text-blue-600 text-sm">{code.code}</span>
+                                                    <span className={`font-mono font-black text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{code.code}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-wrap gap-1 max-w-[150px]">
                                                         {code.teamCodes && code.teamCodes.length > 0 ? (
                                                             code.teamCodes.slice(0, 3).map((tc, i) => (
-                                                                <span key={i} className={`px-2 py-0.5 rounded text-[8px] font-mono font-black border ${tc.isUsed ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                                                <span key={i} className={`px-2 py-0.5 rounded text-[8px] font-mono font-black border ${tc.isUsed ? (isDark ? 'bg-zinc-800 text-zinc-500 border-zinc-700' : 'bg-gray-100 text-gray-400 border-gray-200') : (isDark ? 'bg-amber-900/20 text-accent border-accent/20' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
                                                                     {tc.code}
                                                                 </span>
                                                             ))
@@ -2142,15 +2247,15 @@ const AuctionManage: React.FC = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="font-black text-gray-800 text-sm uppercase">{code.assignedTo}</span>
+                                                    <span className={`font-black text-sm uppercase ${isDark ? 'text-white' : 'text-gray-800'}`}>{code.assignedTo}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{code.teamName || '-'}</span>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>{code.teamName || '-'}</span>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[10px] font-black text-gray-700 uppercase">{code.currentUsage} / {code.usageLimit}</span>
-                                                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <span className={`text-[10px] font-black uppercase ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>{code.currentUsage} / {code.usageLimit}</span>
+                                                        <div className={`w-20 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
                                                             <div 
                                                                 className={`h-full transition-all ${code.currentUsage >= code.usageLimit ? 'bg-red-500' : 'bg-green-500'}`} 
                                                                 style={{ width: `${Math.min(100, (code.currentUsage / code.usageLimit) * 100)}%` }}
@@ -2160,8 +2265,8 @@ const AuctionManage: React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[10px] font-black text-gray-700 uppercase">{code.teamUsedCount || 0} / {code.teamMaxPlayers || 11}</span>
-                                                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <span className={`text-[10px] font-black uppercase ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>{code.teamUsedCount || 0} / {code.teamMaxPlayers || 11}</span>
+                                                        <div className={`w-20 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
                                                             <div 
                                                                 className={`h-full transition-all ${(code.teamUsedCount || 0) >= (code.teamMaxPlayers || 11) ? 'bg-red-500' : 'bg-amber-500'}`} 
                                                                 style={{ width: `${Math.min(100, ((code.teamUsedCount || 0) / (code.teamMaxPlayers || 11)) * 100)}%` }}
@@ -2171,18 +2276,18 @@ const AuctionManage: React.FC = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                                                        !code.isActive ? 'bg-gray-100 text-gray-400 border-gray-200' :
-                                                        code.currentUsage >= code.usageLimit ? 'bg-red-50 text-red-500 border-red-100' :
-                                                        'bg-green-50 text-green-600 border-green-100'
+                                                        !code.isActive ? (isDark ? 'bg-zinc-800 text-zinc-500 border-zinc-700' : 'bg-gray-100 text-gray-400 border-gray-200') :
+                                                        code.currentUsage >= code.usageLimit ? (isDark ? 'bg-red-900/20 text-red-500 border-red-900/40' : 'bg-red-50 text-red-500 border-red-100') :
+                                                        (isDark ? 'bg-green-900/20 text-green-500 border-green-900/40' : 'bg-green-50 text-green-600 border-green-100')
                                                     }`}>
                                                         {!code.isActive ? 'INACTIVE' : code.currentUsage >= code.usageLimit ? 'USED' : 'ACTIVE'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => handleResetCodeUsage(code.id!)} className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg" title="Reset Usage"><RefreshCw className="w-4 h-4"/></button>
-                                                        <button onClick={() => { setEditCode(code); setShowCodeModal(true); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit className="w-4 h-4"/></button>
-                                                        <button onClick={() => handleDeleteCode(code.id!)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                                                        <button onClick={() => handleResetCodeUsage(code.id!)} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-amber-500 hover:bg-zinc-800' : 'text-amber-500 hover:bg-amber-50'}`} title="Reset Usage"><RefreshCw className="w-4 h-4"/></button>
+                                                        <button onClick={() => { setEditCode(code); setShowCodeModal(true); }} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-blue-500 hover:bg-zinc-800' : 'text-blue-500 hover:bg-blue-50'}`}><Edit className="w-4 h-4"/></button>
+                                                        <button onClick={() => handleDeleteCode(code.id!)} className={`p-2 rounded-lg transition-colors ${isDark ? 'text-red-400 hover:bg-zinc-800' : 'text-red-400 hover:bg-red-50'}`}><Trash2 className="w-4 h-4"/></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -2521,33 +2626,28 @@ const AuctionManage: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Category</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {['Standard', ...categories.map(c => c.name)].map(cat => (
-                                                    <button
-                                                        key={cat}
-                                                        type="button"
-                                                        onClick={() => setEditItem({...editItem, category: cat})}
-                                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${editItem?.category === cat || (!editItem?.category && cat === 'Standard') ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
-                                                    >
-                                                        {cat}
-                                                    </button>
+                                            <select
+                                                value={editItem?.category || 'Standard'}
+                                                onChange={e => setEditItem({...editItem, category: e.target.value})}
+                                                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all appearance-none cursor-pointer"
+                                            >
+                                                <option value="Standard">Standard</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                                                 ))}
-                                            </div>
+                                            </select>
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Role</label>
-                                            <div className="flex flex-wrap gap-2">
+                                            <select
+                                                value={editItem?.role || 'All Rounder'}
+                                                onChange={e => setEditItem({...editItem, role: e.target.value})}
+                                                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold text-gray-700 focus:bg-white focus:border-blue-400 outline-none transition-all appearance-none cursor-pointer"
+                                            >
                                                 {roles.map(role => (
-                                                    <button
-                                                        key={role.id}
-                                                        type="button"
-                                                        onClick={() => setEditItem({...editItem, role: role.name})}
-                                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${editItem?.role === role.name || (!editItem?.role && role.name === 'All Rounder') ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200'}`}
-                                                    >
-                                                        {role.name}
-                                                    </button>
+                                                    <option key={role.id} value={role.name}>{role.name}</option>
                                                 ))}
-                                            </div>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -2841,19 +2941,19 @@ const AuctionManage: React.FC = () => {
                                     link.download = `${overlayImage.title.replace(/\s+/g, '_')}_${overlayImage.field}.jpg`;
                                     link.click();
                                 }}
-                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                                className="p-3 bg-white text-gray-900 rounded-xl transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-100"
                             >
                                 <Download className="w-4 h-4" /> <span className="hidden sm:inline">Download</span>
                             </button>
                             <button 
                                 onClick={() => overlayInputRef.current?.click()}
-                                className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20"
+                                className="p-3 bg-white text-blue-600 rounded-xl transition-all shadow-lg flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-100"
                             >
                                 <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Update</span>
                             </button>
                             <button 
                                 onClick={() => setOverlayImage(null)}
-                                className="p-3 bg-white/10 hover:bg-red-600 text-white rounded-xl transition-all"
+                                className="p-3 bg-white text-red-600 rounded-xl transition-all shadow-lg hover:bg-red-50"
                             >
                                 <X className="w-6 h-6" />
                             </button>

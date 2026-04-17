@@ -537,12 +537,64 @@ const CategoryArrangement: React.FC = () => {
 
     const handleAction = async (action: 'REMOVE' | 'MOVE', slotId: string) => {
         if (action === 'REMOVE') {
-            const playerToRemove = slots[slotId];
+            let playerToRemove;
+            let targetCatId = activeCategory;
+            let actualSlotId = slotId;
+
+            // Handle All Categories view (format catId:slotId)
+            if (slotId.includes(':')) {
+                const [catId, sId] = slotId.split(':');
+                targetCatId = catId;
+                actualSlotId = sId;
+                playerToRemove = allSlots[catId]?.[sId];
+            } else {
+                playerToRemove = slots[slotId];
+            }
+
+            if (!playerToRemove) return;
+
             setHistory([...history, slots]);
-            const newSlots = { ...slots };
-            delete newSlots[slotId];
-            setSlots(newSlots);
-            setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
+            
+            if (slotId.includes(':')) {
+                // Remove from allSlots
+                const newCatSlots = { ...(allSlots[targetCatId] || {}) };
+                delete newCatSlots[actualSlotId];
+                
+                setAllSlots(prev => ({
+                    ...prev,
+                    [targetCatId]: newCatSlots
+                }));
+
+                // If activeCategory is ALL_CATEGORIES, we don't necessarily update 'slots' state 
+                // but let the useEffect on line 271 handle it if needed. 
+                // Actually, if we are in ALL_CATEGORIES view, slots is empty anyway.
+                
+                // Directly update Firestore for All Categories view as it's a global change
+                try {
+                    await db.collection('auctions').doc(id!).collection('arrangementDrafts').doc(targetCatId).update({
+                        slots: newCatSlots,
+                        updatedAt: Date.now()
+                    });
+                } catch (err) {
+                    console.error("Error updating draft in All Categories view:", err);
+                }
+            } else {
+                // Traditional view
+                const newSlots = { ...slots };
+                delete newSlots[slotId];
+                setSlots(newSlots);
+                setAllSlots(prev => ({ ...prev, [activeCategory]: newSlots }));
+
+                // Directly update Firestore for Traditional view to ensure it gets deleted
+                try {
+                    await db.collection('auctions').doc(id!).collection('arrangementDrafts').doc(activeCategory).update({
+                        slots: newSlots,
+                        updatedAt: Date.now()
+                    });
+                } catch (err) {
+                    console.error("Error updating draft in Traditional view:", err);
+                }
+            }
 
             // Update player category in Firestore to Standard
             if (playerToRemove && id) {

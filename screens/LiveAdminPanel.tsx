@@ -795,9 +795,7 @@ const LiveAdminPanel: React.FC = () => {
                       </div>
                   </div>
               </div>
-          </div>
-      </div>
-      
+
       {/* SELECTION MODE TOGGLE (Inline Segments) */}
       <div className="bg-primary/40 rounded-2xl p-3 mb-4 flex flex-col gap-3 border border-gray-700 shadow-xl">
           <div className="flex justify-between items-center px-1">
@@ -984,6 +982,7 @@ const LiveAdminPanel: React.FC = () => {
         {teams.map((team: Team) => (
           <TeamStatusCard key={team.id} team={team} />
         ))}
+      </div>
       </div>
     </div>
   );
