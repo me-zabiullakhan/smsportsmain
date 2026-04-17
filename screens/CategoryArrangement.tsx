@@ -225,6 +225,75 @@ const CategoryArrangement: React.FC = () => {
         }
     };
 
+    const syncUnplacedPlayers = async () => {
+        if (!id || categories.length === 0 || players.length === 0) return;
+        
+        const updatedAllSlots = { ...allSlots };
+        let hasChanges = false;
+
+        for (const cat of categories) {
+            const catPrefix = cat.name.substring(0, 3).toUpperCase();
+            const catConfig = customConfig[cat.id || ''] || { rows: 0, cols: 0 };
+            const catCols = catConfig.cols || 6;
+            const currentDraft = updatedAllSlots[cat.id || ''] || {};
+            
+            // Find players assigned to this category
+            const assignedPlayers = players.filter(p => p.category === cat.name);
+            
+            // Find which of these aren't in slots yet
+            const unplacedPlayers = assignedPlayers.filter(p => 
+                !Object.values(currentDraft).some(slot => String(slot.playerId) === String(p.id))
+            );
+
+            if (unplacedPlayers.length > 0) {
+                const newDraft = { ...currentDraft };
+                let placedCount = 0;
+                
+                // Find empty slots and fill them
+                // We'll check up to a reasonable number of rows
+                const maxRowsToCheck = 20; 
+                for (let r = 1; r <= maxRowsToCheck && placedCount < unplacedPlayers.length; r++) {
+                    for (let c = 1; c <= catCols && placedCount < unplacedPlayers.length; c++) {
+                        const slotId = `${catPrefix}${r}_${c}`;
+                        if (!newDraft[slotId]) {
+                            const p = unplacedPlayers[placedCount];
+                            newDraft[slotId] = {
+                                playerId: String(p.id),
+                                playerName: p.name,
+                                category: p.category || '',
+                                index: (r - 1) * catCols + (c - 1)
+                            };
+                            placedCount++;
+                        }
+                    }
+                }
+
+                if (placedCount > 0) {
+                    updatedAllSlots[cat.id || ''] = newDraft;
+                    hasChanges = true;
+                    // Save to Firestore
+                    await db.collection('auctions').doc(id).collection('arrangementDrafts').doc(cat.id).set({
+                        slots: newDraft,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+                }
+            }
+        }
+
+        if (hasChanges) {
+            setAllSlots(updatedAllSlots);
+            if (activeCategory !== 'ALL_CATEGORIES') {
+                setSlots(updatedAllSlots[activeCategory] || {});
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (!loading && players.length > 0 && categories.length > 0) {
+            syncUnplacedPlayers();
+        }
+    }, [loading, players.length, categories.length]);
+
     const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 5000);
@@ -1157,13 +1226,24 @@ const CategoryArrangement: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 {isDeletingCategory && isAllCategories && (
-                                    <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}>
-                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                                            Select category from table header to delete
-                                        </p>
-                                        <button onClick={() => setIsDeletingCategory(false)} className={`p-1 rounded-full hover:bg-red-500/20 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                                            <X className="w-3.5 h-3.5" />
+                                    <div className={`flex items-center gap-2 p-1 rounded-xl border animate-in slide-in-from-right-2 duration-300 ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
+                                        <select 
+                                            value={categoryToDelete || ''}
+                                            onChange={(e) => setCategoryToDelete(e.target.value)}
+                                            className={`bg-transparent px-3 py-1 text-[10px] font-bold outline-none w-32 ${isDark ? 'text-white' : 'text-gray-900'}`}
+                                        >
+                                            <option value="" className={isDark ? 'bg-zinc-900' : 'bg-white'}>Select...</option>
+                                            {categories.map(cat => (
+                                                <option key={cat.id} value={cat.id} className={isDark ? 'bg-zinc-900' : 'bg-white'}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                        <button 
+                                            onClick={() => handleDeleteCategory(categoryToDelete || '')} 
+                                            className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
                                         </button>
+                                        <button onClick={() => setIsDeletingCategory(false)} className="p-1.5 text-gray-500 hover:bg-gray-500/10 rounded-lg"><X className="w-3.5 h-3.5" /></button>
                                     </div>
                                 )}
                                 <div className={`flex border rounded-xl overflow-hidden ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-200'}`}>
@@ -1515,14 +1595,6 @@ const CategoryArrangement: React.FC = () => {
                                             categories.map(cat => (
                                                 <th key={cat.id} className="p-6 border border-amber-500/20 text-xl font-black text-amber-500 uppercase tracking-widest bg-gradient-to-b from-zinc-800 to-zinc-900 relative group">
                                                     {cat.name}
-                                                    {isDeletingCategory && (
-                                                        <button 
-                                                            onClick={() => handleDeleteCategory(cat.id || '')}
-                                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg active:scale-95"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    )}
                                                 </th>
                                             ))
                                         ) : (
