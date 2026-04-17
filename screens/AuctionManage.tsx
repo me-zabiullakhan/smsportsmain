@@ -2076,10 +2076,10 @@ const AuctionManage: React.FC = () => {
                                                         </div>
                                                     </td>
                                                     <td className={`px-6 py-4 font-mono font-black text-sm ${isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
-                                                        {activeTab === 'CATEGORIES' ? `₹${item.basePrice}` : '-'}
+                                                        {activeTab === 'CATEGORIES' ? `₹${item.basePrice || 0}` : '-'}
                                                     </td>
                                                     <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                                                        {activeTab === 'CATEGORIES' ? `${item.minPerTeam}-${item.maxPerTeam}` : '-'}
+                                                        {activeTab === 'CATEGORIES' ? `${item.minPerTeam || 0}-${item.maxPerTeam || 0}` : '-'}
                                                     </td>
                                                     <td className={`px-6 py-4 text-xs font-bold ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
                                                         {activeTab === 'CATEGORIES' ? item.requiredPlayers || 0 : '-'}
@@ -2095,11 +2095,11 @@ const AuctionManage: React.FC = () => {
                                                                 <button 
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        navigate(`/category-arrangement/${id}`);
+                                                                        setExpandedCategory(expandedCategory === item.id ? null : item.id);
                                                                     }}
                                                                     className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${isDark ? 'bg-zinc-800 text-blue-400 hover:bg-blue-400/10' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
                                                                 >
-                                                                    <Move className="w-4 h-4"/>
+                                                                    <UserPlus className="w-4 h-4"/>
                                                                     <span className="text-[9px] font-black uppercase">Assign</span>
                                                                 </button>
                                                             )}
